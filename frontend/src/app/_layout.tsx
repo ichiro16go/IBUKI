@@ -1,15 +1,59 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router";
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_500Medium,
+  JetBrainsMono_700Bold,
+} from "@expo-google-fonts/jetbrains-mono";
+import {
+  ShipporiMinchoB1_400Regular,
+  ShipporiMinchoB1_500Medium,
+  ShipporiMinchoB1_700Bold,
+} from "@expo-google-fonts/shippori-mincho-b1";
+import {
+  ZenKakuGothicNew_400Regular,
+  ZenKakuGothicNew_500Medium,
+  ZenKakuGothicNew_700Bold,
+} from "@expo-google-fonts/zen-kaku-gothic-new";
+import { useFonts } from "expo-font";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 
-import { AnimatedSplashOverlay } from "@/components/animated-icon";
-import AppTabs from "@/components/app-tabs";
+import { IbukiFonts } from "@/constants/ibuki-theme";
 
-export default function TabLayout() {
+void SplashScreen.preventAutoHideAsync();
+
+export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [fontsLoaded, fontLoadError] = useFonts({
+    [IbukiFonts.sansRegular]: ZenKakuGothicNew_400Regular,
+    [IbukiFonts.sans]: ZenKakuGothicNew_500Medium,
+    [IbukiFonts.sansBold]: ZenKakuGothicNew_700Bold,
+    [IbukiFonts.serifRegular]: ShipporiMinchoB1_400Regular,
+    [IbukiFonts.serif]: ShipporiMinchoB1_500Medium,
+    [IbukiFonts.serifBold]: ShipporiMinchoB1_700Bold,
+    [IbukiFonts.monoRegular]: JetBrainsMono_400Regular,
+    [IbukiFonts.mono]: JetBrainsMono_500Medium,
+    [IbukiFonts.monoBold]: JetBrainsMono_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontLoadError) {
+      void SplashScreen.hideAsync();
+    }
+  }, [fontLoadError, fontsLoaded]);
+
+  if (!fontsLoaded && !fontLoadError) {
+    return null;
+  }
+
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="hobby/[id]" />
+      </Stack>
     </ThemeProvider>
   );
 }
