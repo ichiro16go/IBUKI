@@ -1,0 +1,36 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: "claude-sonnet-4-20250514"
+          prompt: |
+            このPRをレビューしてください。以下の観点でコメントをお願いします：
+
+            1. コードの品質・可読性
+            2. バグや潜在的な問題
+            3. セキュリティ上の懸念
+            4. パフォーマンスの問題
+            5. 改善提案
+
+            日本語でレビューコメントを書いてください。
+            重大な問題がなければ「LGTM」とコメントしてください。
