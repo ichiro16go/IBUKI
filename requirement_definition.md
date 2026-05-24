@@ -60,6 +60,20 @@ suki_card {
   status: "興味あり" | "好き" | "大好き" | "熱狂";
   created_at: timestamp;
 }
+
+```
+
+### Suki Action
+```typescript
+suki_action {
+  id: string;
+  user_id: string;
+  suki_card: string;
+  title: string;
+  description: string;
+  photo: string;
+  created_at: timestamp;
+  }
 ```
 
 ### Genre（暫定14種）
