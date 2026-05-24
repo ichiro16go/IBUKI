@@ -115,9 +115,20 @@ GPS ログを一定間隔でサーバーに送信し、近接していたユー�
 ## セットアップ手順
 
 ```bash
-# ローカル起動例（適宜書き換え）
-npm install
-npm run dev
+# 依存関係のインストール
+make install
+```
+
+```bash
+# フロントエンド起動
+cd frontend
+npm run web
+```
+
+```bash
+# バックエンド起動
+cd backend
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ## 既知の問題 / 未実装機能（Day3 審査員向け）
