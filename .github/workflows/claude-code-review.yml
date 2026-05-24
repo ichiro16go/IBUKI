@@ -8,6 +8,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  id-token: write
 
 jobs:
   review:
@@ -22,7 +23,17 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: "claude-sonnet-4-20250514"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # コメント投稿に必要なツールを許可
+          additional_permissions: |
+            Bash(gh pr comment:*)
+            Bash(gh pr diff:*)
+            Bash(gh pr view:*)
+            Bash(gh pr review:*)
+            Bash(gh issue comment:*)
+            Read
+            Glob
+            Grep
           prompt: |
             このPRをレビューしてください。以下の観点でコメントをお願いします：
 
@@ -34,3 +45,6 @@ jobs:
 
             日本語でレビューコメントを書いてください。
             重大な問題がなければ「LGTM」とコメントしてください。
+
+            レビューが終わったら、以下のコマンドでPRにコメントを投稿してください：
+            gh pr comment ${{ github.event.pull_request.number }} --body "レビュー内容"
