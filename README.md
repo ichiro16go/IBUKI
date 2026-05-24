@@ -161,6 +161,11 @@ uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 詳細は [`docs/supabase-development.md`](./docs/supabase-development.md) を参照。
 
+### 開発ドキュメント
+
+- Supabase開発フロー: [`docs/supabase-development.md`](./docs/supabase-development.md)
+- デザインガイドライン: [`docs/design-guidelines.md`](./docs/design-guidelines.md)
+
 ## 既知の問題 / 未実装機能（Day3 審査員向け）
 
 開発期間が短いため、Day3 提出時点で「ここまでやった／ここは諦めた」を正直に書く。
