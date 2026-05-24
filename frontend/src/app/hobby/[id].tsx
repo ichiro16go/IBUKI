@@ -12,7 +12,12 @@ import {
   PhotoBlock,
   PillButton,
 } from "@/components/ibuki-ui";
-import { IbukiColors, IbukiFonts, IbukiRadius, IbukiSpacing } from "@/constants/ibuki-theme";
+import {
+  IbukiColors,
+  IbukiFonts,
+  IbukiRadius,
+  IbukiSpacing,
+} from "@/constants/ibuki-theme";
 import { getHobbyById } from "@/data/ibuki";
 
 export default function HobbyDetailScreen() {
@@ -26,19 +31,35 @@ export default function HobbyDetailScreen() {
       <View style={styles.topBar}>
         <IconButton
           label="Back"
-          icon={{ ios: "chevron.left", android: "arrow_back", web: "chevron.left" }}
+          icon={{
+            ios: "chevron.left",
+            android: "arrow_back",
+            web: "chevron.left",
+          }}
           onPress={() => router.back()}
         />
         <Kicker>NO. {hobby.number} · CARD DETAIL</Kicker>
-        <IconButton icon={{ ios: "square.and.arrow.up", android: "share", web: "square.and.arrow.up" }} />
+        <IconButton
+          icon={{
+            ios: "square.and.arrow.up",
+            android: "share",
+            web: "square.and.arrow.up",
+          }}
+        />
       </View>
 
-      <PhotoBlock hobby={hobby} height={220} label={`${hobby.lastSeen}にすれ違い · ${hobby.distance}`} />
+      <PhotoBlock
+        hobby={hobby}
+        height={220}
+        label={`${hobby.lastSeen}にすれ違い · ${hobby.distance}`}
+      />
 
       <View style={styles.titleSection}>
         <Kicker>A HOBBY YOU DIDN&apos;T KNOW</Kicker>
         <Heading size="medium">{hobby.nameJa}</Heading>
-        <Text style={styles.subtitle}>{hobby.nameEn} · No. {hobby.number}</Text>
+        <Text style={styles.subtitle}>
+          {hobby.nameEn} · No. {hobby.number}
+        </Text>
         <View style={styles.tagRow}>
           {hobby.tags.map((tag) => (
             <Chip key={tag} label={tag} />
@@ -89,7 +110,9 @@ export default function HobbyDetailScreen() {
           onPress={() => setSaved((current) => !current)}
           style={styles.actionWide}
         />
-        <IconButton icon={{ ios: "ellipsis", android: "more_horiz", web: "ellipsis" }} />
+        <IconButton
+          icon={{ ios: "ellipsis", android: "more_horiz", web: "ellipsis" }}
+        />
       </View>
       <Text style={styles.footerLink}>入口を見る · 体験スポットを探す</Text>
     </IbukiScreen>

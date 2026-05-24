@@ -1,18 +1,13 @@
 import {
-  JetBrainsMono_400Regular,
-  JetBrainsMono_500Medium,
-  JetBrainsMono_700Bold,
-} from "@expo-google-fonts/jetbrains-mono";
+  MPLUS1_400Regular,
+  MPLUS1_500Medium,
+  MPLUS1_700Bold,
+} from "@expo-google-fonts/m-plus-1";
 import {
-  ShipporiMinchoB1_400Regular,
-  ShipporiMinchoB1_500Medium,
-  ShipporiMinchoB1_700Bold,
-} from "@expo-google-fonts/shippori-mincho-b1";
-import {
-  ZenKakuGothicNew_400Regular,
-  ZenKakuGothicNew_500Medium,
-  ZenKakuGothicNew_700Bold,
-} from "@expo-google-fonts/zen-kaku-gothic-new";
+  ZenMaruGothic_400Regular,
+  ZenMaruGothic_500Medium,
+  ZenMaruGothic_700Bold,
+} from "@expo-google-fonts/zen-maru-gothic";
 import { useFonts } from "expo-font";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -26,15 +21,15 @@ void SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded, fontLoadError] = useFonts({
-    [IbukiFonts.sansRegular]: ZenKakuGothicNew_400Regular,
-    [IbukiFonts.sans]: ZenKakuGothicNew_500Medium,
-    [IbukiFonts.sansBold]: ZenKakuGothicNew_700Bold,
-    [IbukiFonts.serifRegular]: ShipporiMinchoB1_400Regular,
-    [IbukiFonts.serif]: ShipporiMinchoB1_500Medium,
-    [IbukiFonts.serifBold]: ShipporiMinchoB1_700Bold,
-    [IbukiFonts.monoRegular]: JetBrainsMono_400Regular,
-    [IbukiFonts.mono]: JetBrainsMono_500Medium,
-    [IbukiFonts.monoBold]: JetBrainsMono_700Bold,
+    [IbukiFonts.sansRegular]: ZenMaruGothic_400Regular,
+    [IbukiFonts.sans]: ZenMaruGothic_500Medium,
+    [IbukiFonts.sansBold]: ZenMaruGothic_700Bold,
+    [IbukiFonts.serifRegular]: ZenMaruGothic_400Regular,
+    [IbukiFonts.serif]: ZenMaruGothic_500Medium,
+    [IbukiFonts.serifBold]: ZenMaruGothic_700Bold,
+    [IbukiFonts.monoRegular]: MPLUS1_400Regular,
+    [IbukiFonts.mono]: MPLUS1_500Medium,
+    [IbukiFonts.monoBold]: MPLUS1_700Bold,
   });
 
   useEffect(() => {
