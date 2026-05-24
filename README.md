@@ -120,16 +120,46 @@ make install
 ```
 
 ```bash
+# Supabase（初回のみ）
+make supabase-login
+make supabase-link SUPABASE_PROJECT_REF=<your-project-ref>
+make supabase-start
+make supabase-db-reset
+make supabase-types
+```
+
+```bash
 # フロントエンド起動
 cd frontend
 npm run web
 ```
 
 ```bash
-# バックエンド起動
+# バックエンド起動（必要な場合）
 cd backend
 uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+### 開発でよく使うコマンド
+
+| 目的 | コマンド |
+|---|---|
+| 依存関係インストール | `make install` |
+| Supabase CLIログイン | `make supabase-login` |
+| Supabaseプロジェクト紐づけ | `make supabase-link SUPABASE_PROJECT_REF=<ref>` |
+| Supabaseローカル起動/停止 | `make supabase-start` / `make supabase-stop` |
+| migration新規作成 | `make supabase-migration name=<migration_name>` |
+| migrationからローカルDB再構築 | `make supabase-db-reset` |
+| linked先へmigration反映 | `make supabase-db-push` |
+| TypeScript型再生成 | `make supabase-types` |
+
+### Supabase運用ルール（重要）
+
+- 本番Supabaseは直接編集しない。**必ずmigrationを作って管理**する。
+- schema変更後は `make supabase-db-reset` と `make supabase-types` を実行する。
+- migrationと型ファイルを同じPRでレビューする。
+
+詳細は [`docs/supabase-development.md`](./docs/supabase-development.md) を参照。
 
 ## 既知の問題 / 未実装機能（Day3 審査員向け）
 
