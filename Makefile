@@ -1,15 +1,16 @@
 FRONTEND_DIR ?= frontend
+BACKEND_DIR ?= backend
 SUPABASE_SCHEMA ?= public
 SUPABASE_TYPES ?= $(FRONTEND_DIR)/src/lib/database.types.ts
 SUPABASE_PROJECT_REF ?=
 SUPABASE ?= npx supabase
 
-.PHONY: help frontend-install format supabase-login supabase-init supabase-link supabase-start supabase-stop supabase-types supabase-db-push supabase-db-reset supabase-migration
+.PHONY: help install format supabase-login supabase-init supabase-link supabase-start supabase-stop supabase-types supabase-db-push supabase-db-reset supabase-migration
 
 help:
 	@printf "Targets:\n"
-	@printf "  frontend-install      Install Expo frontend dependencies, including Supabase\n"
-	@printf "  format                Format frontend files with Prettier\n"
+	@printf "  install               Install frontend and backend dependencies\n"
+	@printf "  format                Format frontend files with Prettier and backend files with Ruff\n"
 	@printf "  supabase-login        Authenticate the Supabase CLI\n"
 	@printf "  supabase-init         Create local supabase/config.toml\n"
 	@printf "  supabase-link         Link to remote project: make supabase-link SUPABASE_PROJECT_REF=...\n"
@@ -20,11 +21,13 @@ help:
 	@printf "  supabase-db-reset     Reset local database from migrations\n"
 	@printf "  supabase-types        Generate TypeScript DB types into $(SUPABASE_TYPES)\n"
 
-frontend-install:
-	cd $(FRONTEND_DIR) && npx expo install @supabase/supabase-js @react-native-async-storage/async-storage react-native-url-polyfill
+install:
+	cd $(BACKEND_DIR) && uv sync --dev
+	cd $(FRONTEND_DIR) && npm ci
 
 format:
 	npm run format --prefix $(FRONTEND_DIR)
+	cd $(BACKEND_DIR) && uv run ruff format .
 
 supabase-login:
 	$(SUPABASE) login
