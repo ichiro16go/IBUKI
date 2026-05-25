@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 
 import { IbukiFonts } from "@/constants/ibuki-theme";
+import { AuthProvider, useAuth } from "@/contexts/auth";
 import { EncounterPreferencesProvider } from "@/state/encounter-preferences";
 
 void SplashScreen.preventAutoHideAsync();
@@ -77,13 +78,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <EncounterPreferencesProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="hobby/[id]" />
-        </Stack>
-      </EncounterPreferencesProvider>
+      <AuthProvider>
+        <EncounterPreferencesProvider>
+          <RootNavigator />
+        </EncounterPreferencesProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
