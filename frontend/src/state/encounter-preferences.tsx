@@ -8,9 +8,9 @@ import {
 } from "react";
 
 type EncounterPreferencesContextValue = {
-  hiddenHobbyIds: string[];
-  hideEncounter: (hobbyId: string) => void;
-  isEncounterHidden: (hobbyId: string) => boolean;
+  hiddenEncounterIds: string[];
+  hideEncounter: (encounterId: string) => void;
+  isEncounterHidden: (encounterId: string) => boolean;
 };
 
 const EncounterPreferencesContext =
@@ -21,26 +21,26 @@ export function EncounterPreferencesProvider({
 }: {
   children: ReactNode;
 }) {
-  const [hiddenHobbyIds, setHiddenHobbyIds] = useState<string[]>([]);
+  const [hiddenEncounterIds, setHiddenEncounterIds] = useState<string[]>([]);
 
-  const hideEncounter = useCallback((hobbyId: string) => {
-    setHiddenHobbyIds((currentIds) =>
-      currentIds.includes(hobbyId) ? currentIds : [...currentIds, hobbyId],
+  const hideEncounter = useCallback((encounterId: string) => {
+    setHiddenEncounterIds((currentIds) =>
+      currentIds.includes(encounterId) ? currentIds : [...currentIds, encounterId],
     );
   }, []);
 
   const isEncounterHidden = useCallback(
-    (hobbyId: string) => hiddenHobbyIds.includes(hobbyId),
-    [hiddenHobbyIds],
+    (encounterId: string) => hiddenEncounterIds.includes(encounterId),
+    [hiddenEncounterIds],
   );
 
   const value = useMemo(
     () => ({
-      hiddenHobbyIds,
+      hiddenEncounterIds,
       hideEncounter,
       isEncounterHidden,
     }),
-    [hiddenHobbyIds, hideEncounter, isEncounterHidden],
+    [hiddenEncounterIds, hideEncounter, isEncounterHidden],
   );
 
   return (
