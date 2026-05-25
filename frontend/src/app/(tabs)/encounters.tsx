@@ -30,7 +30,10 @@ export default function EncountersScreen() {
   });
 
   function openHobby(id: string) {
-    router.push({ pathname: "/hobby/[id]", params: { id } } as never);
+    router.push({
+      pathname: "/hobby/[id]",
+      params: { id, from: "encounters" },
+    } as never);
   }
 
   return (
@@ -84,7 +87,7 @@ export default function EncountersScreen() {
         })}
       </View>
 
-      <Text style={styles.disclaimer}>人ではなく、趣味だけが届きます。</Text>
+      <Text style={styles.disclaimer}>人ではなく、sukiだけが届きます。</Text>
 
       <NotificationModal
         visible={notificationVisible}

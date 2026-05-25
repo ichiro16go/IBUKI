@@ -624,9 +624,9 @@ export function BottomTabBar() {
       },
     },
     {
-      path: "/saved",
-      label: "保存",
-      icon: { ios: "heart", android: "favorite_border", web: "heart" },
+      path: "/bookmark",
+      label: "ブックマーク",
+      icon: { ios: "bookmark", android: "bookmark_border", web: "bookmark" },
     },
     {
       path: "/entry",

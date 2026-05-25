@@ -90,7 +90,7 @@ export default function ProfileScreen() {
       <View style={styles.stats}>
         <ProfileStat
           value={profileSummary.savedCount.toString()}
-          label="保存した趣味"
+          label="保存したsuki"
         />
         <ProfileStat
           value={String(sharedHobbyIds.length).padStart(2, "0")}
@@ -99,7 +99,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.segmentRow}>
-        <Text style={styles.segmentActive}>自分の趣味カード</Text>
+        <Text style={styles.segmentActive}>自分のsukiカード</Text>
         <Text style={styles.segment}>保存</Text>
         <Text style={styles.segment}>SNSリンク</Text>
       </View>

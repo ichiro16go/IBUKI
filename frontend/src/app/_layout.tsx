@@ -13,7 +13,7 @@ import {
   SpaceMono_700Bold,
 } from "@expo-google-fonts/space-mono";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
@@ -22,6 +22,38 @@ import { IbukiFonts } from "@/constants/ibuki-theme";
 import { EncounterPreferencesProvider } from "@/state/encounter-preferences";
 
 void SplashScreen.preventAutoHideAsync();
+
+function RootNavigator() {
+  const { session, isLoading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const seg = segments[0] as string | undefined;
+    const inTabs = seg === "(tabs)";
+    const onPublicScreen = seg === "sign-in" || seg === "auth-callback" || !seg;
+
+    if (!session && inTabs) {
+      router.replace("/sign-in");
+    } else if (session && onPublicScreen) {
+      router.replace("/(tabs)/encounters" as never);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, isLoading]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="hobby/[id]" />
+      <Stack.Screen name="planter/[id]" />
+      <Stack.Screen name="sign-in" />
+      <Stack.Screen name="auth-callback" />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

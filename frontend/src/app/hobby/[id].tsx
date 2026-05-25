@@ -1,6 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  Alert,
+} from "react-native";
 
 import {
   BodyText,
@@ -10,19 +17,19 @@ import {
   IconButton,
   Kicker,
   PhotoBlock,
-  PillButton,
 } from "@/components/ibuki-ui";
 import {
   IbukiColors,
   IbukiFonts,
   IbukiRadius,
   IbukiSpacing,
+  TabBarHeight,
 } from "@/constants/ibuki-theme";
 import { getHobbyById } from "@/data/ibuki";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function HobbyDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
   const hobby = getHobbyById(id);
   const [saved, setSaved] = useState(false);
   const { hideEncounter } = useEncounterPreferences();
@@ -68,8 +75,9 @@ export default function HobbyDetailScreen() {
         </View>
       </View>
 
+      {/* Quote */}
       <View style={styles.quoteBox}>
-        <Text style={styles.quoteMark}>“</Text>
+        <Text style={styles.quoteMark}>&#34;</Text>
         <Text style={styles.quote}>{hobby.quote}</Text>
       </View>
 
@@ -86,10 +94,38 @@ export default function HobbyDetailScreen() {
           <View style={styles.placePin}>
             <Text style={styles.placePinIcon}>⌖</Text>
           </View>
-          <View style={styles.placeCopy}>
-            <Text style={styles.placeTitle}>{hobby.nearbyPlace}</Text>
-            <Text style={styles.subtitle}>はじめて歓迎 · 予約可</Text>
+
+          {/* Beginner Note */}
+          <View style={styles.noteSection}>
+            <Kicker>GETTING STARTED</Kicker>
+            <BodyText muted>{hobby.beginnerNote}</BodyText>
           </View>
+        </ScrollView>
+
+        {/* Fixed Bottom Action Bar */}
+        <View style={[styles.actionBar, { bottom: TabBarHeight }]}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.secondaryButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.secondaryButtonText}>Bye</Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.primaryButton,
+              isBookmarked || isPlanted ? styles.primaryButtonActive : {},
+              pressed && styles.pressed,
+            ]}
+            onPress={handlePrimaryAction}
+          >
+            <Text style={styles.primaryButtonText}>{primaryButtonLabel}</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -112,6 +148,13 @@ export default function HobbyDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: IbukiSpacing.md,
+    paddingTop: 0,
+  },
   topBar: {
     alignItems: "center",
     flexDirection: "row",
@@ -123,13 +166,14 @@ const styles = StyleSheet.create({
   },
   titleSection: {
     gap: IbukiSpacing.xs,
+    marginTop: IbukiSpacing.md,
+    marginBottom: IbukiSpacing.md,
   },
   subtitle: {
-    color: IbukiColors.mid,
+    color: IbukiColors.muted,
     fontFamily: IbukiFonts?.sansBold,
     fontSize: 12,
     fontWeight: "700",
-    lineHeight: 18,
   },
   tagRow: {
     flexDirection: "row",
@@ -139,12 +183,13 @@ const styles = StyleSheet.create({
   },
   quoteBox: {
     backgroundColor: IbukiColors.surface,
-    borderColor: IbukiColors.line,
+    borderColor: IbukiColors.border,
     borderRadius: IbukiRadius.lg,
     borderWidth: 1,
     flexDirection: "row",
     gap: IbukiSpacing.sm,
     padding: IbukiSpacing.lg,
+    marginBottom: IbukiSpacing.lg,
   },
   quoteMark: {
     color: IbukiColors.accent,
@@ -153,62 +198,75 @@ const styles = StyleSheet.create({
     lineHeight: 52,
   },
   quote: {
-    color: IbukiColors.ink,
+    color: IbukiColors.text,
     flex: 1,
     fontFamily: IbukiFonts?.sans,
-    fontSize: 18,
-    lineHeight: 28,
+    fontSize: 16,
+    lineHeight: 24,
   },
-  infoGrid: {
-    flexDirection: "row",
-    gap: IbukiSpacing.sm,
+  descriptionSection: {
+    marginBottom: IbukiSpacing.lg,
   },
-  infoCard: {
-    backgroundColor: IbukiColors.surface,
-    borderColor: IbukiColors.line,
-    borderRadius: IbukiRadius.md,
-    borderWidth: 1,
-    flex: 1,
-    gap: IbukiSpacing.xs,
-    padding: IbukiSpacing.md,
+  stepsSection: {
+    marginBottom: IbukiSpacing.lg,
   },
-  placeCard: {
-    backgroundColor: IbukiColors.surfaceWarm,
-    borderColor: IbukiColors.line,
-    borderRadius: IbukiRadius.md,
-    borderWidth: 1,
+  stepsList: {
     gap: IbukiSpacing.md,
-    padding: IbukiSpacing.md,
+    marginTop: IbukiSpacing.md,
   },
-  placeRow: {
-    alignItems: "center",
+  stepItem: {
     flexDirection: "row",
     gap: IbukiSpacing.md,
+    alignItems: "flex-start",
   },
-  placePin: {
-    alignItems: "center",
-    backgroundColor: IbukiColors.accentTint,
-    borderRadius: 24,
-    height: 48,
+  stepNumber: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: IbukiColors.accent,
     justifyContent: "center",
-    width: 48,
+    alignItems: "center",
+    flexShrink: 0,
   },
-  placePinIcon: {
-    color: IbukiColors.accentDeep,
-    fontSize: 19,
+  stepNumberText: {
+    color: IbukiColors.background,
+    fontFamily: IbukiFonts?.sansBold,
+    fontSize: 16,
     fontWeight: "700",
   },
-  placeCopy: {
+  stepText: {
     flex: 1,
-  },
-  placeTitle: {
-    color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.sansBold,
+    color: IbukiColors.text,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 14,
-    fontWeight: "800",
     lineHeight: 20,
+    paddingTop: IbukiSpacing.xs,
   },
-  actions: {
+  noteSection: {
+    backgroundColor: IbukiColors.surface,
+    borderColor: IbukiColors.border,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    padding: IbukiSpacing.md,
+    marginBottom: IbukiSpacing.lg,
+  },
+  actionBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    backgroundColor: IbukiColors.background,
+    borderTopWidth: 1,
+    borderTopColor: IbukiColors.border,
+    flexDirection: "row",
+    gap: IbukiSpacing.sm,
+    paddingHorizontal: IbukiSpacing.md,
+    paddingVertical: IbukiSpacing.md,
+  },
+  actionButton: {
+    paddingHorizontal: IbukiSpacing.md,
+    paddingVertical: IbukiSpacing.sm,
+    borderRadius: IbukiRadius.md,
+    justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
     gap: IbukiSpacing.xs,
