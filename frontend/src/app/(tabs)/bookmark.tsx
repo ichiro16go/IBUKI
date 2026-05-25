@@ -18,12 +18,17 @@ import {
 } from "@/components/ibuki-ui";
 import { IbukiSpacing } from "@/constants/ibuki-theme";
 import { useAuth } from "@/contexts/auth";
-import { fetchSavedCards, type SavedFeedItem } from "@/lib/encounters";
+import {
+  fetchFromUserIdsByEncounterIds,
+  fetchSavedCards,
+  type SavedFeedItem,
+} from "@/lib/encounters";
 
 export default function BookmarkScreen() {
   const { user } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState("全て");
   const [savedCards, setSavedCards] = useState<SavedFeedItem[]>([]);
+  const [fromUserIds, setFromUserIds] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +44,9 @@ export default function BookmarkScreen() {
       setError(null);
       const nextSavedCards = await fetchSavedCards(user.id);
       setSavedCards(nextSavedCards);
+      const encounterIds = nextSavedCards.map((c) => c.encounterId);
+      const fromUserMap = await fetchFromUserIdsByEncounterIds(encounterIds, user.id);
+      setFromUserIds(fromUserMap);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -109,6 +117,7 @@ export default function BookmarkScreen() {
                       source: "remote",
                       cardId: savedCard.likeCardId,
                       encounterId: savedCard.encounterId,
+                      fromUserId: fromUserIds[savedCard.encounterId],
                     },
                   } as never)
                 }

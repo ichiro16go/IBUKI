@@ -22,35 +22,53 @@ import { useAuth } from "@/contexts/auth";
 import { getHobbyById } from "@/data/ibuki";
 import {
   fetchLikeCardById,
+  fetchOtherSukisByUserIds,
   mapLikeCardToHobby,
   saveEncounterBookmark,
 } from "@/lib/encounters";
 import { createPlanterItem } from "@/lib/planter";
+import { getUserPublicProfile } from "@/lib/user-profile";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function HobbyDetailScreen() {
-  const { cardId, encounterId, from, hideKey, id, source } = useLocalSearchParams<{
+  const { cardId, encounterId, from, fromUserId, hideKey, id, source } = useLocalSearchParams<{
     id: string;
     from?: string;
     source?: string;
     cardId?: string;
     encounterId?: string;
     hideKey?: string;
+    fromUserId?: string;
   }>();
   const { user } = useAuth();
   const isRemote = source === "remote" && typeof cardId === "string";
   const staticHobby = useMemo(() => getHobbyById(id), [id]);
-  const [remoteHobby, setRemoteHobby] = useState<typeof staticHobby | null>(
-    null,
-  );
+  const [remoteHobby, setRemoteHobby] = useState<typeof staticHobby | null>(null);
   const [isLoadingRemote, setIsLoadingRemote] = useState(isRemote);
   const [remoteLoadError, setRemoteLoadError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPlanting, setIsPlanting] = useState(false);
+  const [fromUserProfile, setFromUserProfile] = useState<{
+    age_range: string | null;
+    gender_label: string | null;
+    is_profile_public: boolean;
+  } | null>(null);
+  const [otherSukis, setOtherSukis] = useState<string[]>([]);
   const { hideEncounter } = useEncounterPreferences();
   const hobby = (isRemote ? remoteHobby : staticHobby) ?? staticHobby;
   const canPlantFromBookmark =
     from === "bookmark" && user?.id && typeof cardId === "string";
+
+  useEffect(() => {
+    if (typeof fromUserId !== "string") return;
+    void Promise.all([
+      getUserPublicProfile(fromUserId),
+      fetchOtherSukisByUserIds([fromUserId]),
+    ]).then(([profile, sukiMap]) => {
+      setFromUserProfile(profile);
+      setOtherSukis(sukiMap[fromUserId] ?? []);
+    });
+  }, [fromUserId]);
 
   useEffect(() => {
     if (!isRemote || typeof cardId !== "string") {
@@ -232,7 +250,36 @@ export default function HobbyDetailScreen() {
         </View>
       </View>
 
-      <View style={styles.placeCard}>
+      {typeof fromUserId === "string" &&
+        fromUserProfile &&
+        (fromUserProfile.is_profile_public ||
+          otherSukis.length > 0) ? (
+        <View style={styles.fromUserCard}>
+          <Kicker>この人について</Kicker>
+          {fromUserProfile.is_profile_public &&
+            (fromUserProfile.age_range ?? fromUserProfile.gender_label) ? (
+            <Text style={styles.fromUserAttr}>
+              {[fromUserProfile.age_range, fromUserProfile.gender_label]
+                .filter(Boolean)
+                .join(" · ")}
+            </Text>
+          ) : <Text style={styles.placeInfo}>プロフィール非公開</Text>}
+          {otherSukis.length > 0 ? (
+            <View style={styles.otherSukiSection}>
+              <Text style={styles.otherSukiLabel}>この人の他のsuki</Text>
+              <View style={styles.fromUserTagRow}>
+                {otherSukis.slice(0, 4).map((title) => (
+                  <View key={title} style={styles.fromUserTag}>
+                    <Text style={styles.fromUserTagText}>{title}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      {/* <View style={styles.placeCard}>
         <Kicker>近くで体験できる場所</Kicker>
         <View style={styles.placeRow}>
           <View style={styles.placePin}>
@@ -243,7 +290,7 @@ export default function HobbyDetailScreen() {
             <Text style={styles.placeDistance}>徒歩12分</Text>
           </View>
         </View>
-      </View>
+      </View> */}
 
 
 
@@ -390,5 +437,46 @@ const styles = StyleSheet.create({
   },
   actionWide: {
     flex: 1.25,
+  },
+  fromUserCard: {
+    backgroundColor: IbukiColors.surface,
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    gap: IbukiSpacing.sm,
+    marginBottom: IbukiSpacing.lg,
+    padding: IbukiSpacing.md,
+  },
+  fromUserAttr: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts?.sansBold,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  otherSukiSection: {
+    gap: IbukiSpacing.xs,
+  },
+  otherSukiLabel: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts?.sans,
+    fontSize: 11,
+  },
+  fromUserTagRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: IbukiSpacing.xs,
+  },
+  fromUserTag: {
+    backgroundColor: IbukiColors.surfaceMuted,
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.pill,
+    borderWidth: 1,
+    paddingHorizontal: IbukiSpacing.sm,
+    paddingVertical: 4,
+  },
+  fromUserTagText: {
+    color: IbukiColors.inkSoft,
+    fontFamily: IbukiFonts?.sans,
+    fontSize: 12,
   },
 });

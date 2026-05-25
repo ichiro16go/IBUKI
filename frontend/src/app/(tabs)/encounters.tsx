@@ -106,6 +106,7 @@ export default function EncountersScreen() {
         cardId: encounter.likeCardId,
         encounterId: encounter.encounterId,
         hideKey: encounter.id,
+        fromUserId: encounter.fromUserId,
       },
     } as never);
   }

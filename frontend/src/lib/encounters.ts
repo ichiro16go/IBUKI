@@ -274,6 +274,25 @@ export async function fetchSavedCards(
     .filter((item): item is SavedFeedItem => item !== null);
 }
 
+/** encounter_id → from_user_id のマップを返す（bookmark画面でプロフィール表示に使用） */
+export async function fetchFromUserIdsByEncounterIds(
+  encounterIds: string[],
+  toUserId: string,
+): Promise<Record<string, string>> {
+  if (encounterIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from("encounter_cards")
+    .select("encounter_id, from_user_id")
+    .in("encounter_id", encounterIds)
+    .eq("to_user_id", toUserId);
+  if (error) return {};
+  const result: Record<string, string> = {};
+  for (const row of data) {
+    result[row.encounter_id] = row.from_user_id;
+  }
+  return result;
+}
+
 /** 複数ユーザーの like_cards をまとめて取得し userId → titles[] に変換 */
 export async function fetchOtherSukisByUserIds(
   userIds: string[],

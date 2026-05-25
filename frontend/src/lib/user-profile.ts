@@ -27,6 +27,18 @@ export async function getMyProfile(): Promise<UserProfile | null> {
   return data;
 }
 
+export async function getUserPublicProfile(
+  userId: string,
+): Promise<Pick<UserProfile, "age_range" | "gender_label" | "is_profile_public"> | null> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("age_range, gender_label, is_profile_public")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
 export async function updateMyProfile(input: {
   age_range?: string | null;
   gender_label?: string | null;
