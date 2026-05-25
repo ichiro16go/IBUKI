@@ -20,7 +20,11 @@ import {
 } from "@/constants/ibuki-theme";
 import { useAuth } from "@/contexts/auth";
 import { getHobbyById } from "@/data/ibuki";
-import { fetchLikeCardById, mapLikeCardToHobby, saveEncounterBookmark } from "@/lib/encounters";
+import {
+  fetchLikeCardById,
+  mapLikeCardToHobby,
+  saveEncounterBookmark,
+} from "@/lib/encounters";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function HobbyDetailScreen() {
@@ -34,7 +38,9 @@ export default function HobbyDetailScreen() {
   const { user } = useAuth();
   const isRemote = source === "remote" && typeof cardId === "string";
   const staticHobby = useMemo(() => getHobbyById(id), [id]);
-  const [remoteHobby, setRemoteHobby] = useState<typeof staticHobby | null>(null);
+  const [remoteHobby, setRemoteHobby] = useState<typeof staticHobby | null>(
+    null,
+  );
   const [isLoadingRemote, setIsLoadingRemote] = useState(isRemote);
   const [remoteLoadError, setRemoteLoadError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -87,7 +93,12 @@ export default function HobbyDetailScreen() {
   }
 
   async function handleSave() {
-    if (isRemote && user?.id && typeof cardId === "string" && typeof encounterId === "string") {
+    if (
+      isRemote &&
+      user?.id &&
+      typeof cardId === "string" &&
+      typeof encounterId === "string"
+    ) {
       try {
         await saveEncounterBookmark({
           userId: user.id,
@@ -95,11 +106,16 @@ export default function HobbyDetailScreen() {
           likeCardId: cardId,
         });
         setSaved(true);
-        Alert.alert("Bookmarkしました", `${hobby.nameJa}をbookmarkに追加しました`);
+        Alert.alert(
+          "Bookmarkしました",
+          `${hobby.nameJa}をbookmarkに追加しました`,
+        );
       } catch (saveError) {
         Alert.alert(
           "保存できませんでした",
-          saveError instanceof Error ? saveError.message : "bookmarkに失敗しました",
+          saveError instanceof Error
+            ? saveError.message
+            : "bookmarkに失敗しました",
         );
       }
       return;
@@ -107,7 +123,10 @@ export default function HobbyDetailScreen() {
 
     setSaved((current) => !current);
     if (!saved) {
-      Alert.alert("Bookmarkしました", `${hobby.nameJa}をbookmarkに追加しました`);
+      Alert.alert(
+        "Bookmarkしました",
+        `${hobby.nameJa}をbookmarkに追加しました`,
+      );
     }
   }
 

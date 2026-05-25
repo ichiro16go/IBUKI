@@ -1,7 +1,13 @@
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import {
   Chip,
@@ -83,7 +89,9 @@ export default function BookmarkScreen() {
         </View>
       ) : savedCards.length === 0 ? (
         <View style={styles.stateBlock}>
-          <Text style={styles.stateText}>まだbookmarkされたカードがありません。</Text>
+          <Text style={styles.stateText}>
+            まだbookmarkされたカードがありません。
+          </Text>
         </View>
       ) : (
         <View style={styles.grid}>

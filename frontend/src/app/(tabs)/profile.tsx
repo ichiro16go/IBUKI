@@ -30,7 +30,11 @@ import {
   type RecommendedHobby,
 } from "@/hooks/use-hobby-recommendations";
 import { useAuth } from "@/contexts/auth";
-import { createLikeCard, getMyLikeCards, type LikeCard } from "@/lib/like-cards";
+import {
+  createLikeCard,
+  getMyLikeCards,
+  type LikeCard,
+} from "@/lib/like-cards";
 
 const MAX_SHARED_HOBBIES = 5;
 
@@ -165,7 +169,9 @@ export default function ProfileScreen() {
       <HobbyRecommendationModal
         visible={modalVisible}
         status={state.status}
-        recommendations={state.status === "success" ? state.recommendations : []}
+        recommendations={
+          state.status === "success" ? state.recommendations : []
+        }
         errorMessage={state.status === "error" ? state.message : undefined}
         onClose={closeRecommendations}
         onAdd={addHobbyFromRecommendation}

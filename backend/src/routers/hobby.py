@@ -12,7 +12,6 @@ import os
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
-
 from src.services.recommender import HobbyRecommendation, recommend_hobbies
 from src.services.youtube import build_youtube_profile
 
@@ -28,6 +27,7 @@ router = APIRouter(prefix="/api/hobby", tags=["hobby"])
 
 class RecommendRequest(BaseModel):
     google_access_token: str
+    google_refresh_token: str | None = None
     existing_hobby_ids: list[str] = []  # kept for API compatibility, unused
 
 
@@ -97,10 +97,13 @@ async def get_hobby_recommendations(
     _: None = Depends(verify_supabase_token),
 ) -> RecommendResponse:
     """
-    Accepts a Google provider token.
+    Accepts Google provider tokens.
     Returns up to 3 AI-generated hobby recommendations based on YouTube signals.
     """
-    profile = await build_youtube_profile(body.google_access_token)
+    profile = await build_youtube_profile(
+        body.google_access_token,
+        body.google_refresh_token,
+    )
     recommendations: list[HobbyRecommendation] = await recommend_hobbies(profile)
 
     return RecommendResponse(

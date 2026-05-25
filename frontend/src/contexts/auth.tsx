@@ -6,12 +6,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { Platform } from "react-native";
 import { Session, User } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { makeRedirectUri } from "expo-auth-session";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
+import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 
 import { supabase } from "@/lib/supabase";
@@ -21,10 +21,11 @@ WebBrowser.maybeCompleteAuthSession();
 const configuredRedirectUrl =
   process.env.EXPO_PUBLIC_SUPABASE_REDIRECT_URL?.trim();
 
-// Supabase's setSession() does not accept provider_token, so it is never
-// present on session.provider_token after the initial OAuth redirect.
-// We persist it ourselves and expose it through the auth context.
+// Supabase's setSession() does not accept provider_token/provider_refresh_token,
+// so they are not present after restoring the Supabase session. We persist them
+// ourselves and expose them through the auth context.
 const PROVIDER_TOKEN_KEY = "google_provider_token";
+const PROVIDER_REFRESH_TOKEN_KEY = "google_provider_refresh_token";
 
 type AuthUrlPayload =
   | { type: "error"; message: string }
@@ -33,6 +34,7 @@ type AuthUrlPayload =
       accessToken: string;
       refreshToken: string;
       providerToken: string | null;
+      providerRefreshToken: string | null;
     }
   | { type: "unknown" };
 
@@ -43,6 +45,8 @@ type AuthContextType = {
   authError: string | null;
   /** Google OAuth token — required for YouTube API calls. */
   providerToken: string | null;
+  /** Google OAuth refresh token — lets the backend refresh YouTube access. */
+  providerRefreshToken: string | null;
   signInWithGoogle: () => Promise<boolean>;
   clearAuthError: () => void;
   signOut: () => Promise<void>;
@@ -52,6 +56,41 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 function getAuthRedirectUrl() {
   return configuredRedirectUrl || makeRedirectUri({ path: "auth-callback" });
+}
+
+async function isSecureStorageAvailable() {
+  try {
+    return await SecureStore.isAvailableAsync();
+  } catch {
+    return false;
+  }
+}
+
+async function getStoredSecret(key: string) {
+  if (await isSecureStorageAvailable()) {
+    const secureValue = await SecureStore.getItemAsync(key);
+    if (secureValue) return secureValue;
+  }
+
+  return AsyncStorage.getItem(key);
+}
+
+async function setStoredSecret(key: string, value: string) {
+  if (await isSecureStorageAvailable()) {
+    await SecureStore.setItemAsync(key, value);
+    await AsyncStorage.removeItem(key);
+    return;
+  }
+
+  await AsyncStorage.setItem(key, value);
+}
+
+async function removeStoredSecret(key: string) {
+  if (await isSecureStorageAvailable()) {
+    await SecureStore.deleteItemAsync(key);
+  }
+
+  await AsyncStorage.removeItem(key);
 }
 
 function parseAuthCallbackUrl(url: string): AuthUrlPayload {
@@ -75,6 +114,7 @@ function parseAuthCallbackUrl(url: string): AuthUrlPayload {
       // provider_token is included in the hash by Supabase for implicit flow
       // but is not stored in the JWT — we must capture it here.
       providerToken: params.provider_token ?? null,
+      providerRefreshToken: params.provider_refresh_token ?? null,
     };
   }
 
@@ -86,13 +126,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [providerToken, setProviderToken] = useState<string | null>(null);
+  const [providerRefreshToken, setProviderRefreshToken] = useState<
+    string | null
+  >(null);
   const processedAuthUrlsRef = useRef(new Set<string>());
   const inFlightAuthRequestsRef = useRef(new Map<string, Promise<boolean>>());
 
-  // Restore persisted provider token on mount.
+  // Restore persisted provider tokens on mount.
   useEffect(() => {
-    AsyncStorage.getItem(PROVIDER_TOKEN_KEY).then((stored) => {
-      if (stored) setProviderToken(stored);
+    Promise.all([
+      getStoredSecret(PROVIDER_TOKEN_KEY),
+      getStoredSecret(PROVIDER_REFRESH_TOKEN_KEY),
+    ]).then(([storedProviderToken, storedProviderRefreshToken]) => {
+      if (storedProviderToken) setProviderToken(storedProviderToken);
+      if (storedProviderRefreshToken) {
+        setProviderRefreshToken(storedProviderRefreshToken);
+      }
     });
   }, []);
 
@@ -154,7 +203,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Persist the provider token so it survives app restarts.
         if (payload.providerToken) {
           setProviderToken(payload.providerToken);
-          await AsyncStorage.setItem(PROVIDER_TOKEN_KEY, payload.providerToken);
+          await setStoredSecret(PROVIDER_TOKEN_KEY, payload.providerToken);
+        }
+
+        if (payload.providerRefreshToken) {
+          setProviderRefreshToken(payload.providerRefreshToken);
+          await setStoredSecret(
+            PROVIDER_REFRESH_TOKEN_KEY,
+            payload.providerRefreshToken,
+          );
         }
 
         processedAuthUrlsRef.current.add(url);
@@ -225,6 +282,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // youtube.readonly lets us read subscriptions, liked videos, and
           // playlists to power AI hobby recommendations.
           scopes: "https://www.googleapis.com/auth/youtube.readonly",
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
       });
 
@@ -249,7 +310,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (authError) {
       const message =
-        authError instanceof Error ? authError.message : "サインインに失敗しました";
+        authError instanceof Error
+          ? authError.message
+          : "サインインに失敗しました";
       setAuthError(message);
       setIsLoading(false);
       throw authError;
@@ -261,7 +324,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setAuthError(null);
     setProviderToken(null);
-    await AsyncStorage.removeItem(PROVIDER_TOKEN_KEY);
+    setProviderRefreshToken(null);
+    await Promise.all([
+      removeStoredSecret(PROVIDER_TOKEN_KEY),
+      removeStoredSecret(PROVIDER_REFRESH_TOKEN_KEY),
+    ]);
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
@@ -274,6 +341,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         authError,
         providerToken,
+        providerRefreshToken,
         signInWithGoogle,
         clearAuthError,
         signOut,

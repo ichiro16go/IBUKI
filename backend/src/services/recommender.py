@@ -23,7 +23,11 @@ PROMPT_VIDEO_LIMIT = 30
 PROMPT_PLAYLIST_LIMIT = 20
 
 FALLBACK_HOBBIES: list[dict] = [
-    {"name_ja": "フィルムカメラ", "name_en": "Film Camera", "tags": ["写真", "散歩", "レトロ"]},
+    {
+        "name_ja": "フィルムカメラ",
+        "name_en": "Film Camera",
+        "tags": ["写真", "散歩", "レトロ"],
+    },
     {"name_ja": "陶芸", "name_en": "Pottery", "tags": ["手仕事", "集中", "土"]},
     {"name_ja": "ジャズ喫茶", "name_en": "Jazz Kissa", "tags": ["音楽", "街歩き"]},
 ]

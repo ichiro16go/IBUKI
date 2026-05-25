@@ -128,9 +128,9 @@ export function mapLikeCardToHobby(card: LikeCardRow): Hobby {
     lastSeen: "今",
     savedAt: "今日",
     photoTone: pickPhotoTone(card.id),
-    image: (
-      card.photo_url ? { uri: card.photo_url } : undefined
-    ) as ImageSourcePropType,
+    image: (card.photo_url
+      ? { uri: card.photo_url }
+      : undefined) as ImageSourcePropType,
     beginnerNote: note,
     intro: note,
     howToStart: [
@@ -141,7 +141,9 @@ export function mapLikeCardToHobby(card: LikeCardRow): Hobby {
   };
 }
 
-export async function fetchEncounterFeed(userId: string): Promise<EncounterFeedItem[]> {
+export async function fetchEncounterFeed(
+  userId: string,
+): Promise<EncounterFeedItem[]> {
   const { data, error } = await supabase
     .from("encounter_cards")
     .select(
@@ -194,7 +196,9 @@ export async function fetchEncounterFeed(userId: string): Promise<EncounterFeedI
     .filter((item): item is EncounterFeedItem => item !== null);
 }
 
-export async function fetchSavedCards(userId: string): Promise<SavedFeedItem[]> {
+export async function fetchSavedCards(
+  userId: string,
+): Promise<SavedFeedItem[]> {
   const { data, error } = await supabase
     .from("saved_cards")
     .select(

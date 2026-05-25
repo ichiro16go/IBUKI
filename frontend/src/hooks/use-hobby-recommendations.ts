@@ -26,7 +26,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000";
 const IDLE_STATE: RecommendationState = { status: "idle" };
 
 export function useHobbyRecommendations(): UseHobbyRecommendationsResult {
-  const { session, providerToken } = useAuth();
+  const { session, providerToken, providerRefreshToken } = useAuth();
   const [state, setState] = useState<RecommendationState>(IDLE_STATE);
 
   const recommend = useCallback(async () => {
@@ -59,6 +59,7 @@ export function useHobbyRecommendations(): UseHobbyRecommendationsResult {
         },
         body: JSON.stringify({
           google_access_token: providerToken,
+          google_refresh_token: providerRefreshToken,
         }),
       });
 
@@ -72,12 +73,12 @@ export function useHobbyRecommendations(): UseHobbyRecommendationsResult {
       }
 
       const data = (await response.json()) as {
-        recommendations: Array<{
+        recommendations: {
           name_ja: string;
           name_en: string;
           tags: string[];
           reason: string;
-        }>;
+        }[];
       };
 
       const recommendations: RecommendedHobby[] = data.recommendations.map(
@@ -95,7 +96,7 @@ export function useHobbyRecommendations(): UseHobbyRecommendationsResult {
         err instanceof Error ? err.message : "おすすめの取得に失敗しました。";
       setState({ status: "error", message });
     }
-  }, [session, providerToken]);
+  }, [session, providerToken, providerRefreshToken]);
 
   const reset = useCallback(() => setState(IDLE_STATE), []);
 

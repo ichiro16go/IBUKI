@@ -1,4 +1,12 @@
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import {
   IbukiColors,
@@ -59,10 +67,7 @@ export function HobbyRecommendationModal({
           <ErrorBody message={errorMessage ?? ""} onRetry={onRetry} />
         )}
         {status === "success" && (
-          <SuccessBody
-            recommendations={recommendations}
-            onAdd={onAdd}
-          />
+          <SuccessBody recommendations={recommendations} onAdd={onAdd} />
         )}
       </View>
     </Modal>
@@ -126,7 +131,8 @@ function SuccessBody({
     return (
       <View style={styles.bodyCenter}>
         <Text style={styles.emptyText}>
-          おすすめが見つかりませんでした。{"\n"}しばらくしてから再度お試しください。
+          おすすめが見つかりませんでした。{"\n"}
+          しばらくしてから再度お試しください。
         </Text>
       </View>
     );

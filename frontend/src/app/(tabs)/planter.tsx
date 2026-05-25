@@ -8,11 +8,7 @@ import {
   PhotoBlock,
 } from "@/components/ibuki-ui";
 import { IbukiColors, IbukiSpacing } from "@/constants/ibuki-theme";
-import {
-  planterItems,
-  getHobbyById,
-  getGrowthStatus,
-} from "@/data/ibuki";
+import { planterItems, getHobbyById, getGrowthStatus } from "@/data/ibuki";
 
 export default function PlanterScreen() {
   function openPlanterDetail(sukiId: string) {
