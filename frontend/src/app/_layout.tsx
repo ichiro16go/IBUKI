@@ -50,6 +50,7 @@ function RootNavigator() {
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="hobby/[id]" />
+      <Stack.Screen name="suki/[id]" />
       <Stack.Screen name="planter/[id]" />
       <Stack.Screen name="sign-in" />
       <Stack.Screen name="auth-callback" />
