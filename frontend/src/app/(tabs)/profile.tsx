@@ -41,7 +41,7 @@ import { hobbies, profileSummary, type Hobby } from "@/data/ibuki";
 const MAX_SHARED_HOBBIES = 5;
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [likeCards, setLikeCards] = useState<LikeCard[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -89,14 +89,34 @@ export default function ProfileScreen() {
     }
   }
 
+  function handleSignOutPress() {
+    Alert.alert("サインアウト", "サインアウトしますか？", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "サインアウト",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await signOut();
+            router.replace({ pathname: "/sign-in" } as never);
+          } catch {
+            Alert.alert("エラー", "サインアウトに失敗しました");
+          }
+        },
+      },
+    ]);
+  }
+
   return (
     <IbukiScreen withTabBar>
       <TopBar
         left={<Kicker>PROFILE</Kicker>}
         right={
-          <IconButton
-            icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
-          />
+            <IconButton
+              icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
+              onPress={handleSignOutPress}
+              label="設定"
+            />
         }
       />
 
