@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 
 import {
   Chip,
@@ -28,6 +29,10 @@ import {
   type EncounterFeedItem,
 } from "@/lib/encounters";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
+
+const cardSlideUpTransition = LinearTransition.duration(220).easing(
+  Easing.out(Easing.quad),
+);
 
 export default function EncountersScreen() {
   const [notificationVisible, setNotificationVisible] = useState(false);
@@ -151,26 +156,29 @@ export default function EncountersScreen() {
           </View>
         ) : (
           visibleEncounters.map((encounter) => (
-            <SwipeableEncounterCard
+            <Animated.View
               key={encounter.id}
-              onSwipeLeft={() => hideEncounter(encounter.id)}
-              onSwipeRight={() => {
-                void handleBookmark(encounter);
-              }}
+              layout={cardSlideUpTransition}
             >
-              <EncounterCard
-                hobby={encounter.hobby}
-                time={encounter.time}
-                context={encounter.context}
-                isNew={encounter.isNew}
-                onPress={() => openHobbyDetail(encounter)}
-              />
-            </SwipeableEncounterCard>
+              <SwipeableEncounterCard
+                onSwipeLeft={() => hideEncounter(encounter.id)}
+                onSwipeRight={() => {
+                  void handleBookmark(encounter);
+                }}
+              >
+                <EncounterCard
+                  hobby={encounter.hobby}
+                  time={encounter.time}
+                  context={encounter.context}
+                  isNew={encounter.isNew}
+                  onPress={() => openHobbyDetail(encounter)}
+                />
+              </SwipeableEncounterCard>
+            </Animated.View>
           ))
         )}
+        <Text style={styles.disclaimer}>人ではなく、sukiだけが届きます。</Text>
       </View>
-
-      <Text style={styles.disclaimer}>人ではなく、sukiだけが届きます。</Text>
 
       <NotificationModal
         visible={notificationVisible}
