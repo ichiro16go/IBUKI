@@ -245,7 +245,16 @@ export default function HobbyDetailScreen() {
         </View>
       </View>
 
-      <View style={styles.actions}>
+
+
+      {canPlantFromBookmark ? (
+        <PillButton
+          label={isPlanting ? "植えています..." : "Planterに植える"}
+          variant="accent"
+          onPress={isPlanting ? undefined : handlePlant}
+          style={styles.planterButton}
+        />
+      ) : (<View style={styles.actions}>
         <PillButton
           label="興味なし"
           variant="light"
@@ -258,16 +267,7 @@ export default function HobbyDetailScreen() {
           onPress={handleSave}
           style={styles.actionWide}
         />
-      </View>
-
-      {canPlantFromBookmark ? (
-        <PillButton
-          label={isPlanting ? "植えています..." : "Planterに植える"}
-          variant="accent"
-          onPress={isPlanting ? undefined : handlePlant}
-          style={styles.planterButton}
-        />
-      ) : null}
+      </View>)}
     </IbukiScreen>
   );
 }

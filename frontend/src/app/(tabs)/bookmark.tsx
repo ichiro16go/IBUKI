@@ -61,7 +61,7 @@ export default function BookmarkScreen() {
       <View style={styles.header}>
         <View>
           <Kicker>BOOKMARK · {savedCards.length} suki</Kicker>
-          <Heading size="medium">気になった{"\n"}suki</Heading>
+          <Heading size="medium">気になったsuki</Heading>
         </View>
       </View>
 
