@@ -131,7 +131,7 @@ make supabase-types
 ```bash
 # フロントエンド起動
 cd frontend
-npm run web
+npx expo start --tunnel
 ```
 
 ```bash
