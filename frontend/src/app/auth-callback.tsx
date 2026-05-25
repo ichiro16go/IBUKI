@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -20,7 +21,7 @@ import {
 export default function AuthCallbackScreen() {
   const router = useRouter();
   const { session, completeAuthSessionFromUrl } = useAuth();
-  const url = Linking.useURL();
+  const url = Linking.useLinkingURL();
   const params = useLocalSearchParams<{
     code?: string;
     error?: string;
@@ -64,6 +65,19 @@ export default function AuthCallbackScreen() {
 
   useEffect(() => {
     if (!callbackUrl || lastProcessedUrlRef.current === callbackUrl) {
+      return;
+    }
+
+    const { errorCode, params: callbackParams } = QueryParams.getQueryParams(callbackUrl);
+    const hasAuthPayload =
+      Boolean(errorCode) ||
+      Boolean(callbackParams.error) ||
+      Boolean(callbackParams.error_description) ||
+      Boolean(callbackParams.code) ||
+      Boolean(callbackParams.access_token) ||
+      Boolean(callbackParams.refresh_token);
+
+    if (!hasAuthPayload) {
       return;
     }
 

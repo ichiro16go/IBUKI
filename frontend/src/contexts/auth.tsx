@@ -7,7 +7,8 @@ import {
   useState,
 } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import * as Linking from "expo-linking";
+import { makeRedirectUri } from "expo-auth-session";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as WebBrowser from "expo-web-browser";
 
 import { supabase } from "@/lib/supabase";
@@ -34,31 +35,26 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 function getAuthRedirectUrl() {
-  return configuredRedirectUrl || Linking.createURL("/auth-callback");
+  return configuredRedirectUrl || makeRedirectUri({ path: "auth-callback" });
 }
 
 function parseAuthCallbackUrl(url: string): AuthUrlPayload {
-  const parsedUrl = new URL(url);
-  const queryParams = parsedUrl.searchParams;
-  const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ""));
+  const { errorCode, params } = QueryParams.getQueryParams(url);
 
   const errorMessage =
-    queryParams.get("error_description") ||
-    hashParams.get("error_description") ||
-    queryParams.get("error") ||
-    hashParams.get("error");
+    errorCode || params.error_description || params.error || null;
 
   if (errorMessage) {
     return { type: "error", message: errorMessage };
   }
 
-  const code = queryParams.get("code");
+  const code = params.code;
   if (code) {
     return { type: "pkce", code };
   }
 
-  const accessToken = hashParams.get("access_token");
-  const refreshToken = hashParams.get("refresh_token");
+  const accessToken = params.access_token;
+  const refreshToken = params.refresh_token;
 
   if (accessToken && refreshToken) {
     return { type: "implicit", accessToken, refreshToken };
