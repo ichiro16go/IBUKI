@@ -12,7 +12,12 @@ import {
   PillButton,
   TopBar,
 } from "@/components/ibuki-ui";
-import { IbukiColors, IbukiFonts, IbukiRadius, IbukiSpacing } from "@/constants/ibuki-theme";
+import {
+  IbukiColors,
+  IbukiFonts,
+  IbukiRadius,
+  IbukiSpacing,
+} from "@/constants/ibuki-theme";
 import { entrySteps, hobbies } from "@/data/ibuki";
 
 export default function EntryScreen() {
@@ -24,7 +29,15 @@ export default function EntryScreen() {
     <IbukiScreen withTabBar>
       <TopBar
         kicker="ENTRY · 入口"
-        right={<IconButton icon={{ ios: "bookmark", android: "bookmark_border", web: "bookmark" }} />}
+        right={
+          <IconButton
+            icon={{
+              ios: "bookmark",
+              android: "bookmark_border",
+              web: "bookmark",
+            }}
+          />
+        }
       />
 
       <View style={styles.heroCard}>
@@ -52,7 +65,9 @@ export default function EntryScreen() {
 
       <View style={styles.stepsHeader}>
         <Kicker>タップして進める</Kicker>
-        <Text style={styles.remainingText}>あと {Math.max(0, 4 - activeIndex - 1)} ステップで満開</Text>
+        <Text style={styles.remainingText}>
+          あと {Math.max(0, 4 - activeIndex - 1)} ステップで満開
+        </Text>
       </View>
       <View style={styles.steps}>
         {entrySteps.map((step) => (
@@ -66,10 +81,18 @@ export default function EntryScreen() {
       </View>
 
       <View style={styles.actions}>
-        <PillButton label="体験を探す" variant="dark" style={styles.actionButton} />
+        <PillButton
+          label="体験を探す"
+          variant="dark"
+          style={styles.actionButton}
+        />
         <PillButton
           label="初心者ガイドを読む"
-          icon={{ ios: "arrow.up.right", android: "open_in_new", web: "arrow.up.right" }}
+          icon={{
+            ios: "arrow.up.right",
+            android: "open_in_new",
+            web: "arrow.up.right",
+          }}
           style={styles.actionButtonWide}
         />
       </View>

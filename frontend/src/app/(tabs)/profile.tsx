@@ -8,17 +8,28 @@ import {
   Kicker,
   TopBar,
 } from "@/components/ibuki-ui";
-import { IbukiColors, IbukiFonts, IbukiRadius, IbukiSpacing } from "@/constants/ibuki-theme";
+import {
+  IbukiColors,
+  IbukiFonts,
+  IbukiRadius,
+  IbukiSpacing,
+} from "@/constants/ibuki-theme";
 import { hobbies, profileSummary } from "@/data/ibuki";
 
 export default function ProfileScreen() {
-  const sharedHobbies = hobbies.filter((hobby) => ["sauna", "bookstores", "jazz-kissa"].includes(hobby.id));
+  const sharedHobbies = hobbies.filter((hobby) =>
+    ["sauna", "bookstores", "jazz-kissa"].includes(hobby.id),
+  );
 
   return (
     <IbukiScreen withTabBar>
       <TopBar
         left={<Kicker>PROFILE</Kicker>}
-        right={<IconButton icon={{ ios: "gearshape", android: "settings", web: "gearshape" }} />}
+        right={
+          <IconButton
+            icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
+          />
+        }
       />
 
       <View style={styles.identity}>
@@ -29,14 +40,22 @@ export default function ProfileScreen() {
         <View style={styles.identityCopy}>
           <Kicker>{profileSummary.handle} · 匿名表示</Kicker>
           <Heading size="medium">まだ名前のない{"\n"}誰か</Heading>
-          <Text style={styles.metaText}>{profileSummary.location} · since {profileSummary.since}</Text>
+          <Text style={styles.metaText}>
+            {profileSummary.location} · since {profileSummary.since}
+          </Text>
         </View>
       </View>
 
       <View style={styles.stats}>
-        <ProfileStat value={profileSummary.savedCount.toString()} label="保存した趣味" />
+        <ProfileStat
+          value={profileSummary.savedCount.toString()}
+          label="保存した趣味"
+        />
         <ProfileStat value={`0${profileSummary.sharingCount}`} label="共有中" />
-        <ProfileStat value={`0${profileSummary.mutualCount}`} label="相互解放" />
+        <ProfileStat
+          value={`0${profileSummary.mutualCount}`}
+          label="相互解放"
+        />
       </View>
 
       <View style={styles.segmentRow}>

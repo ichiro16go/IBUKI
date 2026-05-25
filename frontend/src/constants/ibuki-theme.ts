@@ -61,7 +61,8 @@ export const IbukiFonts = {
 export const IbukiShadow = {
   card: Platform.select({
     web: {
-      boxShadow: "0 1px 2px rgba(20,19,15,0.05), 0 8px 24px rgba(20,19,15,0.07)",
+      boxShadow:
+        "0 1px 2px rgba(20,19,15,0.05), 0 8px 24px rgba(20,19,15,0.07)",
     },
     default: {
       shadowColor: "#1A1C12",
