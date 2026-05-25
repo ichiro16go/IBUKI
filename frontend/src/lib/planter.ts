@@ -43,7 +43,7 @@ export type PlanterDetail = {
   logs: PlanterActionLogItem[];
 };
 
-const ACTIONS_PER_LEVEL = 4;
+const ACTIONS_PER_LEVEL = 3;
 
 function normalizeLikeCard(relation: LikeCardRelation): Tables<"like_cards"> | null {
   if (!relation) return null;

@@ -337,18 +337,27 @@ export type Database = {
       };
       users: {
         Row: {
+          age_range: string | null;
           created_at: string | null;
+          gender_label: string | null;
           id: string;
+          is_profile_public: boolean;
           username: string;
         };
         Insert: {
+          age_range?: string | null;
           created_at?: string | null;
+          gender_label?: string | null;
           id: string;
+          is_profile_public?: boolean;
           username: string;
         };
         Update: {
+          age_range?: string | null;
           created_at?: string | null;
+          gender_label?: string | null;
           id?: string;
+          is_profile_public?: boolean;
           username?: string;
         };
         Relationships: [];

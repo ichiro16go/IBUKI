@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
+import { Dimensions } from "react-native";
 import {
   ActivityIndicator,
   Modal,
@@ -203,12 +204,24 @@ export default function PlanterDetailScreen() {
       />
 
       <View style={styles.visualSection}>
-        <PlantVisual
-          actionCount={item.actionCount}
-          stage={initialStage ?? (item.actionCount === 0 ? "seed" : "leafy")}
-          flowerVariant={Math.abs(hashCode(item.id)) % 3}
-          size={260}
-        />
+        {/* full-width plant visual: use device width and clip vertical overflow if needed */}
+        {(() => {
+          const screenWidth = Dimensions.get("window").width;
+          const displayWidth = screenWidth; // full width
+          const maxHeight = Math.min(displayWidth * 1.05, 380);
+
+          return (
+            <View style={{ width: displayWidth, height: maxHeight, overflow: "hidden" }}>
+              <PlantVisual
+                actionCount={item.actionCount}
+                stage={initialStage ?? (item.actionCount === 0 ? "seed" : "leafy")}
+                plantType={Math.abs(hashCode(item.id)) % 3}
+                size={displayWidth}
+                itemLevel={Math.max(0, (item.level ?? 1) - 1)}
+              />
+            </View>
+          );
+        })()}
 
         {item.isOwnSuki && item.actionCount === 0 ? (
           <PillButton

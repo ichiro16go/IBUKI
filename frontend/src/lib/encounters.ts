@@ -17,12 +17,20 @@ type EncounterRelation = {
   detection_method?: string | null;
 };
 
+type FromUserRow = {
+  age_range: string | null;
+  gender_label: string | null;
+  is_profile_public: boolean;
+};
+
 type EncounterCardRow = {
   id: string;
   encounter_id: string;
+  from_user_id: string;
   created_at: string | null;
   like_card: LikeCardRow | LikeCardRow[] | null;
   encounter: EncounterRelation | EncounterRelation[] | null;
+  from_user: FromUserRow | FromUserRow[] | null;
 };
 
 type SavedCardRow = {
@@ -32,10 +40,18 @@ type SavedCardRow = {
   like_card: LikeCardRow | LikeCardRow[] | null;
 };
 
+export type FromUserProfile = {
+  ageRange: string | null;
+  genderLabel: string | null;
+  isProfilePublic: boolean;
+};
+
 export type EncounterFeedItem = {
   id: string;
   encounterId: string;
   likeCardId: string;
+  fromUserId: string;
+  fromUserProfile: FromUserProfile | null;
   hobby: Hobby;
   time: string;
   context: string;
@@ -150,6 +166,7 @@ export async function fetchEncounterFeed(
       `
         id,
         encounter_id,
+        from_user_id,
         created_at,
         like_card:like_cards!encounter_cards_like_card_id_fkey (
           id,
@@ -162,6 +179,11 @@ export async function fetchEncounterFeed(
         encounter:encounters!encounter_cards_encounter_id_fkey (
           encountered_at,
           detection_method
+        ),
+        from_user:users!encounter_cards_from_user_id_fkey (
+          age_range,
+          gender_label,
+          is_profile_public
         )
       `,
     )
@@ -174,16 +196,28 @@ export async function fetchEncounterFeed(
     .map((row, index) => {
       const likeCard = normalizeLikeCard(row.like_card);
       const encounter = normalizeEncounterRelation(row.encounter);
+      const rawFromUser = Array.isArray(row.from_user)
+        ? (row.from_user[0] ?? null)
+        : row.from_user;
 
       if (!likeCard) return null;
 
       const hobby = mapLikeCardToHobby(likeCard);
       const encounteredAt = encounter?.encountered_at ?? row.created_at;
+      const fromUserProfile: FromUserProfile | null = rawFromUser
+        ? {
+            ageRange: rawFromUser.age_range,
+            genderLabel: rawFromUser.gender_label,
+            isProfilePublic: rawFromUser.is_profile_public,
+          }
+        : null;
 
       return {
         id: row.id,
         encounterId: row.encounter_id,
         likeCardId: likeCard.id,
+        fromUserId: row.from_user_id,
+        fromUserProfile,
         hobby: {
           ...hobby,
           lastSeen: formatRelativeTime(encounteredAt),
@@ -238,6 +272,24 @@ export async function fetchSavedCards(
       };
     })
     .filter((item): item is SavedFeedItem => item !== null);
+}
+
+/** 複数ユーザーの like_cards をまとめて取得し userId → titles[] に変換 */
+export async function fetchOtherSukisByUserIds(
+  userIds: string[],
+): Promise<Record<string, string[]>> {
+  if (userIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from("like_cards")
+    .select("user_id, title")
+    .in("user_id", userIds);
+  if (error) throw error;
+  const result: Record<string, string[]> = {};
+  for (const row of data) {
+    if (!result[row.user_id]) result[row.user_id] = [];
+    result[row.user_id].push(row.title);
+  }
+  return result;
 }
 
 export async function fetchLikeCardById(cardId: string) {

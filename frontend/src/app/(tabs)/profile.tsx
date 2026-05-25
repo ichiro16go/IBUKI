@@ -18,6 +18,7 @@ import {
   IbukiScreen,
   IconButton,
   Kicker,
+  PillButton,
   TopBar,
 } from "@/components/ibuki-ui";
 import {
@@ -32,7 +33,7 @@ import {
   type RecommendedHobby,
 } from "@/hooks/use-hobby-recommendations";
 import { useAuth } from "@/contexts/auth";
-import { createLikeCard, getMyLikeCards, type LikeCard } from "@/lib/like-cards";
+import { createLikeCard, getMyLikeCards, getPlantedCountByCardIds, type LikeCard } from "@/lib/like-cards";
 import { fetchSavedCards } from "@/lib/encounters";
 
 
@@ -42,6 +43,7 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const [likeCards, setLikeCards] = useState<LikeCard[]>([]);
   const [savedCount, setSavedCount] = useState(0);
+  const [plantedCounts, setPlantedCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const { state, recommend, reset } = useHobbyRecommendations();
@@ -53,9 +55,11 @@ export default function ProfileScreen() {
       if (!user) return;
       setLoading(true);
       Promise.all([getMyLikeCards(), fetchSavedCards(user.id)])
-        .then(([cards, saved]) => {
+        .then(async ([cards, saved]) => {
           setLikeCards(cards);
           setSavedCount(saved.length);
+          const counts = await getPlantedCountByCardIds(cards.map((c) => c.id));
+          setPlantedCounts(counts);
         })
         .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
         .finally(() => setLoading(false));
@@ -143,6 +147,15 @@ export default function ProfileScreen() {
         />
       </View>
 
+      <PillButton
+        label="プロフィールを編集"
+        onPress={() =>
+          router.push({ pathname: "/profile-edit" } as never)
+        }
+        style={styles.editProfileButton}
+        variant="light"
+      />
+
       <View style={styles.segmentRow}>
         <Text style={styles.segmentActive}>自分のsukiカード</Text>
       </View>
@@ -161,6 +174,7 @@ export default function ProfileScreen() {
             <View key={card.id} style={styles.gridItem}>
               <LikeCardTile
                 card={card}
+                plantedCount={plantedCounts[card.id] ?? 0}
                 onPress={() =>
                   router.push({
                     pathname: "/suki/[id]",
@@ -207,9 +221,11 @@ export default function ProfileScreen() {
 
 function LikeCardTile({
   card,
+  plantedCount,
   onPress,
 }: {
   card: LikeCard;
+  plantedCount: number;
   onPress: () => void;
 }) {
   return (
@@ -232,6 +248,9 @@ function LikeCardTile({
           <Text style={styles.tileDetail} numberOfLines={2}>
             {card.detail}
           </Text>
+        ) : null}
+        {plantedCount > 0 ? (
+          <Text style={styles.plantedCount}>{plantedCount}人が植えています</Text>
         ) : null}
       </View>
     </Pressable>
@@ -388,6 +407,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
     lineHeight: 15,
+  },
+  plantedCount: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts?.sans,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  editProfileButton: {
+    marginBottom: IbukiSpacing.md,
+    width: "100%",
   },
   addCard: {
     alignItems: "center",
