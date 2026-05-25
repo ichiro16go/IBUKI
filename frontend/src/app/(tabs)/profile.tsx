@@ -31,10 +31,8 @@ import {
   type RecommendedHobby,
 } from "@/hooks/use-hobby-recommendations";
 import { useAuth } from "@/contexts/auth";
-
 import { createLikeCard, getMyLikeCards, type LikeCard } from "@/lib/like-cards";
 import { fetchSavedCards } from "@/lib/encounters";
-import { hobbies, profileSummary, type Hobby } from "@/data/ibuki";
 
 
 const MAX_SHARED_HOBBIES = 5;

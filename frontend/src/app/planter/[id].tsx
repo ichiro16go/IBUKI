@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -33,6 +33,14 @@ import {
   fetchPlanterDetail,
   type PlanterDetail,
 } from "@/lib/planter";
+import { useActionRecommendations } from "@/hooks/use-action-recommendations";
+
+type SelectedActionInfo = {
+  id: string;
+  title: string;
+  description: string;
+  actionType: string;
+};
 
 export default function PlanterDetailScreen() {
   const params = useLocalSearchParams() as { id?: string };
@@ -43,14 +51,11 @@ export default function PlanterDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+  const [selectedAction, setSelectedAction] = useState<SelectedActionInfo | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const selectedAction = useMemo(
-    () => sukiActions.find((action) => action.id === selectedActionId) ?? null,
-    [selectedActionId],
-  );
+  const { state: aiState, fetchRecommendations, reset: resetAi } = useActionRecommendations();
 
   const loadDetail = useCallback(async () => {
     if (!user?.id || !planterItemId) {
@@ -79,6 +84,24 @@ export default function PlanterDetailScreen() {
     void loadDetail();
   }, [loadDetail]);
 
+  function openActionModal() {
+    setShowActionModal(true);
+    if (detail) {
+      void fetchRecommendations(
+        detail.item.hobby.nameJa,
+        detail.item.hobby.nameEn,
+        detail.item.hobby.intro,
+      );
+    }
+  }
+
+  function closeActionModal() {
+    setShowActionModal(false);
+    setSelectedAction(null);
+    setNotes("");
+    resetAi();
+  }
+
   async function handleAddAction() {
     if (!detail || !selectedAction || !user?.id || isSaving) {
       return;
@@ -87,15 +110,13 @@ export default function PlanterDetailScreen() {
     try {
       setIsSaving(true);
       await createPlanterActionLog({
-        actionType: selectedAction.id,
+        actionType: selectedAction.actionType,
         notes,
         planterItemId: detail.item.id,
         title: selectedAction.title,
         userId: user.id,
       });
-      setShowActionModal(false);
-      setSelectedActionId(null);
-      setNotes("");
+      closeActionModal();
       await loadDetail();
     } catch (saveError) {
       setError(
@@ -155,7 +176,7 @@ export default function PlanterDetailScreen() {
 
         <PillButton
           label={isSaving ? "追加中..." : "アクションを追加"}
-          onPress={isSaving ? undefined : () => setShowActionModal(true)}
+          onPress={isSaving ? undefined : openActionModal}
           style={styles.fullWidthButton}
           variant="accent"
         />
@@ -197,13 +218,13 @@ export default function PlanterDetailScreen() {
       <Modal
         visible={showActionModal}
         animationType="slide"
-        onRequestClose={() => setShowActionModal(false)}
+        onRequestClose={closeActionModal}
       >
         <IbukiScreen>
           <TopBar
             left={<Kicker>アクション追加</Kicker>}
             right={
-              <Pressable onPress={() => setShowActionModal(false)}>
+              <Pressable onPress={closeActionModal}>
                 <Text style={styles.closeButton}>✕</Text>
               </Pressable>
             }
@@ -214,17 +235,24 @@ export default function PlanterDetailScreen() {
             {sukiActions.map((action) => (
               <Pressable
                 key={action.id}
-                onPress={() => setSelectedActionId(action.id)}
+                onPress={() =>
+                  setSelectedAction({
+                    id: action.id,
+                    title: action.title,
+                    description: action.description,
+                    actionType: action.id,
+                  })
+                }
                 style={[
                   styles.actionOption,
-                  selectedActionId === action.id && styles.actionOptionSelected,
+                  selectedAction?.id === action.id && styles.actionOptionSelected,
                 ]}
               >
                 <Text
                   style={[
                     styles.actionOptionTitle,
-                    selectedActionId === action.id &&
-                    styles.actionOptionTitleSelected,
+                    selectedAction?.id === action.id &&
+                      styles.actionOptionTitleSelected,
                   ]}
                 >
                   {action.title}
@@ -232,6 +260,53 @@ export default function PlanterDetailScreen() {
                 <Text style={styles.actionOptionDesc}>{action.description}</Text>
               </Pressable>
             ))}
+
+            {/* AI recommendations section */}
+            {aiState.status === "loading" ? (
+              <View style={styles.aiSection}>
+                <Kicker>AIのおすすめ ✦</Kicker>
+                <View style={styles.aiLoadingContainer}>
+                  <ActivityIndicator size="small" color={IbukiColors.mid} />
+                  <Text style={styles.aiLoadingText}>AIがおすすめを考え中...</Text>
+                </View>
+              </View>
+            ) : aiState.status === "success" && aiState.recommendations.length > 0 ? (
+              <View style={styles.aiSection}>
+                <Kicker>AIのおすすめ ✦</Kicker>
+                {aiState.recommendations.map((rec, index) => (
+                  <Pressable
+                    key={`ai-rec-${index}`}
+                    onPress={() =>
+                      setSelectedAction({
+                        id: `ai-rec-${index}`,
+                        title: rec.title,
+                        description: rec.description,
+                        actionType: rec.actionType,
+                      })
+                    }
+                    style={[
+                      styles.actionOption,
+                      styles.actionOptionAi,
+                      selectedAction?.id === `ai-rec-${index}` &&
+                        styles.actionOptionAiSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.actionOptionTitle,
+                        selectedAction?.id === `ai-rec-${index}` &&
+                          styles.actionOptionTitleAiSelected,
+                      ]}
+                    >
+                      {rec.title}
+                    </Text>
+                    {rec.description ? (
+                      <Text style={styles.actionOptionDesc}>{rec.description}</Text>
+                    ) : null}
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
           </View>
 
           {selectedAction ? (
@@ -252,7 +327,7 @@ export default function PlanterDetailScreen() {
           <View style={styles.modalActions}>
             <PillButton
               label="キャンセル"
-              onPress={() => setShowActionModal(false)}
+              onPress={closeActionModal}
               style={styles.fullWidthButton}
               variant="light"
             />
@@ -281,6 +356,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: IbukiSpacing.md,
     paddingVertical: IbukiSpacing.md,
   },
+  actionOptionAi: {
+    borderColor: IbukiColors.good,
+    backgroundColor: "rgba(165,182,141,0.08)",
+  },
+  actionOptionAiSelected: {
+    backgroundColor: "rgba(165,182,141,0.22)",
+    borderColor: IbukiColors.good,
+  },
   actionOptionDesc: {
     color: IbukiColors.mid,
     fontFamily: IbukiFonts.sans,
@@ -296,9 +379,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: IbukiSpacing.xs,
   },
+  actionOptionTitleAiSelected: {
+    color: IbukiColors.good,
+    fontFamily: IbukiFonts.sansBold,
+  },
   actionOptionTitleSelected: {
     color: IbukiColors.accentDeep,
     fontFamily: IbukiFonts.sansBold,
+  },
+  aiLoadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: IbukiSpacing.xs,
+    paddingVertical: IbukiSpacing.md,
+  },
+  aiLoadingText: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 12,
+  },
+  aiSection: {
+    borderTopColor: IbukiColors.line,
+    borderTopWidth: 1,
+    marginTop: IbukiSpacing.md,
+    paddingTop: IbukiSpacing.md,
   },
   closeButton: {
     color: IbukiColors.ink,

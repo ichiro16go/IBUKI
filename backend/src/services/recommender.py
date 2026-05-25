@@ -127,6 +127,115 @@ def _fallback_recommendations() -> list[HobbyRecommendation]:
     ]
 
 
+MAX_ACTION_RECOMMENDATIONS = 3
+
+
+@dataclass(frozen=True)
+class ActionRecommendation:
+    title: str
+    description: str
+    action_type: str = "ai-recommend"
+
+
+def _build_action_prompt(
+    hobby_title: str, hobby_category: str, hobby_detail: str
+) -> str:
+    return f"""あなたはユーザーの趣味活動を具体的にサポートするアシスタントです。
+
+趣味: {hobby_title}
+カテゴリ: {hobby_category or "未設定"}
+詳細: {hobby_detail or "未設定"}
+
+この趣味に関して、ユーザーが今日・今週から実際に試せる具体的なアクションを{MAX_ACTION_RECOMMENDATIONS}つ提案してください。
+
+ポイント:
+- 各アクションは動詞始まりで具体的に（例:「〇〇を調べて動画を2本見る」「〇〇の体験教室を1件検索する」）
+- 初心者でも取り組みやすいものを中心に
+- 趣味名を含めた具体的な行動を含める
+
+レスポンスは必ずJSON形式で返してください:
+{{
+  "recommendations": [
+    {{
+      "title": "具体的なアクション（50字以内）",
+      "description": "補足説明（30字以内）"
+    }}
+  ]
+}}"""
+
+
+def _parse_action_response(content: str) -> list[ActionRecommendation]:
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
+        logger.warning("OpenAI returned invalid JSON for actions: %s", content[:200])
+        return []
+
+    results: list[ActionRecommendation] = []
+    for item in data.get("recommendations", []):
+        title = item.get("title", "").strip()
+        description = item.get("description", "").strip()
+        if title:
+            results.append(ActionRecommendation(title=title, description=description))
+        if len(results) >= MAX_ACTION_RECOMMENDATIONS:
+            break
+
+    return results
+
+
+async def recommend_actions(
+    hobby_title: str,
+    hobby_category: str = "",
+    hobby_detail: str = "",
+) -> list[ActionRecommendation]:
+    """Return up to 3 AI-generated action recommendations for a specific hobby."""
+    fallback = [
+        ActionRecommendation(
+            title=f"{hobby_title}の動画を探して1本見る",
+            description="まず視覚的に体験してみよう",
+        ),
+        ActionRecommendation(
+            title=f"{hobby_title}の入門記事を読む",
+            description="ブログや記事で情報収集",
+        ),
+        ActionRecommendation(
+            title=f"{hobby_title}の体験教室を検索する",
+            description="近くで試せる場所を探す",
+        ),
+    ]
+
+    try:
+        client = _get_client()
+    except ValueError:
+        logger.warning("OpenAI client unavailable; using fallback actions")
+        return fallback
+
+    prompt = _build_action_prompt(hobby_title, hobby_category, hobby_detail)
+    logger.info("Sending action prompt to OpenAI:\n%s", prompt)
+
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0.7,
+            max_tokens=512,
+        )
+    except Exception:
+        logger.exception("OpenAI call failed for action recommendations")
+        return fallback
+
+    content = response.choices[0].message.content or "{}"
+    logger.info("OpenAI action response: %s", content)
+
+    recommendations = _parse_action_response(content)
+    if not recommendations:
+        logger.warning("No valid action recommendations parsed; using fallback")
+        return fallback
+
+    return recommendations
+
+
 async def recommend_hobbies(
     profile: YouTubeProfile,
 ) -> list[HobbyRecommendation]:
