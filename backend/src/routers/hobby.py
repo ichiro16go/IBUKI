@@ -3,7 +3,7 @@
 POST /api/hobby/recommend
   - Validates the caller's Supabase JWT via /auth/v1/user
   - Fetches YouTube signals using the Google provider token
-  - Returns up to 3 AI-generated hobby recommendations
+  - Returns up to 5 AI-inferred interests
 """
 
 import logging
@@ -151,7 +151,7 @@ async def get_hobby_recommendations(
 ) -> RecommendResponse:
     """
     Accepts Google provider tokens.
-    Returns up to 3 AI-generated hobby recommendations based on YouTube signals.
+    Returns up to 5 AI-inferred interests based on YouTube signals.
     """
     profile = await build_youtube_profile(
         body.google_access_token,

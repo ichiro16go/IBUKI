@@ -27,7 +27,6 @@ import {
   IbukiRadius,
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
-import { profileSummary } from "@/data/ibuki";
 import {
   useHobbyRecommendations,
   type RecommendedHobby,
