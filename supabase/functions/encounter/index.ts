@@ -5,6 +5,11 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 function haversineDistance(
   lat1: number, lng1: number,
   lat2: number, lng2: number
@@ -21,13 +26,17 @@ function haversineDistance(
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
     const { user_id, latitude, longitude } = await req.json();
 
     if (!user_id || !latitude || !longitude) {
       return new Response(
         JSON.stringify({ error: "user_id, latitude, longitude are required" }),
-        { status: 400 }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -45,7 +54,10 @@ Deno.serve(async (req) => {
       .gte("updated_at", fiveMinutesAgo);
 
     if (!nearbyUsers || nearbyUsers.length === 0) {
-      return new Response(JSON.stringify({ encounters: [] }), { status: 200 });
+      return new Response(
+        JSON.stringify({ encounters: [] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // 3. 50m以内のユーザーを絞り込む
@@ -55,7 +67,10 @@ Deno.serve(async (req) => {
     );
 
     if (closeUsers.length === 0) {
-      return new Response(JSON.stringify({ encounters: [] }), { status: 200 });
+      return new Response(
+        JSON.stringify({ encounters: [] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const newEncounters = [];
@@ -89,40 +104,52 @@ Deno.serve(async (req) => {
 
       if (!encounter) continue;
 
-      // 6. 相手のlike_cardsからランダム1枚取得
-      const { data: likeCards } = await supabase
+      // 6. user_aにuser_bのカードを渡す
+      const { data: likeCardsB } = await supabase
         .from("like_cards")
         .select("id")
         .eq("user_id", closeUser.user_id)
         .limit(100);
 
-      if (!likeCards || likeCards.length === 0) continue;
+      if (likeCardsB && likeCardsB.length > 0) {
+        const randomCardB = likeCardsB[Math.floor(Math.random() * likeCardsB.length)];
+        await supabase.from("encounter_cards").insert({
+          encounter_id: encounter.id,
+          from_user_id: closeUser.user_id,
+          to_user_id: user_id,
+          like_card_id: randomCardB.id,
+        });
+      }
 
-      const randomCard = likeCards[Math.floor(Math.random() * likeCards.length)];
+      // 7. user_bにuser_aのカードを渡す
+      const { data: likeCardsA } = await supabase
+        .from("like_cards")
+        .select("id")
+        .eq("user_id", user_id)
+        .limit(100);
 
-      console.log("likeCards:", likeCards); // 追加
-      console.log("closeUser:", closeUser); // 追加
-
-      // 7. encounter_cardsを生成
-      await supabase.from("encounter_cards").insert({
-        encounter_id: encounter.id,
-        from_user_id: closeUser.user_id,
-        to_user_id: user_id,
-        like_card_id: randomCard.id,
-      });
+      if (likeCardsA && likeCardsA.length > 0) {
+        const randomCardA = likeCardsA[Math.floor(Math.random() * likeCardsA.length)];
+        await supabase.from("encounter_cards").insert({
+          encounter_id: encounter.id,
+          from_user_id: user_id,
+          to_user_id: closeUser.user_id,
+          like_card_id: randomCardA.id,
+        });
+      }
 
       newEncounters.push(encounter);
     }
 
     return new Response(
       JSON.stringify({ encounters: newEncounters }),
-      { status: 200 }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (err) {
     return new Response(
       JSON.stringify({ error: (err as Error).message }),
-      { status: 500 }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
