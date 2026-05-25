@@ -177,11 +177,8 @@ export default function EncountersScreen() {
             </Animated.View>
           ))
         )}
-      </View>
-
-      <Animated.View layout={cardSlideUpTransition}>
         <Text style={styles.disclaimer}>人ではなく、sukiだけが届きます。</Text>
-      </Animated.View>
+      </View>
 
       <NotificationModal
         visible={notificationVisible}
