@@ -42,12 +42,20 @@ function AppSymbol({
   size: number;
   tintColor: string;
 }) {
-  if (Platform.OS === "web") {
-    const fallback =
-      symbolFallbacks[name.ios] ??
-      symbolFallbacks[name.web ?? ""] ??
-      symbolFallbacks[name.android ?? ""] ??
-      "•";
+  const symbolName =
+    Platform.OS === "android"
+      ? (name.android ?? name.ios)
+      : Platform.OS === "web"
+        ? (name.web ?? name.ios)
+        : name.ios;
+  const fallback =
+    symbolFallbacks[symbolName] ??
+    symbolFallbacks[name.ios] ??
+    symbolFallbacks[name.web ?? ""] ??
+    symbolFallbacks[name.android ?? ""] ??
+    "•";
+
+  if (Platform.OS !== "ios") {
     return (
       <Text
         style={{
@@ -62,7 +70,14 @@ function AppSymbol({
     );
   }
 
-  return <SymbolView name={name as never} size={size} tintColor={tintColor} />;
+  return (
+    <SymbolView
+      fallback={fallback}
+      name={symbolName as never}
+      size={size}
+      tintColor={tintColor}
+    />
+  );
 }
 
 const symbolFallbacks: Record<string, string> = {
@@ -75,6 +90,7 @@ const symbolFallbacks: Record<string, string> = {
   bookmark_border: "□",
   chevron: "‹",
   "chevron.left": "‹",
+  "dot.radiowaves.left.and.right": "◉",
   eco: "⌁",
   ellipsis: "…",
   favorite: "♥",
