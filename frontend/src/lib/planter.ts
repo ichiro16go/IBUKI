@@ -30,6 +30,7 @@ export type PlanterActionLogItem = {
 export type PlanterFeedItem = PlanterGrowth & {
   hobby: Hobby;
   id: string;
+  isOwnSuki: boolean;
   lastActionAt: string | null;
   lastActionLabel: string;
   likeCardId: string;
@@ -96,6 +97,7 @@ function buildPlanterFeedItem(
       savedAt: formatRelativeTime(planterItem.planted_at),
     },
     id: planterItem.id,
+    isOwnSuki: planterItem.source_encounter_id === null && planterItem.source_saved_card_id === null,
     lastActionAt: latestAction?.acted_at ?? null,
     lastActionLabel: latestAction ? formatRelativeTime(latestAction.acted_at) : "まだアクションなし",
     likeCardId: planterItem.like_card_id,
@@ -129,42 +131,46 @@ async function fetchActionLogsForPlanterItems(planterItemIds: string[]) {
 }
 
 export async function fetchPlanterFeed(userId: string): Promise<PlanterFeedItem[]> {
-  const { data, error } = await supabase
+  const { data: planterData, error: planterError } = await supabase
     .from("planter_items")
     .select(
-      `
-        id,
-        user_id,
-        like_card_id,
-        source_saved_card_id,
-        source_encounter_id,
-        planted_at,
-        created_at,
-        like_card:like_cards!planter_items_like_card_id_fkey (
-          id,
-          title,
-          category,
-          detail,
-          photo_url,
-          created_at,
-          updated_at,
-          user_id
-        )
-      `,
+      "id, user_id, like_card_id, source_saved_card_id, source_encounter_id, planted_at, created_at",
     )
-    .eq("user_id", userId)
-    .order("planted_at", { ascending: false });
+    .eq("user_id", userId);
 
-  if (error) throw error;
+  if (planterError) throw planterError;
 
-  const planterItems = (data ?? []) as PlanterItemWithCardRow[];
-  const logsByPlanterItem = await fetchActionLogsForPlanterItems(
-    planterItems.map((item) => item.id),
+  const rawItems = (planterData ?? []) as Tables<"planter_items">[];
+  if (rawItems.length === 0) return [];
+
+  const likeCardIds = [...new Set(rawItems.map((i) => i.like_card_id))];
+  const { data: cardData, error: cardError } = await supabase
+    .from("like_cards")
+    .select("id, title, category, detail, photo_url, created_at, updated_at, user_id")
+    .in("id", likeCardIds);
+
+  if (cardError) throw cardError;
+
+  const cardById = new Map(
+    (cardData ?? []).map((c) => [c.id, c as Tables<"like_cards">]),
   );
 
-  return planterItems
-    .map((item) => buildPlanterFeedItem(item, logsByPlanterItem.get(item.id) ?? []))
-    .filter((item): item is PlanterFeedItem => item !== null);
+  const logsByPlanterItem = await fetchActionLogsForPlanterItems(rawItems.map((i) => i.id));
+
+  return rawItems
+    .map((item) => {
+      const likeCard = cardById.get(item.like_card_id) ?? null;
+      return buildPlanterFeedItem(
+        { ...item, like_card: likeCard } as PlanterItemWithCardRow,
+        logsByPlanterItem.get(item.id) ?? [],
+      );
+    })
+    .filter((item): item is PlanterFeedItem => item !== null)
+    .sort((a, b) => {
+      const aTime = a.lastActionAt ?? a.plantedAt;
+      const bTime = b.lastActionAt ?? b.plantedAt;
+      return bTime.localeCompare(aTime);
+    });
 }
 
 export async function fetchPlanterDetail(

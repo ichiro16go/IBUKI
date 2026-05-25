@@ -110,11 +110,11 @@ export default function ProfileScreen() {
       <TopBar
         left={<Kicker>PROFILE</Kicker>}
         right={
-            <IconButton
-              icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
-              onPress={handleSignOutPress}
-              label="設定"
-            />
+          <IconButton
+            icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
+            onPress={handleSignOutPress}
+            label="設定"
+          />
         }
       />
 
@@ -145,15 +145,12 @@ export default function ProfileScreen() {
 
       <View style={styles.segmentRow}>
         <Text style={styles.segmentActive}>自分のsukiカード</Text>
-        <Text style={styles.segment}>保存</Text>
-        <Text style={styles.segment}>SNSリンク</Text>
       </View>
 
       <View style={styles.sectionHeader}>
         <Kicker>
           すきカード · {likeCards.length} / {MAX_SHARED_HOBBIES}
         </Kicker>
-        <Kicker>↓ ドラッグで並べ替え</Kicker>
       </View>
 
       {loading ? (

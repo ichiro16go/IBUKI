@@ -164,6 +164,7 @@ export default function PlanterDetailScreen() {
             label="戻る"
           />
         }
+        right={item.isOwnSuki ? <Kicker>MY SUKI</Kicker> : <Kicker>もらったsuki</Kicker>}
       />
 
       <View style={styles.photoSection}>
