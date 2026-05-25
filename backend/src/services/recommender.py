@@ -1,13 +1,14 @@
 """OpenAI-powered hobby recommendation service.
 
-Takes a YouTubeProfile and a list of already-owned hobby IDs,
-returns up to 3 HobbyRecommendation objects with a short Japanese reason.
+Takes a YouTubeProfile and returns up to 3 freshly generated HobbyRecommendation
+objects — OpenAI creates the hobby names and reasons from scratch based on the
+user's YouTube signals rather than selecting from a predefined catalog.
 """
 
 import json
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 
 from openai import AsyncOpenAI
@@ -16,29 +17,24 @@ from .youtube import YouTubeProfile
 
 logger = logging.getLogger(__name__)
 
-# Hobby catalog mirrors frontend/src/data/ibuki.ts
-HOBBY_CATALOG: list[dict] = [
-    {"id": "film-camera", "nameJa": "フィルムカメラ", "tags": ["散歩", "写真", "レトロ"]},
-    {"id": "togei", "nameJa": "陶芸", "tags": ["手仕事", "集中", "土"]},
-    {"id": "jazz-kissa", "nameJa": "ジャズ喫茶", "tags": ["音楽", "街歩き"]},
-    {"id": "birdwatching", "nameJa": "野鳥観察", "tags": ["自然", "朝"]},
-    {"id": "tanka", "nameJa": "短歌", "tags": ["言葉"]},
-    {"id": "board-game", "nameJa": "ボードゲーム", "tags": ["人と", "戦略"]},
-    {"id": "sauna", "nameJa": "サウナ巡り", "tags": ["整う", "夜"]},
-    {"id": "bookstores", "nameJa": "本屋散歩", "tags": ["街歩き", "本"]},
-]
-
-FALLBACK_IDS = ["film-camera", "togei", "jazz-kissa"]
 MAX_RECOMMENDATIONS = 3
 PROMPT_CHANNEL_LIMIT = 30
 PROMPT_VIDEO_LIMIT = 30
 PROMPT_PLAYLIST_LIMIT = 20
 
+FALLBACK_HOBBIES: list[dict] = [
+    {"name_ja": "フィルムカメラ", "name_en": "Film Camera", "tags": ["写真", "散歩", "レトロ"]},
+    {"name_ja": "陶芸", "name_en": "Pottery", "tags": ["手仕事", "集中", "土"]},
+    {"name_ja": "ジャズ喫茶", "name_en": "Jazz Kissa", "tags": ["音楽", "街歩き"]},
+]
+
 
 @dataclass(frozen=True)
 class HobbyRecommendation:
-    hobby_id: str
-    reason: str
+    name_ja: str
+    name_en: str
+    tags: list[str] = field(default_factory=list)
+    reason: str = ""
 
 
 @lru_cache(maxsize=1)
@@ -49,31 +45,37 @@ def _get_client() -> AsyncOpenAI:
     return AsyncOpenAI(api_key=api_key)
 
 
-def _build_prompt(profile: YouTubeProfile, available: list[dict]) -> str:
+def _build_prompt(profile: YouTubeProfile) -> str:
     channels = ", ".join(profile.subscribed_channels[:PROMPT_CHANNEL_LIMIT]) or "なし"
     liked = ", ".join(profile.liked_video_titles[:PROMPT_VIDEO_LIMIT]) or "なし"
     playlists = ", ".join(profile.playlist_names[:PROMPT_PLAYLIST_LIMIT]) or "なし"
-    catalog = json.dumps(available, ensure_ascii=False)
 
-    return f"""あなたはユーザーの趣味を分析するアシスタントです。
+    return f"""あなたはユーザーの趣味を提案するアシスタントです。
 
 ユーザーのYouTube情報:
 - チャンネル登録: {channels}
 - 高評価した動画: {liked}
 - プレイリスト名: {playlists}
 
-以下の趣味カタログから、ユーザーの興味に最も合う{MAX_RECOMMENDATIONS}つを選んでください:
-{catalog}
+このユーザーの興味・関心をもとに、ぴったりな趣味を{MAX_RECOMMENDATIONS}つ新しく考えて提案してください。
+既存リストから選ぶのではなく、ユーザーの個性に合わせてオリジナルの趣味を生み出してください。
 
 レスポンスは必ずJSON形式で返してください:
-{{"recommendations": [{{"hobby_id": "...", "reason": "（30字以内の日本語で推薦理由）"}}]}}
+{{
+  "recommendations": [
+    {{
+      "name_ja": "趣味の日本語名（10字以内）",
+      "name_en": "Hobby name in English",
+      "tags": ["タグ1", "タグ2", "タグ3"],
+      "reason": "YouTubeの傾向からこの趣味を勧める理由（30字以内の日本語）"
+    }}
+  ]
+}}
 
-YouTubeの傾向から自然につながる趣味を選び、理由は30字以内の日本語で書いてください。
-データが少ない場合は、人気のある趣味を推薦してください。"""
+趣味名は短く親しみやすく、理由はYouTubeの傾向と自然につながる内容にしてください。"""
 
 
-def _parse_response(content: str, available: list[dict]) -> list[HobbyRecommendation]:
-    available_ids = {h["id"] for h in available}
+def _parse_response(content: str) -> list[HobbyRecommendation]:
     try:
         data = json.loads(content)
     except json.JSONDecodeError:
@@ -82,50 +84,49 @@ def _parse_response(content: str, available: list[dict]) -> list[HobbyRecommenda
 
     results: list[HobbyRecommendation] = []
     for item in data.get("recommendations", []):
-        hobby_id = item.get("hobby_id", "")
-        reason = item.get("reason", "")
-        if hobby_id in available_ids and reason:
-            results.append(HobbyRecommendation(hobby_id=hobby_id, reason=reason))
-        if len(results) >= MAX_RECOMMENDATIONS:
-            break
-
-    return results
-
-
-def _fallback_recommendations(
-    available: list[dict],
-) -> list[HobbyRecommendation]:
-    """Return up to 3 popular hobbies when YouTube data is empty."""
-    results: list[HobbyRecommendation] = []
-    available_ids = {h["id"] for h in available}
-    for fid in FALLBACK_IDS:
-        if fid in available_ids:
+        name_ja = item.get("name_ja", "").strip()
+        name_en = item.get("name_en", "").strip()
+        tags = item.get("tags", [])
+        reason = item.get("reason", "").strip()
+        if name_ja and name_en and reason:
             results.append(
                 HobbyRecommendation(
-                    hobby_id=fid,
-                    reason="人気の趣味としておすすめです",
+                    name_ja=name_ja,
+                    name_en=name_en,
+                    tags=tags if isinstance(tags, list) else [],
+                    reason=reason,
                 )
             )
         if len(results) >= MAX_RECOMMENDATIONS:
             break
+
     return results
+
+
+def _fallback_recommendations() -> list[HobbyRecommendation]:
+    """Return popular hobbies when YouTube data is unavailable."""
+    return [
+        HobbyRecommendation(
+            name_ja=h["name_ja"],
+            name_en=h["name_en"],
+            tags=h["tags"],
+            reason="人気の趣味としておすすめです",
+        )
+        for h in FALLBACK_HOBBIES[:MAX_RECOMMENDATIONS]
+    ]
 
 
 async def recommend_hobbies(
     profile: YouTubeProfile,
-    existing_hobby_ids: list[str],
 ) -> list[HobbyRecommendation]:
-    """Return up to 3 hobby recommendations based on the user's YouTube profile."""
-    available = [h for h in HOBBY_CATALOG if h["id"] not in existing_hobby_ids]
-    if not available:
-        return []
-
+    """Return up to 3 generated hobby recommendations based on the user's YouTube profile."""
     if profile.is_empty():
         logger.info("YouTubeProfile is empty; using fallback recommendations")
-        return _fallback_recommendations(available)
+        return _fallback_recommendations()
 
     client = _get_client()
-    prompt = _build_prompt(profile, available)
+    prompt = _build_prompt(profile)
+    logger.info("Sending prompt to OpenAI:\n%s", prompt)
 
     response = await client.chat.completions.create(
         model="gpt-4o-mini",
@@ -136,10 +137,16 @@ async def recommend_hobbies(
     )
 
     content = response.choices[0].message.content or "{}"
-    recommendations = _parse_response(content, available)
+    logger.info("OpenAI raw response: %s", content)
+
+    recommendations = _parse_response(content)
+    logger.info(
+        "Parsed recommendations: %s",
+        [(r.name_ja, r.reason) for r in recommendations],
+    )
 
     if not recommendations:
         logger.warning("OpenAI returned no valid recommendations; using fallback")
-        return _fallback_recommendations(available)
+        return _fallback_recommendations()
 
     return recommendations

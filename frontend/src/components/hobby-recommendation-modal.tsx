@@ -1,5 +1,4 @@
-import { router } from "expo-router";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
   IbukiColors,
@@ -7,10 +6,9 @@ import {
   IbukiRadius,
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
-import { hobbies } from "@/data/ibuki";
 import type { RecommendedHobby } from "@/hooks/use-hobby-recommendations";
 
-import { HobbyCard, Kicker, PillButton } from "./ibuki-ui";
+import { Kicker, PillButton } from "./ibuki-ui";
 
 type Props = {
   visible: boolean;
@@ -18,6 +16,7 @@ type Props = {
   recommendations?: RecommendedHobby[];
   errorMessage?: string;
   onClose: () => void;
+  onAdd?: (hobby: RecommendedHobby) => void;
   onRetry?: () => void;
 };
 
@@ -27,16 +26,9 @@ export function HobbyRecommendationModal({
   recommendations = [],
   errorMessage,
   onClose,
+  onAdd,
   onRetry,
 }: Props) {
-  function handleAddHobby(hobbyId: string) {
-    onClose();
-    router.push({
-      pathname: "/hobby/[id]",
-      params: { id: hobbyId },
-    } as never);
-  }
-
   return (
     <Modal
       visible={visible}
@@ -69,7 +61,7 @@ export function HobbyRecommendationModal({
         {status === "success" && (
           <SuccessBody
             recommendations={recommendations}
-            onAdd={handleAddHobby}
+            onAdd={onAdd}
           />
         )}
       </View>
@@ -128,48 +120,56 @@ function SuccessBody({
   onAdd,
 }: {
   recommendations: RecommendedHobby[];
-  onAdd: (hobbyId: string) => void;
+  onAdd?: (hobby: RecommendedHobby) => void;
 }) {
   if (recommendations.length === 0) {
     return (
       <View style={styles.bodyCenter}>
         <Text style={styles.emptyText}>
-          おすすめが見つかりませんでした。{"\n"}すでにすべての趣味を追加済みかもしれません。
+          おすすめが見つかりませんでした。{"\n"}しばらくしてから再度お試しください。
         </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.successBody}>
+    <ScrollView
+      style={styles.successScroll}
+      contentContainerStyle={styles.successBody}
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.subtitle}>
-        YouTubeの視聴傾向から3つのsukiを見つけました
+        YouTubeの視聴傾向から{recommendations.length}つのsukiを見つけました
       </Text>
 
-      <View style={styles.cardList}>
-        {recommendations.map(({ hobbyId, reason }) => {
-          const hobby = hobbies.find((h) => h.id === hobbyId);
-          if (!hobby) return null;
+      {recommendations.map((hobby) => (
+        <View key={hobby.nameJa} style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardNameJa}>{hobby.nameJa}</Text>
+            <Text style={styles.cardNameEn}>{hobby.nameEn}</Text>
+          </View>
 
-          return (
-            <View key={hobbyId} style={styles.cardRow}>
-              <View style={styles.cardWrapper}>
-                <HobbyCard hobby={hobby} compact />
+          <View style={styles.tagRow}>
+            {hobby.tags.map((tag) => (
+              <View key={tag} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
               </View>
-              <View style={styles.cardMeta}>
-                <Text style={styles.reasonText}>{reason}</Text>
-                <PillButton
-                  label="趣味を追加"
-                  variant="accent"
-                  onPress={() => onAdd(hobbyId)}
-                  style={styles.addButton}
-                />
-              </View>
-            </View>
-          );
-        })}
-      </View>
-    </View>
+            ))}
+          </View>
+
+          <Text style={styles.reasonText}>{hobby.reason}</Text>
+
+          {onAdd && (
+            <PillButton
+              label="sukiに追加"
+              variant="accent"
+              onPress={() => onAdd(hobby)}
+              style={styles.addButton}
+            />
+          )}
+        </View>
+      ))}
+    </ScrollView>
   );
 }
 
@@ -268,41 +268,67 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
+  successScroll: {
+    flex: 1,
+  },
   successBody: {
     gap: IbukiSpacing.md,
+    paddingBottom: IbukiSpacing.lg,
   },
   subtitle: {
     color: IbukiColors.mid,
     fontFamily: IbukiFonts.sans,
     fontSize: 12,
   },
-  cardList: {
-    gap: IbukiSpacing.md,
-  },
-  cardRow: {
+  card: {
     backgroundColor: IbukiColors.surface,
     borderColor: IbukiColors.line,
     borderRadius: IbukiRadius.md,
     borderWidth: 1,
-    flexDirection: "row",
-    overflow: "hidden",
-  },
-  cardWrapper: {
-    width: "46%",
-  },
-  cardMeta: {
-    flex: 1,
     gap: IbukiSpacing.sm,
-    justifyContent: "center",
     padding: IbukiSpacing.md,
+  },
+  cardHeader: {
+    gap: 2,
+  },
+  cardNameJa: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  cardNameEn: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  tagRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: IbukiSpacing.xs,
+  },
+  tag: {
+    backgroundColor: IbukiColors.accentTint,
+    borderRadius: IbukiRadius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  tagText: {
+    color: IbukiColors.accentDeep,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 11,
+    fontWeight: "700",
   },
   reasonText: {
     color: IbukiColors.inkSoft,
     fontFamily: IbukiFonts.sans,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 20,
   },
   addButton: {
     alignSelf: "flex-start",
+    marginTop: IbukiSpacing.xs,
   },
 });

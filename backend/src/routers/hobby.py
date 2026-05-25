@@ -28,11 +28,13 @@ router = APIRouter(prefix="/api/hobby", tags=["hobby"])
 
 class RecommendRequest(BaseModel):
     google_access_token: str
-    existing_hobby_ids: list[str] = []
+    existing_hobby_ids: list[str] = []  # kept for API compatibility, unused
 
 
 class RecommendationItem(BaseModel):
-    hobby_id: str
+    name_ja: str
+    name_en: str
+    tags: list[str]
     reason: str
 
 
@@ -95,17 +97,20 @@ async def get_hobby_recommendations(
     _: None = Depends(verify_supabase_token),
 ) -> RecommendResponse:
     """
-    Accepts a Google provider token and the user's existing hobby IDs.
-    Returns up to 3 hobby recommendations based on YouTube signals + OpenAI.
+    Accepts a Google provider token.
+    Returns up to 3 AI-generated hobby recommendations based on YouTube signals.
     """
     profile = await build_youtube_profile(body.google_access_token)
-    recommendations: list[HobbyRecommendation] = await recommend_hobbies(
-        profile, body.existing_hobby_ids
-    )
+    recommendations: list[HobbyRecommendation] = await recommend_hobbies(profile)
 
     return RecommendResponse(
         recommendations=[
-            RecommendationItem(hobby_id=r.hobby_id, reason=r.reason)
+            RecommendationItem(
+                name_ja=r.name_ja,
+                name_en=r.name_en,
+                tags=r.tags,
+                reason=r.reason,
+            )
             for r in recommendations
         ]
     )

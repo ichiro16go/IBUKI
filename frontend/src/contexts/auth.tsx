@@ -6,7 +6,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { Platform } from "react-native";
 import { Session, User } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { makeRedirectUri } from "expo-auth-session";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
@@ -16,11 +18,22 @@ import { supabase } from "@/lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const configuredRedirectUrl = process.env.EXPO_PUBLIC_SUPABASE_REDIRECT_URL?.trim();
+const configuredRedirectUrl =
+  process.env.EXPO_PUBLIC_SUPABASE_REDIRECT_URL?.trim();
+
+// Supabase's setSession() does not accept provider_token, so it is never
+// present on session.provider_token after the initial OAuth redirect.
+// We persist it ourselves and expose it through the auth context.
+const PROVIDER_TOKEN_KEY = "google_provider_token";
 
 type AuthUrlPayload =
   | { type: "error"; message: string }
-  | { type: "tokens"; accessToken: string; refreshToken: string }
+  | {
+      type: "tokens";
+      accessToken: string;
+      refreshToken: string;
+      providerToken: string | null;
+    }
   | { type: "unknown" };
 
 type AuthContextType = {
@@ -28,6 +41,8 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   authError: string | null;
+  /** Google OAuth token — required for YouTube API calls. */
+  providerToken: string | null;
   signInWithGoogle: () => Promise<boolean>;
   clearAuthError: () => void;
   signOut: () => Promise<void>;
@@ -53,7 +68,14 @@ function parseAuthCallbackUrl(url: string): AuthUrlPayload {
   const refreshToken = params.refresh_token;
 
   if (accessToken && refreshToken) {
-    return { type: "tokens", accessToken, refreshToken };
+    return {
+      type: "tokens",
+      accessToken,
+      refreshToken,
+      // provider_token is included in the hash by Supabase for implicit flow
+      // but is not stored in the JWT — we must capture it here.
+      providerToken: params.provider_token ?? null,
+    };
   }
 
   return { type: "unknown" };
@@ -63,8 +85,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [providerToken, setProviderToken] = useState<string | null>(null);
   const processedAuthUrlsRef = useRef(new Set<string>());
   const inFlightAuthRequestsRef = useRef(new Map<string, Promise<boolean>>());
+
+  // Restore persisted provider token on mount.
+  useEffect(() => {
+    AsyncStorage.getItem(PROVIDER_TOKEN_KEY).then((stored) => {
+      if (stored) setProviderToken(stored);
+    });
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -120,6 +150,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
 
         setSession(data.session);
+
+        // Persist the provider token so it survives app restarts.
+        if (payload.providerToken) {
+          setProviderToken(payload.providerToken);
+          await AsyncStorage.setItem(PROVIDER_TOKEN_KEY, payload.providerToken);
+        }
+
         processedAuthUrlsRef.current.add(url);
         return true;
       } catch (sessionError) {
@@ -194,7 +231,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       if (!data.url) throw new Error("No OAuth URL returned");
 
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectUrl,
+      );
       if (result.type !== "success") {
         setIsLoading(false);
         return false;
@@ -220,6 +260,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     setAuthError(null);
+    setProviderToken(null);
+    await AsyncStorage.removeItem(PROVIDER_TOKEN_KEY);
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
@@ -231,6 +273,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: session?.user ?? null,
         isLoading,
         authError,
+        providerToken,
         signInWithGoogle,
         clearAuthError,
         signOut,
