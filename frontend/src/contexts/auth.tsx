@@ -185,6 +185,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           redirectTo: redirectUrl,
           skipBrowserRedirect: true,
+          // youtube.readonly lets us read subscriptions, liked videos, and
+          // playlists to power AI hobby recommendations.
+          scopes: "https://www.googleapis.com/auth/youtube.readonly",
         },
       });
 

@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
   Heading,
@@ -8,6 +9,7 @@ import {
   Kicker,
   TopBar,
 } from "@/components/ibuki-ui";
+import { HobbyRecommendationModal } from "@/components/hobby-recommendation-modal";
 import {
   IbukiColors,
   IbukiFonts,
@@ -15,11 +17,32 @@ import {
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
 import { hobbies, profileSummary } from "@/data/ibuki";
+import { useHobbyRecommendations } from "@/hooks/use-hobby-recommendations";
+
+const SHARED_HOBBY_IDS = ["sauna", "bookstores", "jazz-kissa"];
 
 export default function ProfileScreen() {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const { state, recommend } = useHobbyRecommendations();
+
   const sharedHobbies = hobbies.filter((hobby) =>
-    ["sauna", "bookstores", "jazz-kissa"].includes(hobby.id),
+    SHARED_HOBBY_IDS.includes(hobby.id),
   );
+
+  function handleAddPress() {
+    setIsModalVisible(true);
+    if (state.status === "idle" || state.status === "error") {
+      void recommend(SHARED_HOBBY_IDS);
+    }
+  }
+
+  function handleClose() {
+    setIsModalVisible(false);
+  }
+
+  function handleRetry() {
+    void recommend(SHARED_HOBBY_IDS);
+  }
 
   return (
     <IbukiScreen withTabBar>
@@ -75,11 +98,35 @@ export default function ProfileScreen() {
             <HobbyCard hobby={hobby} compact />
           </View>
         ))}
-        <View style={[styles.gridItem, styles.addCard]}>
-          <Text style={styles.addPlus}>＋</Text>
-          <Text style={styles.addText}>sukiを追加</Text>
+
+        {/* "趣味を追加" tile — triggers AI recommendation modal */}
+        <View style={styles.gridItem}>
+          <Pressable
+            onPress={handleAddPress}
+            style={({ pressed }) => [styles.addCard, pressed && styles.pressed]}
+            accessibilityLabel="趣味を追加"
+            accessibilityRole="button"
+          >
+            <Text style={styles.addPlus}>＋</Text>
+            <Text style={styles.addText}>趣味を追加</Text>
+          </Pressable>
         </View>
       </View>
+
+      <HobbyRecommendationModal
+        visible={isModalVisible}
+        status={state.status}
+        recommendations={
+          state.status === "success" ? state.recommendations : undefined
+        }
+        errorMessage={state.status === "error" ? state.message : undefined}
+        onClose={handleClose}
+        onRetry={
+          state.status === "error"
+            ? handleRetry
+            : undefined
+        }
+      />
     </IbukiScreen>
   );
 }
@@ -208,6 +255,9 @@ const styles = StyleSheet.create({
     gap: IbukiSpacing.xs,
     justifyContent: "center",
     minHeight: 210,
+  },
+  pressed: {
+    opacity: 0.7,
   },
   addPlus: {
     color: IbukiColors.mid,
