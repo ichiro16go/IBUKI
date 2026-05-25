@@ -7,6 +7,7 @@ export type LikeCard = {
   title: string;
   detail: string;
   photo_url: string | null;
+  planted_user_count: number;
   created_at: string;
   updated_at: string;
 };

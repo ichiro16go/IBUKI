@@ -119,6 +119,7 @@ export type Database = {
           detail: string | null;
           id: string;
           photo_url: string | null;
+          planted_user_count: number;
           title: string;
           updated_at: string | null;
           user_id: string;
@@ -129,6 +130,7 @@ export type Database = {
           detail?: string | null;
           id?: string;
           photo_url?: string | null;
+          planted_user_count?: number;
           title: string;
           updated_at?: string | null;
           user_id: string;
@@ -139,6 +141,7 @@ export type Database = {
           detail?: string | null;
           id?: string;
           photo_url?: string | null;
+          planted_user_count?: number;
           title?: string;
           updated_at?: string | null;
           user_id?: string;

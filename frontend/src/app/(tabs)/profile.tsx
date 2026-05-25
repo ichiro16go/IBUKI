@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { router } from "expo-router";
-import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
 
 import {
@@ -31,9 +30,13 @@ import {
   type RecommendedHobby,
 } from "@/hooks/use-hobby-recommendations";
 import { useAuth } from "@/contexts/auth";
-import { createLikeCard, getMyLikeCards, type LikeCard } from "@/lib/like-cards";
+import { profileSummary } from "@/data/ibuki";
 import { fetchSavedCards } from "@/lib/encounters";
-
+import {
+  createLikeCard,
+  getMyLikeCards,
+  type LikeCard,
+} from "@/lib/like-cards";
 
 const MAX_SHARED_HOBBIES = 5;
 
@@ -49,7 +52,13 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!user) return;
+      if (!user) {
+        setLikeCards([]);
+        setSavedCount(0);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       Promise.all([getMyLikeCards(), fetchSavedCards(user.id)])
         .then(([cards, saved]) => {
@@ -235,6 +244,11 @@ function LikeCardTile({
             {card.detail}
           </Text>
         ) : null}
+        <View style={styles.plantedBadge}>
+          <Text style={styles.plantedBadgeText}>
+            植えた人 {card.planted_user_count ?? 0}人
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -390,6 +404,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
     lineHeight: 15,
+  },
+  plantedBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: IbukiColors.accentTint,
+    borderRadius: IbukiRadius.pill,
+    marginTop: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  plantedBadgeText: {
+    color: IbukiColors.accentDeep,
+    fontFamily: IbukiFonts?.sansBold,
+    fontSize: 11,
+    fontWeight: "700",
   },
   addCard: {
     alignItems: "center",
