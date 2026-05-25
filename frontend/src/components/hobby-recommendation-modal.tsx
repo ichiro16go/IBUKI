@@ -83,7 +83,7 @@ function LoadingBody() {
     <View style={styles.bodyCenter}>
       <ActivityIndicator size="large" color={IbukiColors.accent} />
       <Text style={styles.loadingText}>
-        YouTubeをもとに{"\n"}趣味を探しています…
+        YouTubeをもとに{"\n"}興味を読み取っています…
       </Text>
     </View>
   );
