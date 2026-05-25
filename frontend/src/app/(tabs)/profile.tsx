@@ -1,6 +1,7 @@
 import { router } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -43,13 +44,16 @@ export default function ProfileScreen() {
     (h) => !likeCards.some((c) => c.title === h.nameJa),
   );
 
-  useEffect(() => {
-    if (!user) return;
-    getMyLikeCards()
-      .then(setLikeCards)
-      .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
-      .finally(() => setLoading(false));
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      setLoading(true);
+      getMyLikeCards()
+        .then(setLikeCards)
+        .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
+        .finally(() => setLoading(false));
+    }, [user]),
+  );
 
   function openPicker() {
     if (canAddMore) setPickerVisible(true);
