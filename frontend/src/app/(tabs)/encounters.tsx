@@ -29,7 +29,10 @@ export default function EncountersScreen() {
   const featuredHobby = hobbies[0];
 
   function openHobby(id: string) {
-    router.push({ pathname: "/hobby/[id]", params: { id } } as never);
+    router.push({
+      pathname: "/hobby/[id]",
+      params: { id, from: "encounters" },
+    } as never);
   }
 
   return (
@@ -40,7 +43,7 @@ export default function EncountersScreen() {
             <View style={styles.livePulse} />
             <Kicker>LIVE · 半径 300m</Kicker>
           </View>
-          <Heading size="medium">今日すれ違った{"\n"}趣味たち</Heading>
+          <Heading size="medium">今日すれ違った{"\n"}suki</Heading>
         </View>
         <IconButton
           label="Show arrival notification"
@@ -102,7 +105,7 @@ export default function EncountersScreen() {
         </View>
       )}
 
-      <Text style={styles.disclaimer}>人ではなく、趣味だけが届きます。</Text>
+      <Text style={styles.disclaimer}>人ではなく、sukiだけが届きます。</Text>
 
       <NotificationModal
         visible={notificationVisible}

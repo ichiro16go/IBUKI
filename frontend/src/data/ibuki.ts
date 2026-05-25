@@ -25,8 +25,8 @@ export type Hobby = {
   photoTone: PhotoTone;
   image: ImageSourcePropType;
   beginnerNote: string;
-  nearbyPlace: string;
   intro: string;
+  howToStart: string[]; // 3-4 steps for starting this hobby
 };
 
 export type Encounter = {
@@ -55,6 +55,37 @@ export type ProfileSummary = {
   level: string;
 };
 
+export type SukiAction = {
+  id: string;
+  title: string;
+  description: string;
+  example?: string;
+};
+
+export type SukiActionLog = {
+  id: string;
+  sukiId: string;
+  actionId: string;
+  timestamp: string;
+  notes?: string;
+};
+
+export type PlanterItem = {
+  id: string;
+  sukiId: string;
+  startDate: string;
+  level: number;
+  actionCount: number;
+  lastActionDate: string;
+};
+
+export type GrowthStatus = {
+  level: number;
+  actionCount: number;
+  lastActionDate: string;
+  nextLevelProgressPercent: number;
+};
+
 export const hobbies: Hobby[] = [
   {
     id: "film-camera",
@@ -71,9 +102,14 @@ export const hobbies: Hobby[] = [
     image: require("@/assets/images/hobbies/film-camera -dusk-.png"),
     beginnerNote:
       "写ルンですや中古コンパクトから。現像店を1つ見つけると続けやすい。",
-    nearbyPlace: "渋谷フォトラボ · 徒歩8分",
     intro:
       "街の光や影を、あとでゆっくり受け取る趣味。散歩の速度が少しだけ変わります。",
+    howToStart: [
+      "ネットで安い中古フィルムカメラを探す",
+      "最初の一本は写ルンですで試す",
+      "近所のカメラ屋で現像に出す",
+      "写真を見返して世界を再発見する",
+    ],
   },
   {
     id: "togei",
@@ -89,9 +125,14 @@ export const hobbies: Hobby[] = [
     photoTone: "clay",
     image: require("@/assets/images/hobbies/pottery -clay-.png"),
     beginnerNote: "体験教室で湯呑みを1つ。エプロンだけ持っていけば大丈夫。",
-    nearbyPlace: "代々木うつわ工房 · 電車12分",
     intro:
       "形がゆっくり立ち上がる時間を楽しむ趣味。完成まで待つことも、体験の一部です。",
+    howToStart: [
+      "YouTube で陶芸の基本動画を見る",
+      "近所の体験教室を探してネット予約",
+      "初回は湯呑みやお皿を一つ作る",
+      "焼き上がりを受け取りに行く",
+    ],
   },
   {
     id: "jazz-kissa",
@@ -107,8 +148,13 @@ export const hobbies: Hobby[] = [
     photoTone: "night",
     image: require("@/assets/images/hobbies/jazz-kissa -night-.png"),
     beginnerNote: "会話より音を聴く場所。まずは昼の時間帯に一杯だけ。",
-    nearbyPlace: "道玄坂 Quiet Blue · 徒歩9分",
     intro: "大きなスピーカーと暗い灯りの中で、音楽に場所ごと浸る趣味です。",
+    howToStart: [
+      "ジャズの入門盤をSpotifyで聴いてみる",
+      "ネットで近所のジャズ喫茶を検索",
+      "昼間に一人で訪れてコーヒー一杯",
+      "好きなアーティストをスタッフに聞く",
+    ],
   },
   {
     id: "birdwatching",
@@ -125,8 +171,13 @@ export const hobbies: Hobby[] = [
     image: require("@/assets/images/hobbies/birdwatching -dawn-.png"),
     beginnerNote:
       "双眼鏡がなくても、鳴き声アプリと公園のベンチから始められる。",
-    nearbyPlace: "明治神宮外苑 · 電車10分",
     intro: "街の中の小さな動きを見つける趣味。朝の散歩が観察の時間になります。",
+    howToStart: [
+      "鳴き声認識アプリをスマホに入れる",
+      "早朝に近所の公園に行ってみる",
+      "ベンチに座って聞こえる鳥の声を記録",
+      "図書館で野鳥図鑑を借りて確認",
+    ],
   },
   {
     id: "tanka",
@@ -143,8 +194,13 @@ export const hobbies: Hobby[] = [
     image: require("@/assets/images/hobbies/tanka -ink-.png"),
     beginnerNote:
       "まずは好きな一首を写すところから。SNS投稿でも十分に入口です。",
-    nearbyPlace: "青山ブックセンター · 徒歩18分",
     intro: "短い形式に生活の湿度を閉じ込める趣味。読むだけでも始まります。",
+    howToStart: [
+      "好きな短歌を集めた本をAmazonで探す",
+      "好きな一首を声に出して読んでみる",
+      "自分で3行の短歌風テキストを作成",
+      "SNSでハッシュタグ付けで投稿",
+    ],
   },
   {
     id: "board-game",
@@ -160,9 +216,14 @@ export const hobbies: Hobby[] = [
     photoTone: "mint",
     image: require("@/assets/images/hobbies/board-game -mint-.png"),
     beginnerNote: "相席歓迎のカフェで、15分ルールの軽いゲームから。",
-    nearbyPlace: "恵比寿 Table Door · 徒歩14分",
     intro:
       "会話と考える時間が自然に混ざる趣味。初対面でもルールが間をつないでくれます。",
+    howToStart: [
+      "YouTubeでボードゲームのルール動画を見る",
+      "相席歓迎のボドゲカフェをネットで検索",
+      "簡単な15分ゲームから始める",
+      "毎週ゲーム会に参加",
+    ],
   },
   {
     id: "sauna",
@@ -179,8 +240,13 @@ export const hobbies: Hobby[] = [
     image: require("@/assets/images/hobbies/sento.png"),
     beginnerNote:
       "水分補給を忘れず、短いセットから。休憩を長めに取ると楽しい。",
-    nearbyPlace: "笹塚マルシンスパ · 電車16分",
     intro: "熱い部屋、水風呂、外気浴。単純な反復が生活のリズムになります。",
+    howToStart: [
+      "近所のサウナ施設をGoogleマップで探す",
+      "初回は無理なく短いセット5分から",
+      "水風呂で冷やして外気浴の時間を楽しむ",
+      "定期的に通ってお気に入りを見つける",
+    ],
   },
   {
     id: "bookstores",
@@ -197,9 +263,14 @@ export const hobbies: Hobby[] = [
     image: require("@/assets/images/hobbies/paper.png"),
     beginnerNote:
       "知らない駅で小さな本屋を1つ探す。買わなくても、棚を見るだけでいい。",
-    nearbyPlace: "渋谷 Publishing & Books · 徒歩6分",
     intro:
       "本棚を通して街を見る趣味。旅ほど大きくなく、散歩より少し深い時間です。",
+    howToStart: [
+      "知らない駅に降りて散歩してみる",
+      "小さな個人書店を探してみる",
+      "興味がなくても本のカバーを眺める",
+      "一冊だけ買って帰る",
+    ],
   },
 ];
 
@@ -284,6 +355,131 @@ export const profileSummary: ProfileSummary = {
   level: "L3",
 };
 
+export const sukiActions: SukiAction[] = [
+  {
+    id: "action-1",
+    title: "動画を見てみる",
+    description: "YouTubeやネットで関連動画を視聴",
+    example: "フィルムカメラの使い方動画を見た",
+  },
+  {
+    id: "action-2",
+    title: "本や記事を読む",
+    description: "本屋やネットで情報収集",
+    example: "陶芸の技法についての本を読んだ",
+  },
+  {
+    id: "action-3",
+    title: "体験に行く",
+    description: "実際に体験教室やイベントに参加",
+    example: "陶芸の体験教室に行った",
+  },
+  {
+    id: "action-4",
+    title: "道具や材料を買う",
+    description: "必要な道具や材料を購入",
+    example: "フィルムカメラを購入した",
+  },
+  {
+    id: "action-5",
+    title: "友人と一緒にやる",
+    description: "知人や友人と共に楽しむ",
+    example: "友人とサウナ巡りに行った",
+  },
+  {
+    id: "action-6",
+    title: "その他",
+    description: "上記以外の行動",
+    example: "",
+  },
+];
+
+export const planterItems: PlanterItem[] = [
+  {
+    id: "planter-1",
+    sukiId: "togei",
+    startDate: "2026-04-15",
+    level: 3,
+    actionCount: 7,
+    lastActionDate: "2026-05-23",
+  },
+  {
+    id: "planter-2",
+    sukiId: "sauna",
+    startDate: "2026-05-01",
+    level: 2,
+    actionCount: 4,
+    lastActionDate: "2026-05-24",
+  },
+  {
+    id: "planter-3",
+    sukiId: "jazz-kissa",
+    startDate: "2026-04-01",
+    level: 4,
+    actionCount: 12,
+    lastActionDate: "2026-05-20",
+  },
+];
+
+export const sukiActionLogs: SukiActionLog[] = [
+  {
+    id: "log-1",
+    sukiId: "togei",
+    actionId: "action-3",
+    timestamp: "2026-05-23",
+    notes: "代々木うつわ工房で手ひねり体験。湯呑みを成形した。",
+  },
+  {
+    id: "log-2",
+    sukiId: "togei",
+    actionId: "action-1",
+    timestamp: "2026-05-20",
+    notes: "NHK手仕事の動画を見て、釉薬の掛け方について学んだ。",
+  },
+  {
+    id: "log-3",
+    sukiId: "togei",
+    actionId: "action-4",
+    timestamp: "2026-05-15",
+    notes: "粘土のセットと簡易的なろくろを購入。",
+  },
+  {
+    id: "log-4",
+    sukiId: "togei",
+    actionId: "action-1",
+    timestamp: "2026-05-10",
+    notes: "陶芸の基本について Coursera で動画を見た。",
+  },
+  {
+    id: "log-5",
+    sukiId: "sauna",
+    actionId: "action-5",
+    timestamp: "2026-05-24",
+    notes: "友人とサウナ好きの新店舗を一緒に体験。",
+  },
+  {
+    id: "log-6",
+    sukiId: "sauna",
+    actionId: "action-1",
+    timestamp: "2026-05-18",
+    notes: "サウナ本を読み始めた。",
+  },
+  {
+    id: "log-7",
+    sukiId: "jazz-kissa",
+    actionId: "action-3",
+    timestamp: "2026-05-20",
+    notes: "赤坂ジャズ喫茶でひとりでレコードを聴いた。",
+  },
+  {
+    id: "log-8",
+    sukiId: "jazz-kissa",
+    actionId: "action-1",
+    timestamp: "2026-05-15",
+    notes: "ジャズの歴史ドキュメンタリーを見た。",
+  },
+];
+
 export function getHobbyById(id: string | string[] | undefined) {
   const hobbyId = Array.isArray(id) ? id[0] : id;
   return hobbies.find((hobby) => hobby.id === hobbyId) ?? hobbies[0];
@@ -291,4 +487,36 @@ export function getHobbyById(id: string | string[] | undefined) {
 
 export function getEncounterHobby(encounter: Encounter) {
   return hobbies.find((hobby) => hobby.id === encounter.hobbyId) ?? hobbies[0];
+}
+
+export function getPlanterItem(sukiId: string): PlanterItem | undefined {
+  return planterItems.find((item) => item.sukiId === sukiId);
+}
+
+export function getGrowthStatus(sukiId: string): GrowthStatus {
+  const item = getPlanterItem(sukiId);
+  if (!item) {
+    return { level: 0, actionCount: 0, lastActionDate: "", nextLevelProgressPercent: 0 };
+  }
+
+  const nextLevelThreshold = (item.level + 1) * 4;
+  const progressPercent = Math.min(
+    Math.round((item.actionCount / nextLevelThreshold) * 100),
+    100
+  );
+
+  return {
+    level: item.level,
+    actionCount: item.actionCount,
+    lastActionDate: item.lastActionDate,
+    nextLevelProgressPercent: progressPercent,
+  };
+}
+
+export function getSukiActionLogsForSuki(sukiId: string): SukiActionLog[] {
+  return sukiActionLogs.filter((log) => log.sukiId === sukiId);
+}
+
+export function getSukiActionById(actionId: string): SukiAction | undefined {
+  return sukiActions.find((action) => action.id === actionId);
 }

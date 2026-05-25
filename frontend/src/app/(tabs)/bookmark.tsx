@@ -13,15 +13,15 @@ import {
 import { IbukiSpacing } from "@/constants/ibuki-theme";
 import { hobbies, savedFilters } from "@/data/ibuki";
 
-export default function SavedScreen() {
+export default function BookmarkScreen() {
   const [selectedFilter, setSelectedFilter] = useState(savedFilters[0]);
 
   return (
     <IbukiScreen withTabBar>
       <View style={styles.header}>
         <View>
-          <Kicker>SAVED · 14 hobbies</Kicker>
-          <Heading size="medium">気になった{"\n"}趣味たち</Heading>
+          <Kicker>BOOKMARK · 14 suki</Kicker>
+          <Heading size="medium">気になった{"\n"}suki</Heading>
         </View>
         <IconButton
           label="Tune filters"
@@ -71,7 +71,7 @@ export default function SavedScreen() {
               onPress={() =>
                 router.push({
                   pathname: "/hobby/[id]",
-                  params: { id: hobby.id },
+                  params: { id: hobby.id, from: "bookmark" },
                 } as never)
               }
             />
