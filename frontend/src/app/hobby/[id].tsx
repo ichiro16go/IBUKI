@@ -39,7 +39,7 @@ export default function HobbyDetailScreen() {
   const [remoteLoadError, setRemoteLoadError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const { hideEncounter } = useEncounterPreferences();
-  const hobby = isRemote ? remoteHobby : staticHobby;
+  const hobby = (isRemote ? remoteHobby : staticHobby) ?? staticHobby;
 
   useEffect(() => {
     if (!isRemote || typeof cardId !== "string") {
