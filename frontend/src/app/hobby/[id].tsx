@@ -1,13 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  Pressable,
-  Alert,
-} from "react-native";
+import { StyleSheet, Text, View, Alert } from "react-native";
 
 import {
   BodyText,
@@ -17,184 +10,123 @@ import {
   IconButton,
   Kicker,
   PhotoBlock,
+  PillButton,
 } from "@/components/ibuki-ui";
 import {
   IbukiColors,
   IbukiFonts,
   IbukiRadius,
   IbukiSpacing,
-  TabBarHeight,
 } from "@/constants/ibuki-theme";
-import { getHobbyById, planterItems, PlanterItem } from "@/data/ibuki";
-
-type ScreenSource = "encounters" | "bookmark";
+import { getHobbyById } from "@/data/ibuki";
+import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function HobbyDetailScreen() {
-  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const hobby = getHobbyById(id);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [isPlanted, setIsPlanted] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const { hideEncounter } = useEncounterPreferences();
 
-  const source: ScreenSource = (from as ScreenSource) || "encounters";
-  const isFromEncounters = source === "encounters";
+  function markUninterested() {
+    hideEncounter(hobby.id);
+    router.replace("/encounters");
+  }
 
-  const handlePrimaryAction = () => {
-    if (isFromEncounters) {
-      // Bookmark action
-      setIsBookmarked(!isBookmarked);
-      if (!isBookmarked) {
-        // TODO: Call API to add to bookmarks
-        Alert.alert("Bookmarkしました", `${hobby.nameJa}をbookmarkに追加しました`);
-      }
-    } else {
-      // Plant action
-      setIsPlanted(!isPlanted);
-      if (!isPlanted) {
-        // TODO: Call API to add to planter
-        const newPlanterItem: PlanterItem = {
-          id: `planter-${Date.now()}`,
-          sukiId: hobby.id,
-          startDate: new Date().toISOString().split("T")[0],
-          level: 1,
-          actionCount: 0,
-          lastActionDate: new Date().toISOString().split("T")[0],
-        };
-        planterItems.push(newPlanterItem);
-        Alert.alert("種を植えました", `${hobby.nameJa}をplanterに追加しました`);
-      }
+  function handleSave() {
+    setSaved((current) => !current);
+    if (!saved) {
+      Alert.alert("Bookmarkしました", `${hobby.nameJa}をbookmarkに追加しました`);
     }
-  };
-
-  const primaryButtonLabel = isFromEncounters
-    ? isBookmarked
-      ? "✓ Bookmarkした"
-      : "Bookmarkする"
-    : isPlanted
-      ? "✓ 植えた"
-      : "種を植える";
+  }
 
   return (
     <IbukiScreen>
-      <View style={styles.container}>
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: 80 + TabBarHeight },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View style={styles.topBar}>
-            <IconButton
-              label="Back"
-              icon={{
-                ios: "chevron.left",
-                android: "arrow_back",
-                web: "chevron.left",
-              }}
-              onPress={() => router.back()}
-            />
-            <Kicker>NO. {hobby.number} · DETAIL</Kicker>
-            <IconButton
-              icon={{
-                ios: "square.and.arrow.up",
-                android: "share",
-                web: "square.and.arrow.up",
-              }}
-            />
-          </View>
+      <View style={styles.topBar}>
+        <IconButton
+          label="Back"
+          icon={{
+            ios: "chevron.left",
+            android: "arrow_back",
+            web: "chevron.left",
+          }}
+          onPress={() => router.back()}
+        />
+        <Kicker>NO. {hobby.number} · CARD DETAIL</Kicker>
+        <View style={styles.topBarSpacer} />
+      </View>
 
-          {/* Photo */}
-          <PhotoBlock hobby={hobby} height={220} label={hobby.number} />
+      <PhotoBlock
+        hobby={hobby}
+        height={220}
+        label={`${hobby.lastSeen}にすれ違い`}
+      />
 
-          {/* Title Section */}
-          <View style={styles.titleSection}>
-            <Kicker>DISCOVER</Kicker>
-            <Heading size="medium">{hobby.nameJa}</Heading>
-            <Text style={styles.subtitle}>{hobby.nameEn}</Text>
-            <View style={styles.tagRow}>
-              {hobby.tags.map((tag) => (
-                <Chip key={tag} label={tag} />
-              ))}
-            </View>
-          </View>
-
-          {/* Quote */}
-          <View style={styles.quoteBox}>
-            <Text style={styles.quoteMark}>&#34;</Text>
-            <Text style={styles.quote}>{hobby.quote}</Text>
-          </View>
-
-          {/* Description */}
-          <View style={styles.descriptionSection}>
-            <BodyText>{hobby.intro}</BodyText>
-          </View>
-
-          {/* How to Start Steps */}
-          <View style={styles.stepsSection}>
-            <Kicker>HOW TO START</Kicker>
-            <View style={styles.stepsList}>
-              {hobby.howToStart.map((step, index) => (
-                <View key={index} style={styles.stepItem}>
-                  <View style={styles.stepNumber}>
-                    <Text style={styles.stepNumberText}>{index + 1}</Text>
-                  </View>
-                  <Text style={styles.stepText}>{step}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Beginner Note */}
-          <View style={styles.noteSection}>
-            <Kicker>GETTING STARTED</Kicker>
-            <BodyText muted>{hobby.beginnerNote}</BodyText>
-          </View>
-        </ScrollView>
-
-        {/* Fixed Bottom Action Bar */}
-        <View style={[styles.actionBar, { bottom: TabBarHeight }]}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.secondaryButton,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.secondaryButtonText}>Bye</Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.primaryButton,
-              isBookmarked || isPlanted ? styles.primaryButtonActive : {},
-              pressed && styles.pressed,
-            ]}
-            onPress={handlePrimaryAction}
-          >
-            <Text style={styles.primaryButtonText}>{primaryButtonLabel}</Text>
-          </Pressable>
+      <View style={styles.titleSection}>
+        <Kicker>A HOBBY YOU DIDN&apos;T KNOW</Kicker>
+        <Heading size="medium">{hobby.nameJa}</Heading>
+        <Text style={styles.subtitle}>
+          {hobby.nameEn} · No. {hobby.number}
+        </Text>
+        <View style={styles.tagRow}>
+          {hobby.tags.map((tag) => (
+            <Chip key={tag} label={tag} />
+          ))}
+          <Chip label="ひとりで始めやすい" />
         </View>
+      </View>
+
+      <View style={styles.quoteBox}>
+        <Text style={styles.quoteMark}>&#34;</Text>
+        <Text style={styles.quote}>{hobby.quote}</Text>
+      </View>
+
+      <View style={styles.infoGrid}>
+        <View style={styles.infoCard}>
+          <Kicker>HOW TO START</Kicker>
+          <BodyText muted>{hobby.beginnerNote}</BodyText>
+        </View>
+      </View>
+
+      <View style={styles.placeCard}>
+        <Kicker>近くで体験できる場所</Kicker>
+        <View style={styles.placeRow}>
+          <View style={styles.placePin}>
+            <Text style={styles.placePinIcon}>⌖</Text>
+          </View>
+          <View style={styles.placeInfo}>
+            <Text style={styles.placeName}>渋谷ワークショップ</Text>
+            <Text style={styles.placeDistance}>徒歩12分</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.actions}>
+        <PillButton
+          label="興味なし"
+          variant="light"
+          onPress={markUninterested}
+          style={styles.actionShort}
+        />
+        <PillButton
+          label={saved ? "★ 保存済み" : "☆ 保存する"}
+          variant={saved ? "accent" : "dark"}
+          onPress={handleSave}
+          style={styles.actionWide}
+        />
       </View>
     </IbukiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: IbukiSpacing.md,
-    paddingTop: 0,
-  },
   topBar: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: IbukiSpacing.md,
+  },
+  topBarSpacer: {
+    height: 38,
+    width: 38,
   },
   titleSection: {
     gap: IbukiSpacing.xs,
@@ -202,7 +134,7 @@ const styles = StyleSheet.create({
     marginBottom: IbukiSpacing.md,
   },
   subtitle: {
-    color: IbukiColors.muted,
+    color: IbukiColors.mid,
     fontFamily: IbukiFonts?.sansBold,
     fontSize: 12,
     fontWeight: "700",
@@ -215,7 +147,7 @@ const styles = StyleSheet.create({
   },
   quoteBox: {
     backgroundColor: IbukiColors.surface,
-    borderColor: IbukiColors.border,
+    borderColor: IbukiColors.line,
     borderRadius: IbukiRadius.lg,
     borderWidth: 1,
     flexDirection: "row",
@@ -230,104 +162,70 @@ const styles = StyleSheet.create({
     lineHeight: 52,
   },
   quote: {
-    color: IbukiColors.text,
+    color: IbukiColors.ink,
     flex: 1,
     fontFamily: IbukiFonts?.sans,
     fontSize: 16,
     lineHeight: 24,
   },
-  descriptionSection: {
-    marginBottom: IbukiSpacing.lg,
+  infoGrid: {
+    marginBottom: IbukiSpacing.md,
   },
-  stepsSection: {
-    marginBottom: IbukiSpacing.lg,
-  },
-  stepsList: {
-    gap: IbukiSpacing.md,
-    marginTop: IbukiSpacing.md,
-  },
-  stepItem: {
-    flexDirection: "row",
-    gap: IbukiSpacing.md,
-    alignItems: "flex-start",
-  },
-  stepNumber: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: IbukiColors.accent,
-    justifyContent: "center",
-    alignItems: "center",
-    flexShrink: 0,
-  },
-  stepNumberText: {
-    color: IbukiColors.background,
-    fontFamily: IbukiFonts?.sansBold,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  stepText: {
-    flex: 1,
-    color: IbukiColors.text,
-    fontFamily: IbukiFonts?.sans,
-    fontSize: 14,
-    lineHeight: 20,
-    paddingTop: IbukiSpacing.xs,
-  },
-  noteSection: {
+  infoCard: {
     backgroundColor: IbukiColors.surface,
-    borderColor: IbukiColors.border,
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    padding: IbukiSpacing.md,
+  },
+  placeCard: {
+    backgroundColor: IbukiColors.surface,
+    borderColor: IbukiColors.line,
     borderRadius: IbukiRadius.md,
     borderWidth: 1,
     padding: IbukiSpacing.md,
     marginBottom: IbukiSpacing.lg,
   },
-  actionBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    backgroundColor: IbukiColors.background,
-    borderTopWidth: 1,
-    borderTopColor: IbukiColors.border,
+  placeRow: {
     flexDirection: "row",
-    gap: IbukiSpacing.sm,
-    paddingHorizontal: IbukiSpacing.md,
-    paddingVertical: IbukiSpacing.md,
+    alignItems: "center",
+    gap: IbukiSpacing.md,
+    marginTop: IbukiSpacing.sm,
   },
-  actionButton: {
-    paddingHorizontal: IbukiSpacing.md,
-    paddingVertical: IbukiSpacing.sm,
-    borderRadius: IbukiRadius.md,
+  placePin: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: IbukiColors.accentTint,
     justifyContent: "center",
     alignItems: "center",
-    minHeight: 44,
   },
-  secondaryButton: {
-    flex: 0.6,
-    backgroundColor: IbukiColors.surface,
-    borderWidth: 1,
-    borderColor: IbukiColors.border,
+  placePinIcon: {
+    fontSize: 20,
+    color: IbukiColors.accent,
   },
-  secondaryButtonText: {
-    color: IbukiColors.text,
-    fontFamily: IbukiFonts?.sans,
+  placeInfo: {
+    flex: 1,
+  },
+  placeName: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts?.sansBold,
     fontSize: 14,
     fontWeight: "600",
   },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: IbukiColors.primary,
+  placeDistance: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts?.sans,
+    fontSize: 12,
   },
-  primaryButtonActive: {
-    backgroundColor: IbukiColors.success,
+  actions: {
+    flexDirection: "row",
+    gap: IbukiSpacing.sm,
   },
-  primaryButtonText: {
-    color: IbukiColors.background,
-    fontFamily: IbukiFonts?.sansBold,
-    fontSize: 14,
-    fontWeight: "700",
+  actionShort: {
+    flex: 0.9,
   },
-  pressed: {
-    opacity: 0.7,
+  actionWide: {
+    flex: 1.25,
   },
 });

@@ -8,11 +8,7 @@ import {
   Heading,
   IbukiScreen,
   IconButton,
-  Kicker,
   NotificationModal,
-  RadarView,
-  SegmentedControl,
-  StatsRow,
 } from "@/components/ibuki-ui";
 import { IbukiColors, IbukiFonts, IbukiSpacing } from "@/constants/ibuki-theme";
 import {
@@ -21,12 +17,17 @@ import {
   getEncounterHobby,
   hobbies,
 } from "@/data/ibuki";
+import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function EncountersScreen() {
   const [selectedFilter, setSelectedFilter] = useState(encounterFilters[0]);
-  const [mode, setMode] = useState("FEED");
   const [notificationVisible, setNotificationVisible] = useState(false);
+  const { isEncounterHidden } = useEncounterPreferences();
   const featuredHobby = hobbies[0];
+  const visibleEncounters = encounters.filter((encounter) => {
+    const hobby = getEncounterHobby(encounter);
+    return !isEncounterHidden(hobby.id);
+  });
 
   function openHobby(id: string) {
     router.push({
@@ -39,11 +40,7 @@ export default function EncountersScreen() {
     <IbukiScreen withTabBar>
       <View style={styles.header}>
         <View>
-          <View style={styles.liveRow}>
-            <View style={styles.livePulse} />
-            <Kicker>LIVE · 半径 300m</Kicker>
-          </View>
-          <Heading size="medium">今日すれ違った{"\n"}suki</Heading>
+          <Heading size="medium">今日すれ違った{"\n"}趣味たち</Heading>
         </View>
         <IconButton
           label="Show arrival notification"
@@ -53,16 +50,6 @@ export default function EncountersScreen() {
             web: "bell.badge",
           }}
           onPress={() => setNotificationVisible(true)}
-        />
-      </View>
-
-      <StatsRow />
-
-      <View style={styles.modeRow}>
-        <SegmentedControl
-          value={mode}
-          options={["FEED", "RADAR"]}
-          onChange={setMode}
         />
       </View>
 
@@ -84,26 +71,21 @@ export default function EncountersScreen() {
         ))}
       </ScrollView>
 
-      {mode === "RADAR" ? (
-        <RadarView hobbies={hobbies} />
-      ) : (
-        <View style={styles.feed}>
-          {encounters.map((encounter) => {
-            const hobby = getEncounterHobby(encounter);
-            return (
-              <EncounterCard
-                key={encounter.id}
-                hobby={hobby}
-                time={encounter.time}
-                distance={encounter.distance}
-                context={encounter.context}
-                isNew={encounter.isNew}
-                onPress={() => openHobby(hobby.id)}
-              />
-            );
-          })}
-        </View>
-      )}
+      <View style={styles.feed}>
+        {visibleEncounters.map((encounter) => {
+          const hobby = getEncounterHobby(encounter);
+          return (
+            <EncounterCard
+              key={encounter.id}
+              hobby={hobby}
+              time={encounter.time}
+              context={encounter.context}
+              isNew={encounter.isNew}
+              onPress={() => openHobby(hobby.id)}
+            />
+          );
+        })}
+      </View>
 
       <Text style={styles.disclaimer}>人ではなく、sukiだけが届きます。</Text>
 
@@ -125,21 +107,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  liveRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: IbukiSpacing.xs,
-    marginBottom: IbukiSpacing.xs,
-  },
-  livePulse: {
-    backgroundColor: IbukiColors.hot,
-    borderRadius: 5,
-    height: 9,
-    width: 9,
-  },
-  modeRow: {
-    alignItems: "flex-start",
   },
   filterRow: {
     gap: IbukiSpacing.xs,

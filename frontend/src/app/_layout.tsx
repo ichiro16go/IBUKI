@@ -20,6 +20,7 @@ import { useColorScheme } from "react-native";
 
 import { IbukiFonts } from "@/constants/ibuki-theme";
 import { AuthProvider, useAuth } from "@/contexts/auth";
+import { EncounterPreferencesProvider } from "@/state/encounter-preferences";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -61,7 +62,7 @@ export default function RootLayout() {
     [IbukiFonts.sansRegular]: ZenMaruGothic_400Regular,
     [IbukiFonts.sans]: ZenMaruGothic_500Medium,
     [IbukiFonts.sansBold]: ZenMaruGothic_700Bold,
-    [IbukiFonts.mono]: SpaceMono_400Regular,
+    [IbukiFonts.monoRegular]: SpaceMono_400Regular,
     [IbukiFonts.monoBold]: SpaceMono_700Bold,
   });
 
@@ -76,10 +77,12 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <RootNavigator />
-      </ThemeProvider>
-    </AuthProvider>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <AuthProvider>
+        <EncounterPreferencesProvider>
+          <RootNavigator />
+        </EncounterPreferencesProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
