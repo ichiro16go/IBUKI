@@ -16,7 +16,6 @@ import {
   IconButton,
   IbukiScreen,
   Kicker,
-  PhotoBlock,
   PillButton,
   TopBar,
 } from "@/components/ibuki-ui";
@@ -203,25 +202,22 @@ export default function PlanterDetailScreen() {
         right={item.isOwnSuki ? <Kicker>MY SUKI</Kicker> : <Kicker>もらったsuki</Kicker>}
       />
 
-      <View style={styles.photoSection}>
-        <PhotoBlock hobby={item.hobby} height={200} />
-        <View style={{ alignItems: "center", marginTop: 8 }}>
-          <PlantVisual
-            actionCount={item.actionCount}
-            stage={initialStage ?? (item.actionCount === 0 ? "seed" : "leafy")}
-            flowerVariant={Math.abs(hashCode(item.id)) % 3}
-            size={180}
-          />
+      <View style={styles.visualSection}>
+        <PlantVisual
+          actionCount={item.actionCount}
+          stage={initialStage ?? (item.actionCount === 0 ? "seed" : "leafy")}
+          flowerVariant={Math.abs(hashCode(item.id)) % 3}
+          size={260}
+        />
 
-          {item.isOwnSuki && item.actionCount === 0 ? (
-            <PillButton
-              label={initialStage ? `成熟度: ${initialStage}` : "初期成熟度を設定"}
-              onPress={() => setShowInitialStageModal(true)}
-              style={{ marginTop: 8, width: 180 }}
-              variant="accent"
-            />
-          ) : null}
-        </View>
+        {item.isOwnSuki && item.actionCount === 0 ? (
+          <PillButton
+            label={initialStage ? `成熟度: ${initialStage}` : "初期成熟度を設定"}
+            onPress={() => setShowInitialStageModal(true)}
+            style={{ marginTop: 12, width: 220 }}
+            variant="accent"
+          />
+        ) : null}
       </View>
 
       <View style={styles.infoSection}>
@@ -595,8 +591,10 @@ const styles = StyleSheet.create({
     paddingVertical: IbukiSpacing.sm,
     textAlignVertical: "top",
   },
-  photoSection: {
+  visualSection: {
+    alignItems: "center",
     marginBottom: IbukiSpacing.md,
+    paddingTop: IbukiSpacing.lg,
   },
   stateBlock: {
     alignItems: "center",
