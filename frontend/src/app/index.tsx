@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   },
   brandMarkText: {
     color: IbukiColors.background,
-    fontFamily: IbukiFonts?.serifBold,
+    fontFamily: IbukiFonts?.sansBold,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   stackTitle: {
     color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 22,
     fontWeight: "500",
     marginTop: IbukiSpacing.sm,

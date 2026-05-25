@@ -152,14 +152,14 @@ const styles = StyleSheet.create({
   },
   quoteMark: {
     color: IbukiColors.accent,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 48,
     lineHeight: 52,
   },
   quote: {
     color: IbukiColors.ink,
     flex: 1,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 18,
     lineHeight: 28,
   },

@@ -31,15 +31,12 @@ void SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded, fontLoadError] = useFonts({
-    [IbukiFonts.sansRegular]: ZenKakuGothicNew_400Regular,
-    [IbukiFonts.sans]: ZenKakuGothicNew_500Medium,
-    [IbukiFonts.sansBold]: ZenKakuGothicNew_700Bold,
-    [IbukiFonts.serifRegular]: ShipporiMinchoB1_400Regular,
-    [IbukiFonts.serif]: ShipporiMinchoB1_500Medium,
-    [IbukiFonts.serifBold]: ShipporiMinchoB1_700Bold,
-    [IbukiFonts.monoRegular]: JetBrainsMono_400Regular,
-    [IbukiFonts.mono]: JetBrainsMono_500Medium,
-    [IbukiFonts.monoBold]: JetBrainsMono_700Bold,
+    [IbukiFonts.sansRegular]: ZenMaruGothic_400Regular,
+    [IbukiFonts.sans]: ZenMaruGothic_500Medium,
+    [IbukiFonts.sansBold]: ZenMaruGothic_700Bold,
+    [IbukiFonts.monoRegular]: SpaceMono_400Regular,
+    [IbukiFonts.mono]: SpaceMono_400Regular,
+    [IbukiFonts.monoBold]: SpaceMono_700Bold,
   });
 
   useEffect(() => {

@@ -583,7 +583,8 @@ export function EntryStepCard({
           <Text
             style={[
               styles.stepMarkText,
-              (done || active) && styles.stepMarkTextLight,
+              done && styles.stepMarkTextDone,
+              active && styles.stepMarkTextActive,
             ]}
           >
             {done ? "✓" : active ? "•" : "○"}
@@ -787,17 +788,17 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: IbukiColors.mid,
-    fontFamily: IbukiFonts?.monoBold,
+    fontFamily: IbukiFonts?.mono,
     fontSize: 10.5,
-    fontWeight: "600",
-    letterSpacing: 1.4,
+    fontWeight: "500",
+    letterSpacing: 0.6,
     textTransform: "uppercase",
   },
   heading: {
     color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sansBold,
     fontSize: 34,
-    fontWeight: "500",
+    fontWeight: "700",
     lineHeight: 42,
     letterSpacing: 0,
   },
@@ -811,9 +812,9 @@ const styles = StyleSheet.create({
   },
   bodyText: {
     color: IbukiColors.inkSoft,
-    fontFamily: IbukiFonts?.sans,
+    fontFamily: IbukiFonts?.sansRegular,
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "400",
     lineHeight: 23,
   },
   mutedText: {
@@ -850,8 +851,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   chipSelected: {
-    backgroundColor: IbukiColors.ink,
-    borderColor: IbukiColors.ink,
+    backgroundColor: IbukiColors.accentDeep,
+    borderColor: IbukiColors.accentDeep,
   },
   chipText: {
     color: IbukiColors.inkSoft,
@@ -881,12 +882,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
   pillButtonDark: {
-    backgroundColor: IbukiColors.ink,
-    borderColor: IbukiColors.ink,
+    backgroundColor: IbukiColors.accentDeep,
+    borderColor: IbukiColors.accentDeep,
   },
   pillButtonAccent: {
-    backgroundColor: IbukiColors.accent,
-    borderColor: IbukiColors.accent,
+    backgroundColor: IbukiColors.good,
+    borderColor: IbukiColors.good,
   },
   pillButtonText: {
     color: IbukiColors.ink,
@@ -981,7 +982,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 20,
     fontWeight: "500",
     lineHeight: 25,
@@ -999,7 +1000,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tag: {
-    backgroundColor: IbukiColors.surfaceMuted,
+    backgroundColor: IbukiColors.accentTint,
     borderColor: IbukiColors.line,
     borderRadius: IbukiRadius.pill,
     borderWidth: 1,
@@ -1047,7 +1048,7 @@ const styles = StyleSheet.create({
   },
   quoteText: {
     color: IbukiColors.inkSoft,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 15,
     lineHeight: 23,
   },
@@ -1067,7 +1068,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 24,
     fontWeight: "500",
   },
@@ -1095,7 +1096,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   segmentPillSelected: {
-    backgroundColor: IbukiColors.ink,
+    backgroundColor: IbukiColors.accentDeep,
   },
   segmentText: {
     color: IbukiColors.mid,
@@ -1166,7 +1167,7 @@ const styles = StyleSheet.create({
   radarWest: { left: 15, top: "50%" },
   youPin: {
     alignItems: "center",
-    backgroundColor: IbukiColors.ink,
+    backgroundColor: IbukiColors.accentDeep,
     borderRadius: IbukiRadius.pill,
     left: "44%",
     paddingHorizontal: 10,
@@ -1181,7 +1182,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   radarBubble: {
-    backgroundColor: "rgba(255,252,236,0.88)",
+    backgroundColor: "rgba(247,243,234,0.92)",
     borderColor: IbukiColors.line,
     borderRadius: IbukiRadius.md,
     borderWidth: 1,
@@ -1226,7 +1227,7 @@ const styles = StyleSheet.create({
     padding: IbukiSpacing.sm,
   },
   entryStepActive: {
-    borderColor: IbukiColors.accent,
+    borderColor: IbukiColors.good,
     backgroundColor: IbukiColors.accentTint,
   },
   stepMark: {
@@ -1243,15 +1244,18 @@ const styles = StyleSheet.create({
     borderColor: IbukiColors.good,
   },
   stepMarkActive: {
-    backgroundColor: IbukiColors.accent,
-    borderColor: IbukiColors.accent,
+    backgroundColor: IbukiColors.accentDeep,
+    borderColor: IbukiColors.accentDeep,
   },
   stepMarkText: {
     color: IbukiColors.mid,
     fontSize: 16,
     fontWeight: "700",
   },
-  stepMarkTextLight: {
+  stepMarkTextDone: {
+    color: IbukiColors.ink,
+  },
+  stepMarkTextActive: {
     color: IbukiColors.surface,
   },
   stepCopy: {
@@ -1272,7 +1276,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   tabBar: {
-    backgroundColor: "rgba(251,245,221,0.92)",
+    backgroundColor: "rgba(237,232,220,0.95)",
     borderColor: IbukiColors.line,
     borderTopWidth: 1,
     flexDirection: "row",
@@ -1300,7 +1304,7 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     alignItems: "center",
-    backgroundColor: "rgba(20,19,15,0.28)",
+    backgroundColor: "rgba(46,38,32,0.22)",
     flex: 1,
     justifyContent: "center",
   },
@@ -1369,7 +1373,7 @@ const styles = StyleSheet.create({
   },
   toast: {
     alignItems: "center",
-    backgroundColor: "rgba(255,252,236,0.88)",
+    backgroundColor: "rgba(247,243,234,0.93)",
     borderColor: IbukiColors.line,
     borderRadius: IbukiRadius.md,
     borderWidth: 1,
