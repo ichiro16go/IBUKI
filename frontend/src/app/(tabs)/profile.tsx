@@ -29,6 +29,7 @@ import {
 } from "@/constants/ibuki-theme";
 import { useAuth } from "@/contexts/auth";
 import { createLikeCard, getMyLikeCards, type LikeCard } from "@/lib/like-cards";
+import { fetchSavedCards } from "@/lib/encounters";
 import { hobbies, profileSummary, type Hobby } from "@/data/ibuki";
 
 const MAX_SHARED_HOBBIES = 5;
@@ -36,6 +37,7 @@ const MAX_SHARED_HOBBIES = 5;
 export default function ProfileScreen() {
   const { user } = useAuth();
   const [likeCards, setLikeCards] = useState<LikeCard[]>([]);
+  const [savedCount, setSavedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [pickerVisible, setPickerVisible] = useState(false);
 
@@ -48,8 +50,11 @@ export default function ProfileScreen() {
     useCallback(() => {
       if (!user) return;
       setLoading(true);
-      getMyLikeCards()
-        .then(setLikeCards)
+      Promise.all([getMyLikeCards(), fetchSavedCards(user.id)])
+        .then(([cards, saved]) => {
+          setLikeCards(cards);
+          setSavedCount(saved.length);
+        })
         .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
         .finally(() => setLoading(false));
     }, [user]),
@@ -104,7 +109,7 @@ export default function ProfileScreen() {
           label="すきカード"
         />
         <ProfileStat
-          value={profileSummary.savedCount.toString()}
+          value={String(savedCount).padStart(2, "0")}
           label="保存したsuki"
         />
       </View>
