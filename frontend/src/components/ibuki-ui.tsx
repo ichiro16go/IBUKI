@@ -245,8 +245,7 @@ export function PillButton({
 }) {
   const isDark = variant === "dark";
   const isAccent = variant === "accent";
-  const tintColor =
-    isDark || isAccent ? IbukiColors.background : IbukiColors.ink;
+  const tintColor = isDark ? IbukiColors.background : IbukiColors.ink;
 
   return (
     <Pressable
@@ -263,7 +262,7 @@ export function PillButton({
         <Text
           style={[
             styles.pillButtonText,
-            (isDark || isAccent) && styles.pillButtonTextLight,
+            isDark && styles.pillButtonTextLight,
           ]}
         >
           {label}
@@ -583,7 +582,8 @@ export function EntryStepCard({
           <Text
             style={[
               styles.stepMarkText,
-              (done || active) && styles.stepMarkTextLight,
+              done && styles.stepMarkTextDone,
+              active && styles.stepMarkTextActive,
             ]}
           >
             {done ? "✓" : active ? "•" : "○"}
@@ -791,6 +791,7 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     fontWeight: "500",
     letterSpacing: 0.6,
+    textTransform: "uppercase",
   },
   heading: {
     color: IbukiColors.ink,
@@ -849,8 +850,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   chipSelected: {
-    backgroundColor: IbukiColors.accent,
-    borderColor: IbukiColors.accent,
+    backgroundColor: IbukiColors.accentDeep,
+    borderColor: IbukiColors.accentDeep,
   },
   chipText: {
     color: IbukiColors.inkSoft,
@@ -980,7 +981,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 20,
     fontWeight: "500",
     lineHeight: 25,
@@ -1046,7 +1047,7 @@ const styles = StyleSheet.create({
   },
   quoteText: {
     color: IbukiColors.inkSoft,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 15,
     lineHeight: 23,
   },
@@ -1066,7 +1067,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 24,
     fontWeight: "500",
   },
@@ -1242,15 +1243,18 @@ const styles = StyleSheet.create({
     borderColor: IbukiColors.good,
   },
   stepMarkActive: {
-    backgroundColor: IbukiColors.accent,
-    borderColor: IbukiColors.accent,
+    backgroundColor: IbukiColors.accentDeep,
+    borderColor: IbukiColors.accentDeep,
   },
   stepMarkText: {
     color: IbukiColors.mid,
     fontSize: 16,
     fontWeight: "700",
   },
-  stepMarkTextLight: {
+  stepMarkTextDone: {
+    color: IbukiColors.ink,
+  },
+  stepMarkTextActive: {
     color: IbukiColors.surface,
   },
   stepCopy: {

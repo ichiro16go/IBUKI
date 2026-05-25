@@ -140,6 +140,11 @@ cd backend
 uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+```bash
+# 検証環境DB起動
+make supabase-start
+```
+
 ### 開発でよく使うコマンド
 
 | 目的 | コマンド |

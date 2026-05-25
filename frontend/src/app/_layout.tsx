@@ -1,8 +1,7 @@
 import {
-  MPLUS1_400Regular,
-  MPLUS1_500Medium,
-  MPLUS1_700Bold,
-} from "@expo-google-fonts/m-plus-1";
+  SpaceMono_400Regular,
+  SpaceMono_700Bold,
+} from "@expo-google-fonts/space-mono";
 import {
   ZenMaruGothic_400Regular,
   ZenMaruGothic_500Medium,
@@ -24,12 +23,9 @@ export default function RootLayout() {
     [IbukiFonts.sansRegular]: ZenMaruGothic_400Regular,
     [IbukiFonts.sans]: ZenMaruGothic_500Medium,
     [IbukiFonts.sansBold]: ZenMaruGothic_700Bold,
-    [IbukiFonts.serifRegular]: ZenMaruGothic_400Regular,
-    [IbukiFonts.serif]: ZenMaruGothic_500Medium,
-    [IbukiFonts.serifBold]: ZenMaruGothic_700Bold,
-    [IbukiFonts.monoRegular]: MPLUS1_400Regular,
-    [IbukiFonts.mono]: MPLUS1_500Medium,
-    [IbukiFonts.monoBold]: MPLUS1_700Bold,
+    [IbukiFonts.monoRegular]: SpaceMono_400Regular,
+    [IbukiFonts.mono]: SpaceMono_400Regular,
+    [IbukiFonts.monoBold]: SpaceMono_700Bold,
   });
 
   useEffect(() => {

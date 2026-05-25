@@ -17,7 +17,7 @@ export const IbukiColors = {
   accentTint: "#EFE2D6",
   accentTintStrong: "#E7D8C8",
   good: "#A5B68D",
-  hot: "#B17F59",
+  hot: "#B45E57",
   mapLand: "#EDE8DC",
   mapBlock: "#E4DDCF",
   mapWater: "#DCE5D0",
@@ -50,12 +50,9 @@ export const IbukiFonts = {
   sans: "ZenMaruGothic_500Medium",
   sansRegular: "ZenMaruGothic_400Regular",
   sansBold: "ZenMaruGothic_700Bold",
-  serif: "ZenMaruGothic_500Medium",
-  serifRegular: "ZenMaruGothic_400Regular",
-  serifBold: "ZenMaruGothic_700Bold",
-  mono: "MPLUS1_500Medium",
-  monoRegular: "MPLUS1_400Regular",
-  monoBold: "MPLUS1_700Bold",
+  mono: "SpaceMono_400Regular",
+  monoRegular: "SpaceMono_400Regular",
+  monoBold: "SpaceMono_700Bold",
 } as const;
 
 export const IbukiShadow = {

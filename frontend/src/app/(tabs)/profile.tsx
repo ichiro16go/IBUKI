@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   profileStatValue: {
     color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.serif,
+    fontFamily: IbukiFonts?.sans,
     fontSize: 28,
     fontWeight: "500",
   },
