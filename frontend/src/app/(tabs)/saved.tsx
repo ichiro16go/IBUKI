@@ -7,7 +7,6 @@ import {
   Heading,
   HobbyCard,
   IbukiScreen,
-  IconButton,
   Kicker,
 } from "@/components/ibuki-ui";
 import { IbukiSpacing } from "@/constants/ibuki-theme";
@@ -23,14 +22,6 @@ export default function SavedScreen() {
           <Kicker>SAVED · 14 hobbies</Kicker>
           <Heading size="medium">気になった{"\n"}趣味たち</Heading>
         </View>
-        <IconButton
-          label="Tune filters"
-          icon={{
-            ios: "slider.horizontal.3",
-            android: "tune",
-            web: "slider.horizontal.3",
-          }}
-        />
       </View>
 
       <ScrollView
@@ -60,11 +51,8 @@ export default function SavedScreen() {
       </ScrollView>
 
       <View style={styles.grid}>
-        {hobbies.map((hobby, index) => (
-          <View
-            key={hobby.id}
-            style={[styles.gridItem, index % 3 === 1 && styles.tallItem]}
-          >
+        {hobbies.map((hobby) => (
+          <View key={hobby.id} style={styles.gridItem}>
             <HobbyCard
               hobby={hobby}
               compact
@@ -99,8 +87,5 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     width: "48.2%",
-  },
-  tallItem: {
-    marginTop: IbukiSpacing.xl,
   },
 });

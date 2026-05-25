@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 
 import { IbukiFonts } from "@/constants/ibuki-theme";
+import { EncounterPreferencesProvider } from "@/state/encounter-preferences";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -29,7 +30,6 @@ export default function RootLayout() {
     [IbukiFonts.sans]: ZenMaruGothic_500Medium,
     [IbukiFonts.sansBold]: ZenMaruGothic_700Bold,
     [IbukiFonts.monoRegular]: SpaceMono_400Regular,
-    [IbukiFonts.mono]: SpaceMono_400Regular,
     [IbukiFonts.monoBold]: SpaceMono_700Bold,
   });
 
@@ -45,11 +45,13 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="hobby/[id]" />
-      </Stack>
+      <EncounterPreferencesProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="hobby/[id]" />
+        </Stack>
+      </EncounterPreferencesProvider>
     </ThemeProvider>
   );
 }

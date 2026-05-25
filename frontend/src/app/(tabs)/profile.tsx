@@ -96,10 +96,6 @@ export default function ProfileScreen() {
           value={String(sharedHobbyIds.length).padStart(2, "0")}
           label="共有中"
         />
-        <ProfileStat
-          value={`0${profileSummary.mutualCount}`}
-          label="相互解放"
-        />
       </View>
 
       <View style={styles.segmentRow}>

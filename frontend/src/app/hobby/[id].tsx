@@ -19,12 +19,18 @@ import {
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
 import { getHobbyById } from "@/data/ibuki";
+import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function HobbyDetailScreen() {
   const { id } = useLocalSearchParams();
   const hobby = getHobbyById(id);
-  const [interested, setInterested] = useState(false);
   const [saved, setSaved] = useState(false);
+  const { hideEncounter } = useEncounterPreferences();
+
+  function markUninterested() {
+    hideEncounter(hobby.id);
+    router.replace("/encounters");
+  }
 
   return (
     <IbukiScreen>
@@ -39,19 +45,13 @@ export default function HobbyDetailScreen() {
           onPress={() => router.back()}
         />
         <Kicker>NO. {hobby.number} · CARD DETAIL</Kicker>
-        <IconButton
-          icon={{
-            ios: "square.and.arrow.up",
-            android: "share",
-            web: "square.and.arrow.up",
-          }}
-        />
+        <View style={styles.topBarSpacer} />
       </View>
 
       <PhotoBlock
         hobby={hobby}
         height={220}
-        label={`${hobby.lastSeen}にすれ違い · ${hobby.distance}`}
+        label={`${hobby.lastSeen}にすれ違い`}
       />
 
       <View style={styles.titleSection}>
@@ -78,10 +78,6 @@ export default function HobbyDetailScreen() {
           <Kicker>HOW TO START</Kicker>
           <BodyText muted>{hobby.beginnerNote}</BodyText>
         </View>
-        <View style={styles.infoCard}>
-          <Kicker>NEARBY</Kicker>
-          <BodyText muted>{hobby.nearbyPlace}</BodyText>
-        </View>
       </View>
 
       <View style={styles.placeCard}>
@@ -99,9 +95,9 @@ export default function HobbyDetailScreen() {
 
       <View style={styles.actions}>
         <PillButton
-          label={interested ? "気になる中" : "気になる"}
-          variant={interested ? "accent" : "light"}
-          onPress={() => setInterested((current) => !current)}
+          label="興味なし"
+          variant="light"
+          onPress={markUninterested}
           style={styles.actionShort}
         />
         <PillButton
@@ -110,11 +106,7 @@ export default function HobbyDetailScreen() {
           onPress={() => setSaved((current) => !current)}
           style={styles.actionWide}
         />
-        <IconButton
-          icon={{ ios: "ellipsis", android: "more_horiz", web: "ellipsis" }}
-        />
       </View>
-      <Text style={styles.footerLink}>入口を見る · 体験スポットを探す</Text>
     </IbukiScreen>
   );
 }
@@ -124,6 +116,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  topBarSpacer: {
+    height: 38,
+    width: 38,
   },
   titleSection: {
     gap: IbukiSpacing.xs,
@@ -222,13 +218,5 @@ const styles = StyleSheet.create({
   },
   actionWide: {
     flex: 1.25,
-  },
-  footerLink: {
-    color: IbukiColors.mid,
-    fontFamily: IbukiFonts?.monoBold,
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    textAlign: "center",
   },
 });
