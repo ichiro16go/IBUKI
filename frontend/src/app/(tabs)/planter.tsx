@@ -79,7 +79,8 @@ export default function PlanterScreen() {
             まだ planter に植えた suki がありません。
           </Text>
           <Text style={styles.stateSubtext}>
-            bookmark した suki を planter に送ると、ここで育成を始められます。
+            bookmark した suki を planter に送ると、ここで育成を始められます。{"\n"}
+            プロフィールの自分のすきカードからも育てることができます。
           </Text>
         </View>
       ) : (
@@ -102,6 +103,11 @@ export default function PlanterScreen() {
                 />
                 <View style={styles.cardBody}>
                   <Text style={styles.cardTitle}>{item.hobby.nameJa}</Text>
+                  {item.isOwnSuki ? (
+                    <Text style={styles.ownSukiBadge}>MY SUKI</Text>
+                  ) : (
+                    <Text style={styles.receivedSukiBadge}>もらったsuki</Text>
+                  )}
                 </View>
               </View>
             </Pressable>
@@ -162,5 +168,17 @@ const styles = StyleSheet.create({
   stateText: {
     color: IbukiColors.ink,
     textAlign: "center",
+  },
+  ownSukiBadge: {
+    color: IbukiColors.accent,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  receivedSukiBadge: {
+    color: IbukiColors.mid,
+    fontSize: 11,
+    marginTop: 2,
   },
 });

@@ -18,6 +18,7 @@ import {
   IbukiScreen,
   IconButton,
   Kicker,
+  PillButton,
   TopBar,
 } from "@/components/ibuki-ui";
 import {
@@ -31,8 +32,9 @@ import {
   type RecommendedHobby,
 } from "@/hooks/use-hobby-recommendations";
 import { useAuth } from "@/contexts/auth";
-import { createLikeCard, getMyLikeCards, type LikeCard } from "@/lib/like-cards";
+import { createLikeCard, getMyLikeCards, getPlantedCountByCardIds, type LikeCard } from "@/lib/like-cards";
 import { fetchSavedCards } from "@/lib/encounters";
+import { getMyProfile } from "@/lib/user-profile";
 
 
 const MAX_SHARED_HOBBIES = 5;
@@ -41,6 +43,9 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const [likeCards, setLikeCards] = useState<LikeCard[]>([]);
   const [savedCount, setSavedCount] = useState(0);
+  const [plantedCounts, setPlantedCounts] = useState<Record<string, number>>({});
+  const [nickname, setNickname] = useState<string | null>(null);
+  const [isProfilePublic, setIsProfilePublic] = useState(false);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const { state, recommend, reset } = useHobbyRecommendations();
@@ -51,10 +56,16 @@ export default function ProfileScreen() {
     useCallback(() => {
       if (!user) return;
       setLoading(true);
-      Promise.all([getMyLikeCards(), fetchSavedCards(user.id)])
-        .then(([cards, saved]) => {
+      Promise.all([getMyLikeCards(), fetchSavedCards(user.id), getMyProfile()])
+        .then(async ([cards, saved, profile]) => {
           setLikeCards(cards);
           setSavedCount(saved.length);
+          if (profile) {
+            setNickname(profile.nickname ?? null);
+            setIsProfilePublic(profile.is_profile_public);
+          }
+          const counts = await getPlantedCountByCardIds(cards.map((c) => c.id));
+          setPlantedCounts(counts);
         })
         .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
         .finally(() => setLoading(false));
@@ -109,11 +120,11 @@ export default function ProfileScreen() {
       <TopBar
         left={<Kicker>PROFILE</Kicker>}
         right={
-            <IconButton
-              icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
-              onPress={handleSignOutPress}
-              label="設定"
-            />
+          <IconButton
+            icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
+            onPress={handleSignOutPress}
+            label="設定"
+          />
         }
       />
 
@@ -123,8 +134,16 @@ export default function ProfileScreen() {
           <Text style={styles.avatarLevel}>{profileSummary.level}</Text>
         </View>
         <View style={styles.identityCopy}>
-          <Kicker>{profileSummary.handle} · 匿名表示</Kicker>
-          <Heading size="medium">まだ名前のない{"\n"}誰か</Heading>
+          <View style={styles.publicBadgeRow}>
+            <View style={[styles.publicBadge, isProfilePublic ? styles.publicBadgeOn : styles.publicBadgeOff]}>
+              <Text style={[styles.publicBadgeText, isProfilePublic ? styles.publicBadgeTextOn : styles.publicBadgeTextOff]}>
+                {isProfilePublic ? "公開中" : "非公開"}
+              </Text>
+            </View>
+          </View>
+          <Heading size="medium">
+            {nickname ?? "まだ名前のない\n誰か"}
+          </Heading>
           <Text style={styles.metaText}>
             {profileSummary.location} · since {profileSummary.since}
           </Text>
@@ -142,17 +161,23 @@ export default function ProfileScreen() {
         />
       </View>
 
+      <PillButton
+        label="プロフィールを編集"
+        onPress={() =>
+          router.push({ pathname: "/profile-edit" } as never)
+        }
+        style={styles.editProfileButton}
+        variant="light"
+      />
+
       <View style={styles.segmentRow}>
         <Text style={styles.segmentActive}>自分のsukiカード</Text>
-        <Text style={styles.segment}>保存</Text>
-        <Text style={styles.segment}>SNSリンク</Text>
       </View>
 
       <View style={styles.sectionHeader}>
         <Kicker>
           すきカード · {likeCards.length} / {MAX_SHARED_HOBBIES}
         </Kicker>
-        <Kicker>↓ ドラッグで並べ替え</Kicker>
       </View>
 
       {loading ? (
@@ -163,6 +188,7 @@ export default function ProfileScreen() {
             <View key={card.id} style={styles.gridItem}>
               <LikeCardTile
                 card={card}
+                plantedCount={plantedCounts[card.id] ?? 0}
                 onPress={() =>
                   router.push({
                     pathname: "/suki/[id]",
@@ -209,9 +235,11 @@ export default function ProfileScreen() {
 
 function LikeCardTile({
   card,
+  plantedCount,
   onPress,
 }: {
   card: LikeCard;
+  plantedCount: number;
   onPress: () => void;
 }) {
   return (
@@ -234,6 +262,9 @@ function LikeCardTile({
           <Text style={styles.tileDetail} numberOfLines={2}>
             {card.detail}
           </Text>
+        ) : null}
+        {plantedCount > 1 ? (
+          <Text style={styles.plantedCount}>他{plantedCount - 1}人が育てています。</Text>
         ) : null}
       </View>
     </Pressable>
@@ -286,6 +317,35 @@ const styles = StyleSheet.create({
   identityCopy: {
     flex: 1,
     gap: 3,
+  },
+  publicBadgeRow: {
+    flexDirection: "row",
+    marginBottom: 2,
+  },
+  publicBadge: {
+    borderRadius: IbukiRadius.pill,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  publicBadgeOn: {
+    backgroundColor: IbukiColors.accentTint,
+    borderColor: IbukiColors.accent,
+  },
+  publicBadgeOff: {
+    backgroundColor: IbukiColors.surfaceMuted,
+    borderColor: IbukiColors.line,
+  },
+  publicBadgeText: {
+    fontFamily: IbukiFonts?.sansBold,
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  publicBadgeTextOn: {
+    color: IbukiColors.accentDeep,
+  },
+  publicBadgeTextOff: {
+    color: IbukiColors.mid,
   },
   metaText: {
     color: IbukiColors.mid,
@@ -390,6 +450,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
     lineHeight: 15,
+  },
+  plantedCount: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts?.sans,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  editProfileButton: {
+    marginBottom: IbukiSpacing.md,
+    width: "100%",
   },
   addCard: {
     alignItems: "center",
