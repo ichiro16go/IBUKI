@@ -20,6 +20,8 @@ import {
   PillButton,
   TopBar,
 } from "@/components/ibuki-ui";
+import PlantVisual, { type PlantStage } from "@/components/plant-visual";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   IbukiColors,
   IbukiFonts,
@@ -42,6 +44,15 @@ type SelectedActionInfo = {
   actionType: string;
 };
 
+function hashCode(str: string) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return h;
+}
+
 export default function PlanterDetailScreen() {
   const params = useLocalSearchParams() as { id?: string };
   const planterItemId = params.id ?? "";
@@ -54,6 +65,18 @@ export default function PlanterDetailScreen() {
   const [selectedAction, setSelectedAction] = useState<SelectedActionInfo | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  const [initialStage, setInitialStage] = useState<PlantStage | null>(null);
+  const [showInitialStageModal, setShowInitialStageModal] = useState(false);
+
+  useEffect(() => {
+    if (!detail) return;
+    const item = detail.item;
+    const key = `planter_initial_maturity_${item.id}`;
+    void AsyncStorage.getItem(key).then((v) => {
+      if (v === "seed" || v === "sprout" || v === "leafy") setInitialStage(v);
+    });
+  }, [detail]);
 
   const { state: aiState, fetchRecommendations, reset: resetAi } = useActionRecommendations();
 
@@ -154,6 +177,19 @@ export default function PlanterDetailScreen() {
 
   const { item, logs } = detail;
 
+  async function saveInitialStage(stage: PlantStage | null) {
+    if (!item) return;
+    const key = `planter_initial_maturity_${item.id}`;
+    if (stage) {
+      await AsyncStorage.setItem(key, stage);
+      setInitialStage(stage);
+    } else {
+      await AsyncStorage.removeItem(key);
+      setInitialStage(null);
+    }
+    setShowInitialStageModal(false);
+  }
+
   return (
     <IbukiScreen withTabBar scroll>
       <TopBar
@@ -168,7 +204,24 @@ export default function PlanterDetailScreen() {
       />
 
       <View style={styles.photoSection}>
-        <PhotoBlock hobby={item.hobby} height={250} />
+        <PhotoBlock hobby={item.hobby} height={200} />
+        <View style={{ alignItems: "center", marginTop: 8 }}>
+          <PlantVisual
+            actionCount={item.actionCount}
+            stage={initialStage ?? (item.actionCount === 0 ? "seed" : "leafy")}
+            flowerVariant={Math.abs(hashCode(item.id)) % 3}
+            size={180}
+          />
+
+          {item.isOwnSuki && item.actionCount === 0 ? (
+            <PillButton
+              label={initialStage ? `成熟度: ${initialStage}` : "初期成熟度を設定"}
+              onPress={() => setShowInitialStageModal(true)}
+              style={{ marginTop: 8, width: 180 }}
+              variant="accent"
+            />
+          ) : null}
+        </View>
       </View>
 
       <View style={styles.infoSection}>
@@ -253,7 +306,7 @@ export default function PlanterDetailScreen() {
                   style={[
                     styles.actionOptionTitle,
                     selectedAction?.id === action.id &&
-                      styles.actionOptionTitleSelected,
+                    styles.actionOptionTitleSelected,
                   ]}
                 >
                   {action.title}
@@ -289,14 +342,14 @@ export default function PlanterDetailScreen() {
                       styles.actionOption,
                       styles.actionOptionAi,
                       selectedAction?.id === `ai-rec-${index}` &&
-                        styles.actionOptionAiSelected,
+                      styles.actionOptionAiSelected,
                     ]}
                   >
                     <Text
                       style={[
                         styles.actionOptionTitle,
                         selectedAction?.id === `ai-rec-${index}` &&
-                          styles.actionOptionTitleAiSelected,
+                        styles.actionOptionTitleAiSelected,
                       ]}
                     >
                       {rec.title}
@@ -341,6 +394,43 @@ export default function PlanterDetailScreen() {
               ]}
               variant="dark"
             />
+          </View>
+        </IbukiScreen>
+      </Modal>
+
+      <Modal
+        visible={showInitialStageModal}
+        animationType="slide"
+        onRequestClose={() => setShowInitialStageModal(false)}
+      >
+        <IbukiScreen>
+          <TopBar
+            left={<Kicker>初期成熟度を選択</Kicker>}
+            right={
+              <Pressable onPress={() => setShowInitialStageModal(false)}>
+                <Text style={styles.closeButton}>✕</Text>
+              </Pressable>
+            }
+          />
+
+          <View style={{ padding: 20 }}>
+            <Heading size="small">どの段階から始めますか？</Heading>
+            <Pressable onPress={() => void saveInitialStage("seed")} style={[styles.actionOption, { marginTop: 16 }]}>
+              <Text style={styles.actionOptionTitle}>種（Seed）</Text>
+              <Text style={styles.actionOptionDesc}>最初の状態。AIの提案を1〜3回実行すると芽が出ます。</Text>
+            </Pressable>
+            <Pressable onPress={() => void saveInitialStage("sprout")} style={[styles.actionOption, { marginTop: 12 }]}>
+              <Text style={styles.actionOptionTitle}>芽（Sprout）</Text>
+              <Text style={styles.actionOptionDesc}>芽が出ている状態。葉が少しあります。</Text>
+            </Pressable>
+            <Pressable onPress={() => void saveInitialStage("leafy")} style={[styles.actionOption, { marginTop: 12 }]}>
+              <Text style={styles.actionOptionTitle}>ある程度成長（Leafy）</Text>
+              <Text style={styles.actionOptionDesc}>葉があり、すぐに花が咲く可能性があります。</Text>
+            </Pressable>
+
+            <View style={{ marginTop: 20 }}>
+              <PillButton label="クリア" onPress={() => void saveInitialStage(null)} variant="light" />
+            </View>
           </View>
         </IbukiScreen>
       </Modal>
