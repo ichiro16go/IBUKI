@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 export type UserProfile = {
   id: string;
   username: string;
+  nickname: string | null;
   age_range: string | null;
   gender_label: string | null;
   is_profile_public: boolean;
@@ -19,7 +20,7 @@ export async function getMyProfile(): Promise<UserProfile | null> {
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, username, age_range, gender_label, is_profile_public")
+    .select("id, username, nickname, age_range, gender_label, is_profile_public")
     .eq("id", user.id)
     .single();
 
@@ -40,6 +41,7 @@ export async function getUserPublicProfile(
 }
 
 export async function updateMyProfile(input: {
+  nickname?: string | null;
   age_range?: string | null;
   gender_label?: string | null;
   is_profile_public?: boolean;

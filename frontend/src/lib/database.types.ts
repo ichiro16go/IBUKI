@@ -342,6 +342,7 @@ export type Database = {
           gender_label: string | null;
           id: string;
           is_profile_public: boolean;
+          nickname: string | null;
           username: string;
         };
         Insert: {
@@ -350,6 +351,7 @@ export type Database = {
           gender_label?: string | null;
           id: string;
           is_profile_public?: boolean;
+          nickname?: string | null;
           username: string;
         };
         Update: {
@@ -358,6 +360,7 @@ export type Database = {
           gender_label?: string | null;
           id?: string;
           is_profile_public?: boolean;
+          nickname?: string | null;
           username?: string;
         };
         Relationships: [];

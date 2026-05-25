@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -33,6 +34,7 @@ import {
 } from "@/lib/user-profile";
 
 export default function ProfileEditScreen() {
+  const [nickname, setNickname] = useState("");
   const [ageRange, setAgeRange] = useState<string | null>(null);
   const [genderLabel, setGenderLabel] = useState<string | null>(null);
   const [isProfilePublic, setIsProfilePublic] = useState(false);
@@ -43,6 +45,7 @@ export default function ProfileEditScreen() {
     getMyProfile()
       .then((profile) => {
         if (profile) {
+          setNickname(profile.nickname ?? "");
           setAgeRange(profile.age_range);
           setGenderLabel(profile.gender_label);
           setIsProfilePublic(profile.is_profile_public);
@@ -57,6 +60,7 @@ export default function ProfileEditScreen() {
     try {
       setIsSaving(true);
       await updateMyProfile({
+        nickname: nickname.trim() || null,
         age_range: ageRange,
         gender_label: genderLabel,
         is_profile_public: isProfilePublic,
@@ -91,6 +95,19 @@ export default function ProfileEditScreen() {
         }
         right={<Kicker>プロフィール編集</Kicker>}
       />
+
+      <View style={styles.section}>
+        <Heading size="small">ニックネーム（任意）</Heading>
+        <BodyText>アプリ内での表示名です。設定しなくても使えます</BodyText>
+        <TextInput
+          value={nickname}
+          onChangeText={setNickname}
+          placeholder="例：コーヒー好き"
+          placeholderTextColor={IbukiColors.mid}
+          maxLength={20}
+          style={styles.textInput}
+        />
+      </View>
 
       <View style={styles.section}>
         <Heading size="small">年代</Heading>
@@ -202,6 +219,17 @@ const styles = StyleSheet.create({
     gap: IbukiSpacing.sm,
     paddingBottom: IbukiSpacing.lg,
     paddingTop: IbukiSpacing.lg,
+  },
+  textInput: {
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 15,
+    marginTop: IbukiSpacing.xs,
+    paddingHorizontal: IbukiSpacing.md,
+    paddingVertical: IbukiSpacing.sm,
   },
   optionRow: {
     flexDirection: "row",

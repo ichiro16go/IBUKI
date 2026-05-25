@@ -35,6 +35,7 @@ import {
 import { useAuth } from "@/contexts/auth";
 import { createLikeCard, getMyLikeCards, getPlantedCountByCardIds, type LikeCard } from "@/lib/like-cards";
 import { fetchSavedCards } from "@/lib/encounters";
+import { getMyProfile } from "@/lib/user-profile";
 
 
 const MAX_SHARED_HOBBIES = 5;
@@ -44,6 +45,8 @@ export default function ProfileScreen() {
   const [likeCards, setLikeCards] = useState<LikeCard[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [plantedCounts, setPlantedCounts] = useState<Record<string, number>>({});
+  const [nickname, setNickname] = useState<string | null>(null);
+  const [isProfilePublic, setIsProfilePublic] = useState(false);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const { state, recommend, reset } = useHobbyRecommendations();
@@ -54,10 +57,14 @@ export default function ProfileScreen() {
     useCallback(() => {
       if (!user) return;
       setLoading(true);
-      Promise.all([getMyLikeCards(), fetchSavedCards(user.id)])
-        .then(async ([cards, saved]) => {
+      Promise.all([getMyLikeCards(), fetchSavedCards(user.id), getMyProfile()])
+        .then(async ([cards, saved, profile]) => {
           setLikeCards(cards);
           setSavedCount(saved.length);
+          if (profile) {
+            setNickname(profile.nickname ?? null);
+            setIsProfilePublic(profile.is_profile_public);
+          }
           const counts = await getPlantedCountByCardIds(cards.map((c) => c.id));
           setPlantedCounts(counts);
         })
@@ -128,8 +135,16 @@ export default function ProfileScreen() {
           <Text style={styles.avatarLevel}>{profileSummary.level}</Text>
         </View>
         <View style={styles.identityCopy}>
-          <Kicker>{profileSummary.handle} · 匿名表示</Kicker>
-          <Heading size="medium">まだ名前のない{"\n"}誰か</Heading>
+          <View style={styles.publicBadgeRow}>
+            <View style={[styles.publicBadge, isProfilePublic ? styles.publicBadgeOn : styles.publicBadgeOff]}>
+              <Text style={[styles.publicBadgeText, isProfilePublic ? styles.publicBadgeTextOn : styles.publicBadgeTextOff]}>
+                {isProfilePublic ? "公開中" : "非公開"}
+              </Text>
+            </View>
+          </View>
+          <Heading size="medium">
+            {nickname ?? "まだ名前のない\n誰か"}
+          </Heading>
           <Text style={styles.metaText}>
             {profileSummary.location} · since {profileSummary.since}
           </Text>
@@ -249,8 +264,8 @@ function LikeCardTile({
             {card.detail}
           </Text>
         ) : null}
-        {plantedCount > 0 ? (
-          <Text style={styles.plantedCount}>{plantedCount}人が植えています</Text>
+        {plantedCount > 1 ? (
+          <Text style={styles.plantedCount}>他{plantedCount - 1}人が育てています。</Text>
         ) : null}
       </View>
     </Pressable>
@@ -303,6 +318,35 @@ const styles = StyleSheet.create({
   identityCopy: {
     flex: 1,
     gap: 3,
+  },
+  publicBadgeRow: {
+    flexDirection: "row",
+    marginBottom: 2,
+  },
+  publicBadge: {
+    borderRadius: IbukiRadius.pill,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  publicBadgeOn: {
+    backgroundColor: IbukiColors.accentTint,
+    borderColor: IbukiColors.accent,
+  },
+  publicBadgeOff: {
+    backgroundColor: IbukiColors.surfaceMuted,
+    borderColor: IbukiColors.line,
+  },
+  publicBadgeText: {
+    fontFamily: IbukiFonts?.sansBold,
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  publicBadgeTextOn: {
+    color: IbukiColors.accentDeep,
+  },
+  publicBadgeTextOff: {
+    color: IbukiColors.mid,
   },
   metaText: {
     color: IbukiColors.mid,
