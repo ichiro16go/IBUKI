@@ -42,12 +42,20 @@ function AppSymbol({
   size: number;
   tintColor: string;
 }) {
-  if (Platform.OS === "web") {
-    const fallback =
-      symbolFallbacks[name.ios] ??
-      symbolFallbacks[name.web ?? ""] ??
-      symbolFallbacks[name.android ?? ""] ??
-      "•";
+  const symbolName =
+    Platform.OS === "android"
+      ? (name.android ?? name.ios)
+      : Platform.OS === "web"
+        ? (name.web ?? name.ios)
+        : name.ios;
+  const fallback =
+    symbolFallbacks[symbolName] ??
+    symbolFallbacks[name.ios] ??
+    symbolFallbacks[name.web ?? ""] ??
+    symbolFallbacks[name.android ?? ""] ??
+    "•";
+
+  if (Platform.OS !== "ios") {
     return (
       <Text
         style={{
@@ -62,7 +70,14 @@ function AppSymbol({
     );
   }
 
-  return <SymbolView name={name as never} size={size} tintColor={tintColor} />;
+  return (
+    <SymbolView
+      fallback={fallback}
+      name={symbolName as never}
+      size={size}
+      tintColor={tintColor}
+    />
+  );
 }
 
 const symbolFallbacks: Record<string, string> = {
@@ -75,6 +90,7 @@ const symbolFallbacks: Record<string, string> = {
   bookmark_border: "□",
   chevron: "‹",
   "chevron.left": "‹",
+  "dot.radiowaves.left.and.right": "◉",
   eco: "⌁",
   ellipsis: "…",
   favorite: "♥",
@@ -351,7 +367,6 @@ export function PhotoBlock({
           <View style={[styles.photoCircleSmall, { borderColor: tone.ink }]} />
         </>
       )}
-      <Text style={[styles.photoSlug, { color: tone.ink }]}>{hobby.slug}</Text>
       {label && (
         <View style={styles.photoLabel}>
           <Text style={styles.photoLabelText}>{label}</Text>
@@ -410,14 +425,12 @@ export function HobbyCard({
 export function EncounterCard({
   hobby,
   time,
-  distance,
   context,
   isNew,
   onPress,
 }: {
   hobby: Hobby;
   time: string;
-  distance: string;
   context: string;
   isNew: boolean;
   onPress: () => void;
@@ -433,7 +446,6 @@ export function EncounterCard({
           <Kicker>
             {isNew ? "NEW" : "PASS"} · {time}
           </Kicker>
-          <Text style={styles.distanceText}>{distance}</Text>
         </View>
         <View style={styles.encounterContent}>
           <PhotoBlock hobby={hobby} height={116} label={context} />
@@ -617,8 +629,8 @@ export function BottomTabBar() {
       icon: { ios: "bookmark", android: "bookmark_border", web: "bookmark" },
     },
     {
-      path: "/planter",
-      label: "planter",
+      path: "/entry",
+      label: "育てる",
       icon: { ios: "leaf", android: "eco", web: "leaf" },
     },
     {
@@ -940,15 +952,6 @@ const styles = StyleSheet.create({
     top: 36,
     width: 118,
   },
-  photoSlug: {
-    bottom: 16,
-    fontFamily: IbukiFonts?.mono,
-    fontSize: 13,
-    fontWeight: "600",
-    left: 16,
-    letterSpacing: 0.6,
-    position: "absolute",
-  },
   photoLabel: {
     backgroundColor: "rgba(255,255,255,0.78)",
     borderRadius: 4,
@@ -1032,13 +1035,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     height: 9,
     width: 9,
-  },
-  distanceText: {
-    color: IbukiColors.mid,
-    fontFamily: IbukiFonts?.mono,
-    fontSize: 11,
-    fontWeight: "600",
-    marginLeft: "auto",
   },
   encounterContent: {
     gap: IbukiSpacing.md,
