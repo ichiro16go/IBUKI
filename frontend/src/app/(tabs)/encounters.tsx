@@ -1,7 +1,14 @@
 import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import {
   Chip,
@@ -15,7 +22,11 @@ import { SwipeableEncounterCard } from "@/components/swipeable-encounter-card";
 import { IbukiColors, IbukiFonts, IbukiSpacing } from "@/constants/ibuki-theme";
 import { hobbies } from "@/data/ibuki";
 import { useAuth } from "@/contexts/auth";
-import { fetchEncounterFeed, saveEncounterBookmark, type EncounterFeedItem } from "@/lib/encounters";
+import {
+  fetchEncounterFeed,
+  saveEncounterBookmark,
+  type EncounterFeedItem,
+} from "@/lib/encounters";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function EncountersScreen() {
@@ -73,7 +84,9 @@ export default function EncountersScreen() {
     } catch (saveError) {
       Alert.alert(
         "保存できませんでした",
-        saveError instanceof Error ? saveError.message : "bookmarkに失敗しました",
+        saveError instanceof Error
+          ? saveError.message
+          : "bookmarkに失敗しました",
       );
     }
   }

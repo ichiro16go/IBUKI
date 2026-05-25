@@ -1,9 +1,8 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useEncounter } from '../../hooks/useEncounter';
-
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useEncounter } from "../../hooks/useEncounter";
 
 import {
   BodyText,
@@ -32,13 +31,15 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) setUserId(user.id);
     };
     getUser();
   }, []);
 
-  useEncounter(userId ?? '');
+  useEncounter(userId ?? "");
 
   return (
     <IbukiScreen scroll={false}>
@@ -84,7 +85,11 @@ export default function HomeScreen() {
         <PillButton
           label="はじめる"
           variant="dark"
-          icon={{ ios: "arrow.right", android: "arrow_forward", web: "arrow.right" }}
+          icon={{
+            ios: "arrow.right",
+            android: "arrow_forward",
+            web: "arrow.right",
+          }}
           onPress={handleStart}
         />
         {/* <PillButton

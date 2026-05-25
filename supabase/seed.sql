@@ -23,6 +23,9 @@ DECLARE
     -- Encounter IDs
     enc_ids uuid[] := ARRAY[]::uuid[];
     enc_id uuid;
+    planter_id uuid;
+    saved_rec record;
+    planted_count int := 0;
 
     -- Categories and hobbies
     categories text[] := ARRAY['music', 'sports', 'art', 'food', 'tech', 'nature', 'reading', 'games', 'travel', 'craft'];
@@ -70,6 +73,8 @@ BEGIN
     RAISE NOTICE 'Using users: %, %, %', user_a_id, user_b_id, user_c_id;
 
     -- Clear existing data (optional - comment out if you want to keep existing data)
+    DELETE FROM suki_action_logs;
+    DELETE FROM planter_items;
     DELETE FROM saved_cards;
     DELETE FROM encounter_cards;
     DELETE FROM encounters;
@@ -196,6 +201,67 @@ BEGIN
     END LOOP;
 
     RAISE NOTICE 'Created saved_cards';
+
+    -- Insert planter_items and suki_action_logs from a subset of saved cards
+    FOR saved_rec IN
+        SELECT id, user_id, like_card_id, encounter_id
+        FROM saved_cards
+        ORDER BY created_at, id
+        LIMIT 4
+    LOOP
+        INSERT INTO planter_items (
+            user_id,
+            like_card_id,
+            source_saved_card_id,
+            source_encounter_id,
+            planted_at
+        )
+        VALUES (
+            saved_rec.user_id,
+            saved_rec.like_card_id,
+            saved_rec.id,
+            saved_rec.encounter_id,
+            NOW() - ((planted_count + 2) || ' days')::interval
+        )
+        ON CONFLICT (user_id, like_card_id) DO UPDATE
+        SET
+            source_saved_card_id = EXCLUDED.source_saved_card_id,
+            source_encounter_id = EXCLUDED.source_encounter_id
+        RETURNING id INTO planter_id;
+
+        INSERT INTO suki_action_logs (
+            planter_item_id,
+            user_id,
+            action_type,
+            title,
+            notes,
+            acted_at
+        )
+        VALUES
+            (
+                planter_id,
+                saved_rec.user_id,
+                'research',
+                'まずは調べてみる',
+                '気になった入口を検索して、最初の一歩を探した。',
+                NOW() - ((planted_count + 1) || ' days')::interval
+            ),
+            (
+                planter_id,
+                saved_rec.user_id,
+                CASE WHEN planted_count % 2 = 0 THEN 'experience' ELSE 'purchase' END,
+                CASE WHEN planted_count % 2 = 0 THEN '実際に試してみる' ELSE '道具をそろえてみる' END,
+                CASE
+                    WHEN planted_count % 2 = 0 THEN '週末に体験できる場所を見つけて実際に触ってみた。'
+                    ELSE '続けるための最低限の道具をひとつ用意した。'
+                END,
+                NOW() - (planted_count || ' hours')::interval
+            );
+
+        planted_count := planted_count + 1;
+    END LOOP;
+
+    RAISE NOTICE 'Created planter_items and suki_action_logs';
     RAISE NOTICE 'Seed data inserted successfully!';
 END $$;
 
@@ -208,4 +274,8 @@ SELECT 'encounters', COUNT(*) FROM encounters
 UNION ALL
 SELECT 'encounter_cards', COUNT(*) FROM encounter_cards
 UNION ALL
-SELECT 'saved_cards', COUNT(*) FROM saved_cards;
+SELECT 'saved_cards', COUNT(*) FROM saved_cards
+UNION ALL
+SELECT 'planter_items', COUNT(*) FROM planter_items
+UNION ALL
+SELECT 'suki_action_logs', COUNT(*) FROM suki_action_logs;
