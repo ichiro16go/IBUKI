@@ -17,6 +17,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { IbukiFonts } from "@/constants/ibuki-theme";
 import { AuthProvider, useAuth } from "@/contexts/auth";
@@ -49,6 +50,7 @@ function RootNavigator() {
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="hobby/[id]" />
+      <Stack.Screen name="suki/[id]" />
       <Stack.Screen name="planter/[id]" />
       <Stack.Screen name="sign-in" />
       <Stack.Screen name="auth-callback" />
@@ -77,12 +79,14 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <AuthProvider>
-        <EncounterPreferencesProvider>
-          <RootNavigator />
-        </EncounterPreferencesProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <AuthProvider>
+          <EncounterPreferencesProvider>
+            <RootNavigator />
+          </EncounterPreferencesProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

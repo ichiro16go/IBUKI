@@ -23,7 +23,7 @@ export type Hobby = {
   lastSeen: string;
   savedAt: string;
   photoTone: PhotoTone;
-  image: ImageSourcePropType;
+  image?: ImageSourcePropType;
   beginnerNote: string;
   intro: string;
   howToStart: string[]; // 3-4 steps for starting this hobby
@@ -309,7 +309,7 @@ export const encounters: Encounter[] = [
   },
 ];
 
-export const encounterFilters = ["全て", "新しい", "近い順", "ひとり向け"];
+export const encounterFilters = ["全て"];
 export const savedFilters = [
   "全て",
   "今週",
