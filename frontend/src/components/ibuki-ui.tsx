@@ -245,7 +245,8 @@ export function PillButton({
 }) {
   const isDark = variant === "dark";
   const isAccent = variant === "accent";
-  const tintColor = isDark ? IbukiColors.background : IbukiColors.ink;
+  const tintColor =
+    isDark || isAccent ? IbukiColors.background : IbukiColors.ink;
 
   return (
     <Pressable
@@ -262,7 +263,7 @@ export function PillButton({
         <Text
           style={[
             styles.pillButtonText,
-            isDark && styles.pillButtonTextLight,
+            (isDark || isAccent) && styles.pillButtonTextLight,
           ]}
         >
           {label}
@@ -917,7 +918,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   photoScrim: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(20,19,15,0.06)",
   },
   photoCircleLarge: {
@@ -1319,7 +1320,7 @@ const styles = StyleSheet.create({
     width: "92%",
   },
   mapLines: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: IbukiColors.mapLand,
   },
   mapRoad: {

@@ -1,14 +1,25 @@
 import {
-  SpaceMono_400Regular,
-  SpaceMono_700Bold,
-} from "@expo-google-fonts/space-mono";
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
 import {
-  ZenMaruGothic_400Regular,
-  ZenMaruGothic_500Medium,
-  ZenMaruGothic_700Bold,
-} from "@expo-google-fonts/zen-maru-gothic";
+  JetBrainsMono_400Regular,
+  JetBrainsMono_500Medium,
+  JetBrainsMono_700Bold,
+} from "@expo-google-fonts/jetbrains-mono";
+import {
+  ShipporiMinchoB1_400Regular,
+  ShipporiMinchoB1_500Medium,
+  ShipporiMinchoB1_700Bold,
+} from "@expo-google-fonts/shippori-mincho-b1";
+import {
+  ZenKakuGothicNew_400Regular,
+  ZenKakuGothicNew_500Medium,
+  ZenKakuGothicNew_700Bold,
+} from "@expo-google-fonts/zen-kaku-gothic-new";
 import { useFonts } from "expo-font";
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";

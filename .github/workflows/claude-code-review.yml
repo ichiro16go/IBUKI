@@ -23,28 +23,23 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # コメント投稿に必要なツールを許可
-          additional_permissions: |
-            Bash(gh pr comment:*)
-            Bash(gh pr diff:*)
-            Bash(gh pr view:*)
-            Bash(gh pr review:*)
-            Bash(gh issue comment:*)
-            Read
-            Glob
-            Grep
+          # デバッグ中はフルログを出して、コメント未投稿時の原因を追いやすくする
+          show_full_output: true
+          # サマリーコメントを1つに保つ（更新時に追記ではなく集約）
+          use_sticky_comment: true
+          # インラインコメントは分類して投稿（ノイズ低減）
+          classify_inline_comments: true
           prompt: |
-            このPRをレビューしてください。以下の観点でコメントをお願いします：
+            このPRを日本語でコードレビューしてください。
+            必ず以下2種類を残してください:
+            1) PR全体へのサマリーコメント（結論・懸念点・LGTM可否）
+            2) 必要箇所へのインラインコメント（行単位で具体的に）
 
-            1. コードの品質・可読性
-            2. バグや潜在的な問題
-            3. セキュリティ上の懸念
-            4. パフォーマンスの問題
-            5. 改善提案
+            レビュー観点:
+            - コードの品質・可読性
+            - バグや潜在的な問題
+            - セキュリティ上の懸念
+            - パフォーマンスの問題
+            - 改善提案
 
-            日本語でレビューコメントを書いてください。
-            重大な問題がなければ「LGTM」とコメントしてください。
-
-            レビューが終わったら、以下のコマンドでPRにコメントを投稿してください：
-            gh pr comment ${{ github.event.pull_request.number }} --body "レビュー内容"
+            重大な問題がなければサマリー末尾に「LGTM」を含めてください。

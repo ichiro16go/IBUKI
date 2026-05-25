@@ -68,7 +68,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "3分前",
     savedAt: "今日",
     photoTone: "dusk",
-    image: require("@/assets/images/placeholders/film-camera.png"),
+    image: require("@/assets/images/hobbies/film-camera -dusk-.png"),
     beginnerNote:
       "写ルンですや中古コンパクトから。現像店を1つ見つけると続けやすい。",
     nearbyPlace: "渋谷フォトラボ · 徒歩8分",
@@ -87,7 +87,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "昨日",
     savedAt: "3日前",
     photoTone: "clay",
-    image: require("@/assets/images/placeholders/togei.png"),
+    image: require("@/assets/images/hobbies/pottery -clay-.png"),
     beginnerNote: "体験教室で湯呑みを1つ。エプロンだけ持っていけば大丈夫。",
     nearbyPlace: "代々木うつわ工房 · 電車12分",
     intro:
@@ -105,7 +105,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "26分前",
     savedAt: "1週前",
     photoTone: "night",
-    image: require("@/assets/images/placeholders/jazz-kissa.png"),
+    image: require("@/assets/images/hobbies/jazz-kissa -night-.png"),
     beginnerNote: "会話より音を聴く場所。まずは昼の時間帯に一杯だけ。",
     nearbyPlace: "道玄坂 Quiet Blue · 徒歩9分",
     intro: "大きなスピーカーと暗い灯りの中で、音楽に場所ごと浸る趣味です。",
@@ -122,7 +122,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "2時間前",
     savedAt: "3週前",
     photoTone: "moss",
-    image: require("@/assets/images/placeholders/birdwatching.png"),
+    image: require("@/assets/images/hobbies/birdwatching -dawn-.png"),
     beginnerNote:
       "双眼鏡がなくても、鳴き声アプリと公園のベンチから始められる。",
     nearbyPlace: "明治神宮外苑 · 電車10分",
@@ -140,7 +140,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "先週",
     savedAt: "2週前",
     photoTone: "paper",
-    image: require("@/assets/images/placeholders/tanka.png"),
+    image: require("@/assets/images/hobbies/tanka -ink-.png"),
     beginnerNote:
       "まずは好きな一首を写すところから。SNS投稿でも十分に入口です。",
     nearbyPlace: "青山ブックセンター · 徒歩18分",
@@ -158,7 +158,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "1時間前",
     savedAt: "2週前",
     photoTone: "mint",
-    image: require("@/assets/images/placeholders/board-game.png"),
+    image: require("@/assets/images/hobbies/board-game -mint-.png"),
     beginnerNote: "相席歓迎のカフェで、15分ルールの軽いゲームから。",
     nearbyPlace: "恵比寿 Table Door · 徒歩14分",
     intro:
@@ -176,7 +176,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "4時間前",
     savedAt: "先月",
     photoTone: "warm",
-    image: require("@/assets/images/placeholders/sauna.png"),
+    image: require("@/assets/images/hobbies/sento.png"),
     beginnerNote:
       "水分補給を忘れず、短いセットから。休憩を長めに取ると楽しい。",
     nearbyPlace: "笹塚マルシンスパ · 電車16分",
@@ -194,7 +194,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "今朝",
     savedAt: "先月",
     photoTone: "ink",
-    image: require("@/assets/images/placeholders/bookstores.png"),
+    image: require("@/assets/images/hobbies/paper.png"),
     beginnerNote:
       "知らない駅で小さな本屋を1つ探す。買わなくても、棚を見るだけでいい。",
     nearbyPlace: "渋谷 Publishing & Books · 徒歩6分",
