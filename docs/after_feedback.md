@@ -22,6 +22,7 @@
 
 - 何人が育てました
 - どのsukiを育てたか（親DTがsuki）
+![alt text](IMG_20260525_131700338_MFNR.jpg)
 
 属性、UNは必要ない
 nestとしては
@@ -29,4 +30,8 @@ suki一覧<suki_card<suki_action_log
 
 ## 2. 「自分の潜在的なsukiをＡＩを使って発掘する機能」の要件を埋める
 
-あとで写真はる
+![alt text](IMG_20260525_132213828_MFNR.jpg)
+
+## 3. suki一覧画面要件詰める,4. 具体的な利用パターンを想定し、画面構成を詰める
+
+![alt text](IMG_20260525_135026915_MFNR.jpg)
