@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { router } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
+
 import {
   ActivityIndicator,
   Alert,
@@ -47,13 +49,16 @@ export default function ProfileScreen() {
 
   const canAddMore = likeCards.length < MAX_SHARED_HOBBIES;
 
-  useEffect(() => {
-    if (!user) return;
-    getMyLikeCards()
-      .then(setLikeCards)
-      .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
-      .finally(() => setLoading(false));
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      setLoading(true);
+      getMyLikeCards()
+        .then(setLikeCards)
+        .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
+        .finally(() => setLoading(false));
+    }, [user]),
+  );
 
   function openRecommendations() {
     if (!canAddMore) return;
