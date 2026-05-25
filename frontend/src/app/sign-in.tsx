@@ -53,7 +53,9 @@ export default function SignInScreen() {
         <Text style={styles.brandText}>IBUKI</Text>
       </View>
 
-      <Text style={styles.subtitle}>まだ知らない趣味と、{"\n"}街ですれ違う。</Text>
+      <Text style={styles.subtitle}>
+        まだ知らない趣味と、{"\n"}街ですれ違う。
+      </Text>
 
       {error && <Text style={styles.error}>{error}</Text>}
 

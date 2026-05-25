@@ -141,6 +141,23 @@ uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ```bash
+# YouTube連携でGoogle provider tokenを更新する場合
+# backend/.env に設定（値はGoogle Cloud OAuthクライアントのもの）
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+```
+
+```bash
+# ngrok インストール（初回のみ・Homebrew 使用）
+brew install ngrok/ngrok/ngrok
+```
+
+```bash
+# ngrok でバックエンドを外部公開（フロントエンドから実機アクセスする場合）
+ngrok http 8000
+```
+
+```bash
 # 検証環境DB起動
 make supabase-start
 ```

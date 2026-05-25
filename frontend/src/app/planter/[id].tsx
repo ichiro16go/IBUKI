@@ -224,7 +224,7 @@ export default function PlanterDetailScreen() {
                   style={[
                     styles.actionOptionTitle,
                     selectedActionId === action.id &&
-                      styles.actionOptionTitleSelected,
+                    styles.actionOptionTitleSelected,
                   ]}
                 >
                   {action.title}

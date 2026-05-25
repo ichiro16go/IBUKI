@@ -13,7 +13,12 @@ import {
   View,
 } from "react-native";
 
-import { IbukiScreen, IconButton, Kicker, PillButton } from "@/components/ibuki-ui";
+import {
+  IbukiScreen,
+  IconButton,
+  Kicker,
+  PillButton,
+} from "@/components/ibuki-ui";
 import {
   IbukiColors,
   IbukiFonts,
@@ -21,6 +26,7 @@ import {
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
 import {
+  deleteLikeCard,
   getLikeCardById,
   updateLikeCard,
   type LikeCard,
@@ -52,6 +58,24 @@ export default function SukiDetailScreen() {
       .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
       .finally(() => setLoading(false));
   }, [id]);
+
+  function handleDelete() {
+    Alert.alert("カードを削除", "このすきカードを削除しますか？", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteLikeCard(id);
+            router.back();
+          } catch {
+            Alert.alert("エラー", "削除に失敗しました");
+          }
+        },
+      },
+    ]);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -85,7 +109,11 @@ export default function SukiDetailScreen() {
         <View style={styles.topBar}>
           <IconButton
             label="Back"
-            icon={{ ios: "chevron.left", android: "arrow_back", web: "chevron.left" }}
+            icon={{
+              ios: "chevron.left",
+              android: "arrow_back",
+              web: "chevron.left",
+            }}
             onPress={() => router.back()}
           />
         </View>
@@ -103,21 +131,33 @@ export default function SukiDetailScreen() {
         <View style={styles.topBar}>
           <IconButton
             label="Back"
-            icon={{ ios: "chevron.left", android: "arrow_back", web: "chevron.left" }}
+            icon={{
+              ios: "chevron.left",
+              android: "arrow_back",
+              web: "chevron.left",
+            }}
             onPress={() => router.back()}
           />
           <Kicker>MY SUKI CARD</Kicker>
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={saving}
-            style={styles.saveButton}
-          >
-            {saving ? (
-              <ActivityIndicator color={IbukiColors.background} size="small" />
-            ) : (
-              <Text style={styles.saveButtonText}>保存</Text>
-            )}
-          </TouchableOpacity>
+          <View style={styles.topBarActions}>
+            <TouchableOpacity
+              onPress={handleDelete}
+              style={[styles.saveButton, styles.deleteButton]}
+            >
+              <Text style={styles.deleteButtonText}>削除</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={saving}
+              style={styles.saveButton}
+            >
+              {saving ? (
+                <ActivityIndicator color={IbukiColors.background} size="small" />
+              ) : (
+                <Text style={styles.saveButtonText}>保存</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* 写真 */}
@@ -201,6 +241,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: IbukiSpacing.md,
+  },
+  topBarActions: {
+    flexDirection: "row",
+    gap: IbukiSpacing.xs,
+  },
+  deleteButton: {
+    backgroundColor: IbukiColors.surface,
+    borderColor: IbukiColors.line,
+    borderWidth: 1,
+  },
+  deleteButtonText: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 13,
+    fontWeight: "700",
   },
   saveButton: {
     backgroundColor: IbukiColors.ink,

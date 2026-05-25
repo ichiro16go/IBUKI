@@ -496,13 +496,18 @@ export function getPlanterItem(sukiId: string): PlanterItem | undefined {
 export function getGrowthStatus(sukiId: string): GrowthStatus {
   const item = getPlanterItem(sukiId);
   if (!item) {
-    return { level: 0, actionCount: 0, lastActionDate: "", nextLevelProgressPercent: 0 };
+    return {
+      level: 0,
+      actionCount: 0,
+      lastActionDate: "",
+      nextLevelProgressPercent: 0,
+    };
   }
 
   const nextLevelThreshold = (item.level + 1) * 4;
   const progressPercent = Math.min(
     Math.round((item.actionCount / nextLevelThreshold) * 100),
-    100
+    100,
   );
 
   return {

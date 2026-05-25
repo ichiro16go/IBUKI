@@ -8,7 +8,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { IbukiColors, IbukiFonts, IbukiRadius, IbukiSpacing } from "@/constants/ibuki-theme";
+import {
+  IbukiColors,
+  IbukiFonts,
+  IbukiRadius,
+  IbukiSpacing,
+} from "@/constants/ibuki-theme";
 
 const SWIPE_THRESHOLD = 88;
 const OFFSCREEN_X = Dimensions.get("window").width;
@@ -32,13 +37,23 @@ export function SwipeableEncounterCard({
   }));
 
   const rightBadgeStyle = useAnimatedStyle(() => ({
-    opacity: translateX.value > 0 ? Math.min(translateX.value / SWIPE_THRESHOLD, 1) : 0,
-    transform: [{ scale: 0.92 + Math.min(Math.abs(translateX.value) / 260, 0.08) }],
+    opacity:
+      translateX.value > 0
+        ? Math.min(translateX.value / SWIPE_THRESHOLD, 1)
+        : 0,
+    transform: [
+      { scale: 0.92 + Math.min(Math.abs(translateX.value) / 260, 0.08) },
+    ],
   }));
 
   const leftBadgeStyle = useAnimatedStyle(() => ({
-    opacity: translateX.value < 0 ? Math.min(Math.abs(translateX.value) / SWIPE_THRESHOLD, 1) : 0,
-    transform: [{ scale: 0.92 + Math.min(Math.abs(translateX.value) / 260, 0.08) }],
+    opacity:
+      translateX.value < 0
+        ? Math.min(Math.abs(translateX.value) / SWIPE_THRESHOLD, 1)
+        : 0,
+    transform: [
+      { scale: 0.92 + Math.min(Math.abs(translateX.value) / 260, 0.08) },
+    ],
   }));
 
   const panGesture = Gesture.Pan()
@@ -48,20 +63,28 @@ export function SwipeableEncounterCard({
     })
     .onEnd(() => {
       if (translateX.value >= SWIPE_THRESHOLD) {
-        translateX.value = withTiming(OFFSCREEN_X, { duration: 180 }, (finished) => {
-          if (finished) {
-            runOnJS(onSwipeRight)();
-          }
-        });
+        translateX.value = withTiming(
+          OFFSCREEN_X,
+          { duration: 180 },
+          (finished) => {
+            if (finished) {
+              runOnJS(onSwipeRight)();
+            }
+          },
+        );
         return;
       }
 
       if (translateX.value <= -SWIPE_THRESHOLD) {
-        translateX.value = withTiming(-OFFSCREEN_X, { duration: 180 }, (finished) => {
-          if (finished) {
-            runOnJS(onSwipeLeft)();
-          }
-        });
+        translateX.value = withTiming(
+          -OFFSCREEN_X,
+          { duration: 180 },
+          (finished) => {
+            if (finished) {
+              runOnJS(onSwipeLeft)();
+            }
+          },
+        );
         return;
       }
 
@@ -74,7 +97,9 @@ export function SwipeableEncounterCard({
         <Animated.View style={[styles.badge, styles.badgeLeft, leftBadgeStyle]}>
           <Text style={styles.badgeText}>BYE</Text>
         </Animated.View>
-        <Animated.View style={[styles.badge, styles.badgeRight, rightBadgeStyle]}>
+        <Animated.View
+          style={[styles.badge, styles.badgeRight, rightBadgeStyle]}
+        >
           <Text style={styles.badgeText}>BOOKMARK</Text>
         </Animated.View>
         {children}
