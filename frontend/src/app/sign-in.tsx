@@ -16,7 +16,7 @@ import {
 } from "@/constants/ibuki-theme";
 
 export default function SignInScreen() {
-  const { signInWithGoogle, session } = useAuth();
+  const { clearAuthError, signInWithGoogle, session } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +32,7 @@ export default function SignInScreen() {
   const handleSignIn = async () => {
     setLoading(true);
     setError(null);
+    clearAuthError();
     try {
       const didSignIn = await signInWithGoogle();
       if (!didSignIn) {

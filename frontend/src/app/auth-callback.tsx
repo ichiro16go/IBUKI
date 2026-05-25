@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import * as QueryParams from "expo-auth-session/build/QueryParams";
-import * as Linking from "expo-linking";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -20,42 +18,8 @@ import {
 
 export default function AuthCallbackScreen() {
   const router = useRouter();
-  const { session, completeAuthSessionFromUrl } = useAuth();
-  const url = Linking.useLinkingURL();
-  const params = useLocalSearchParams<{
-    code?: string;
-    error?: string;
-    error_description?: string;
-  }>();
-  const [error, setError] = useState<string | null>(null);
-  const lastProcessedUrlRef = useRef<string | null>(null);
-
-  const callbackUrl = useMemo(() => {
-    if (url) {
-      return url;
-    }
-
-    const queryParams = new URLSearchParams();
-
-    if (typeof params.code === "string") {
-      queryParams.set("code", params.code);
-    }
-
-    if (typeof params.error === "string") {
-      queryParams.set("error", params.error);
-    }
-
-    if (typeof params.error_description === "string") {
-      queryParams.set("error_description", params.error_description);
-    }
-
-    const query = queryParams.toString();
-    if (!query) {
-      return null;
-    }
-
-    return `${Linking.createURL("/auth-callback")}?${query}`;
-  }, [params.code, params.error, params.error_description, url]);
+  const { authError, clearAuthError, isLoading, session } = useAuth();
+  const [didTimeout, setDidTimeout] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -64,50 +28,29 @@ export default function AuthCallbackScreen() {
   }, [router, session]);
 
   useEffect(() => {
-    if (!callbackUrl || lastProcessedUrlRef.current === callbackUrl) {
+    if (authError || session) {
+      setDidTimeout(false);
       return;
     }
 
-    const { errorCode, params: callbackParams } = QueryParams.getQueryParams(callbackUrl);
-    const hasAuthPayload =
-      Boolean(errorCode) ||
-      Boolean(callbackParams.error) ||
-      Boolean(callbackParams.error_description) ||
-      Boolean(callbackParams.code) ||
-      Boolean(callbackParams.access_token) ||
-      Boolean(callbackParams.refresh_token);
+    const timeout = setTimeout(() => {
+      setDidTimeout(true);
+    }, 10000);
 
-    if (!hasAuthPayload) {
-      return;
-    }
+    return () => clearTimeout(timeout);
+  }, [authError, session]);
 
-    lastProcessedUrlRef.current = callbackUrl;
-    let cancelled = false;
-
-    const completeSignIn = async () => {
-      try {
-        const handled = await completeAuthSessionFromUrl(callbackUrl);
-
-        if (!handled && !cancelled) {
-          setError("認証結果を確認できませんでした。もう一度お試しください。");
-        }
-      } catch (authError) {
-        if (!cancelled) {
-          setError(
-            authError instanceof Error
-              ? authError.message
-              : "認証に失敗しました。もう一度お試しください。",
-          );
-        }
-      }
-    };
-
-    void completeSignIn();
-
+  useEffect(() => {
     return () => {
-      cancelled = true;
+      clearAuthError();
     };
-  }, [callbackUrl, completeAuthSessionFromUrl]);
+  }, [clearAuthError]);
+
+  const error =
+    authError ||
+    (didTimeout && !isLoading && !session
+      ? "認証結果を確認できませんでした。もう一度お試しください。"
+      : null);
 
   return (
     <View style={styles.container}>
