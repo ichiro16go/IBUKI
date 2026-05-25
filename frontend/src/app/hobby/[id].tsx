@@ -21,11 +21,13 @@ import {
 import { useAuth } from "@/contexts/auth";
 import { getHobbyById } from "@/data/ibuki";
 import { fetchLikeCardById, mapLikeCardToHobby, saveEncounterBookmark } from "@/lib/encounters";
+import { createPlanterItem } from "@/lib/planter";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function HobbyDetailScreen() {
-  const { cardId, encounterId, hideKey, id, source } = useLocalSearchParams<{
+  const { cardId, encounterId, from, hideKey, id, source } = useLocalSearchParams<{
     id: string;
+    from?: string;
     source?: string;
     cardId?: string;
     encounterId?: string;
@@ -38,8 +40,11 @@ export default function HobbyDetailScreen() {
   const [isLoadingRemote, setIsLoadingRemote] = useState(isRemote);
   const [remoteLoadError, setRemoteLoadError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [isPlanting, setIsPlanting] = useState(false);
   const { hideEncounter } = useEncounterPreferences();
   const hobby = (isRemote ? remoteHobby : staticHobby) ?? staticHobby;
+  const canPlantFromBookmark =
+    from === "bookmark" && user?.id && typeof cardId === "string";
 
   useEffect(() => {
     if (!isRemote || typeof cardId !== "string") {
@@ -108,6 +113,35 @@ export default function HobbyDetailScreen() {
     setSaved((current) => !current);
     if (!saved) {
       Alert.alert("Bookmarkしました", `${hobby.nameJa}をbookmarkに追加しました`);
+    }
+  }
+
+  async function handlePlant() {
+    if (!user?.id || typeof cardId !== "string" || isPlanting) {
+      return;
+    }
+
+    try {
+      setIsPlanting(true);
+      const planterItem = await createPlanterItem({
+        encounterId: typeof encounterId === "string" ? encounterId : null,
+        likeCardId: cardId,
+        userId: user.id,
+      });
+      Alert.alert("Planterに植えました", `${hobby.nameJa}の育成を始めます`);
+      router.push({
+        pathname: "/planter/[id]",
+        params: { id: planterItem.id },
+      } as never);
+    } catch (plantError) {
+      Alert.alert(
+        "Planterに植えられませんでした",
+        plantError instanceof Error
+          ? plantError.message
+          : "planterへの追加に失敗しました",
+      );
+    } finally {
+      setIsPlanting(false);
     }
   }
 
@@ -209,6 +243,15 @@ export default function HobbyDetailScreen() {
           style={styles.actionWide}
         />
       </View>
+
+      {canPlantFromBookmark ? (
+        <PillButton
+          label={isPlanting ? "植えています..." : "Planterに植える"}
+          variant="accent"
+          onPress={isPlanting ? undefined : handlePlant}
+          style={styles.planterButton}
+        />
+      ) : null}
     </IbukiScreen>
   );
 }
@@ -316,6 +359,9 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
     gap: IbukiSpacing.sm,
+  },
+  planterButton: {
+    marginTop: IbukiSpacing.sm,
   },
   loadingState: {
     alignItems: "center",

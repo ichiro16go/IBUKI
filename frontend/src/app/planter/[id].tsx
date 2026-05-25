@@ -1,20 +1,22 @@
-import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ScrollView,
+  ActivityIndicator,
+  Modal,
+  Pressable,
   StyleSheet,
   Text,
-  View,
-  Pressable,
-  Modal,
   TextInput,
+  View,
 } from "react-native";
 
 import {
+  BodyText,
   Heading,
+  IconButton,
   IbukiScreen,
   Kicker,
-  BodyText,
+  PhotoBlock,
   PillButton,
   TopBar,
 } from "@/components/ibuki-ui";
@@ -24,136 +26,174 @@ import {
   IbukiRadius,
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
+import { sukiActions } from "@/data/ibuki";
+import { useAuth } from "@/contexts/auth";
 import {
-  getHobbyById,
-  getGrowthStatus,
-  getSukiActionLogsForSuki,
-  getSukiActionById,
-  sukiActions,
-} from "@/data/ibuki";
+  createPlanterActionLog,
+  fetchPlanterDetail,
+  type PlanterDetail,
+} from "@/lib/planter";
 
 export default function PlanterDetailScreen() {
   const params = useLocalSearchParams() as { id?: string };
-  const sukiId = params.id ?? "togei";
+  const planterItemId = params.id ?? "";
+  const { user } = useAuth();
 
+  const [detail, setDetail] = useState<PlanterDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const hobby = getHobbyById(sukiId);
-  const growth = getGrowthStatus(sukiId);
-  const actionLogs = getSukiActionLogsForSuki(sukiId);
+  const selectedAction = useMemo(
+    () => sukiActions.find((action) => action.id === selectedActionId) ?? null,
+    [selectedActionId],
+  );
 
-  function handleAddAction() {
-    if (!selectedActionId) return;
+  const loadDetail = useCallback(async () => {
+    if (!user?.id || !planterItemId) {
+      setDetail(null);
+      setIsLoading(false);
+      return;
+    }
 
-    const action = getSukiActionById(selectedActionId);
-    if (action) {
-      console.log(`Added action: ${selectedActionId}, notes: ${notes}`);
+    try {
+      setIsLoading(true);
+      setError(null);
+      const nextDetail = await fetchPlanterDetail(planterItemId, user.id);
+      setDetail(nextDetail);
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "planter詳細の取得に失敗しました",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [planterItemId, user?.id]);
+
+  useEffect(() => {
+    void loadDetail();
+  }, [loadDetail]);
+
+  async function handleAddAction() {
+    if (!detail || !selectedAction || !user?.id || isSaving) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await createPlanterActionLog({
+        actionType: selectedAction.id,
+        notes,
+        planterItemId: detail.item.id,
+        title: selectedAction.title,
+        userId: user.id,
+      });
       setShowActionModal(false);
       setSelectedActionId(null);
       setNotes("");
+      await loadDetail();
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "アクションの追加に失敗しました",
+      );
+    } finally {
+      setIsSaving(false);
     }
   }
 
-  const nextLevelThreshold = (growth.level + 1) * 4;
-  const actionCountToNextLevel = nextLevelThreshold - growth.actionCount;
+  if (isLoading) {
+    return (
+      <IbukiScreen>
+        <View style={styles.stateBlock}>
+          <ActivityIndicator color={IbukiColors.ink} />
+          <Text style={styles.stateText}>planter詳細を読み込み中です</Text>
+        </View>
+      </IbukiScreen>
+    );
+  }
+
+  if (!detail || error) {
+    return (
+      <IbukiScreen>
+        <View style={styles.stateBlock}>
+          <Text style={styles.stateText}>
+            {error ?? "planter詳細を表示できませんでした"}
+          </Text>
+        </View>
+      </IbukiScreen>
+    );
+  }
+
+  const { item, logs } = detail;
 
   return (
-    <IbukiScreen withTabBar>
+    <IbukiScreen withTabBar scroll>
       <TopBar
-        left={<Kicker>{hobby.nameJa}</Kicker>}
-        right={<Kicker>L{growth.level}</Kicker>}
+        left={
+          <IconButton
+            icon="chevron-left"
+            onPress={() => router.back()}
+            label="戻る"
+          />
+        }
       />
 
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Growth Visualization Section */}
-        <View style={styles.growthSection}>
-          <View style={styles.plantViz}>
-            <Text style={styles.plantEmoji}>🌱</Text>
-          </View>
+      <View style={styles.photoSection}>
+        <PhotoBlock hobby={item.hobby} height={250} />
+      </View>
 
-          <View style={styles.levelInfo}>
-            <Text style={styles.levelLabel}>現在のレベル</Text>
-            <Text style={styles.levelValue}>L{growth.level}</Text>
-          </View>
+      <View style={styles.infoSection}>
+        <Heading size="medium">{item.hobby.nameJa}</Heading>
+        <BodyText>{item.hobby.intro}</BodyText>
 
-          <View style={styles.progressSection}>
-            <View style={styles.progressLabel}>
-              <Text style={styles.progressText}>次のレベルまで</Text>
-              <Text style={styles.progressCount}>
-                {actionCountToNextLevel}アクション
-              </Text>
-            </View>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${growth.nextLevelProgressPercent}%`,
-                  },
-                ]}
-              />
-            </View>
-            <Text style={styles.progressPercent}>
-              {growth.nextLevelProgressPercent}%
-            </Text>
-          </View>
-        </View>
+        <PillButton
+          label={isSaving ? "追加中..." : "アクションを追加"}
+          onPress={isSaving ? undefined : () => setShowActionModal(true)}
+          style={styles.fullWidthButton}
+          variant="accent"
+        />
+      </View>
 
-        {/* Suki Info */}
-        <View style={styles.infoSection}>
-          <Heading size="medium">{hobby.nameJa}</Heading>
-          <BodyText style={styles.description}>{hobby.intro}</BodyText>
+      <View style={styles.logsSection}>
+        <Kicker>アクション履歴</Kicker>
+        <Text style={styles.logsCount}>{logs.length}件</Text>
 
-          <PillButton
-            label="アクションを追加"
-            onPress={() => setShowActionModal(true)}
-            variant="primary"
-            fullWidth
-          />
-        </View>
+        {logs.length === 0 ? (
+          <Text style={styles.emptyText}>まだアクションがありません。</Text>
+        ) : (
+          <View style={styles.logsList}>
+            {logs.map((log) => {
+              const date = new Date(log.actedAt);
+              const month = date.getMonth() + 1;
+              const day = date.getDate();
 
-        {/* Action Logs */}
-        <View style={styles.logsSection}>
-          <Kicker>アクション履歴</Kicker>
-          <Text style={styles.logsCount}>{actionLogs.length}件</Text>
-
-          {actionLogs.length === 0 ? (
-            <Text style={styles.emptyText}>
-              まだアクションがありません。
-            </Text>
-          ) : (
-            <View style={styles.logsList}>
-              {actionLogs.map((log) => {
-                const action = getSukiActionById(log.actionId);
-                const date = new Date(log.timestamp);
-                const month = date.getMonth() + 1;
-                const day = date.getDate();
-
-                return (
-                  <View key={log.id} style={styles.logItem}>
-                    <View style={styles.logDate}>
-                      <Text style={styles.logMonth}>{month}</Text>
-                      <Text style={styles.logDay}>{day}</Text>
-                    </View>
-                    <View style={styles.logContent}>
-                      <Text style={styles.logAction}>
-                        {action?.title ?? "Unknown Action"}
-                      </Text>
-                      {log.notes && (
-                        <Text style={styles.logNotes}>{log.notes}</Text>
-                      )}
-                    </View>
+              return (
+                <View key={log.id} style={styles.logItem}>
+                  <View style={styles.logDate}>
+                    <Text style={styles.logMonth}>{month}</Text>
+                    <Text style={styles.logDay}>{day}</Text>
                   </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
-      </ScrollView>
+                  <View style={styles.logContent}>
+                    <Text style={styles.logAction}>{log.title}</Text>
+                    <Text style={styles.logMeta}>{log.actedAtLabel}</Text>
+                    {log.notes ? (
+                      <Text style={styles.logNotes}>{log.notes}</Text>
+                    ) : null}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
 
-      {/* Action Modal */}
       <Modal
         visible={showActionModal}
         animationType="slide"
@@ -169,65 +209,63 @@ export default function PlanterDetailScreen() {
             }
           />
 
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            <View style={styles.modalSection}>
-              <Heading size="small">アクションを選択</Heading>
-              {sukiActions.map((action) => (
-                <Pressable
-                  key={action.id}
-                  onPress={() => setSelectedActionId(action.id)}
+          <View style={styles.modalSection}>
+            <Heading size="small">アクションを選択</Heading>
+            {sukiActions.map((action) => (
+              <Pressable
+                key={action.id}
+                onPress={() => setSelectedActionId(action.id)}
+                style={[
+                  styles.actionOption,
+                  selectedActionId === action.id && styles.actionOptionSelected,
+                ]}
+              >
+                <Text
                   style={[
-                    styles.actionOption,
-                    selectedActionId === action.id && styles.actionOptionSelected,
+                    styles.actionOptionTitle,
+                    selectedActionId === action.id &&
+                      styles.actionOptionTitleSelected,
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.actionOptionTitle,
-                      selectedActionId === action.id &&
-                        styles.actionOptionTitleSelected,
-                    ]}
-                  >
-                    {action.title}
-                  </Text>
-                  <Text style={styles.actionOptionDesc}>
-                    {action.description}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+                  {action.title}
+                </Text>
+                <Text style={styles.actionOptionDesc}>{action.description}</Text>
+              </Pressable>
+            ))}
+          </View>
 
-            {selectedActionId && (
-              <View style={styles.modalSection}>
-                <Heading size="small">メモ（任意）</Heading>
-                <TextInput
-                  style={styles.notesInput}
-                  placeholder="この時のメモを追加..."
-                  multiline
-                  numberOfLines={4}
-                  value={notes}
-                  onChangeText={setNotes}
-                  placeholderTextColor={IbukiColors.muted}
-                />
-              </View>
-            )}
-
-            <View style={styles.modalActions}>
-              <PillButton
-                label="キャンセル"
-                onPress={() => setShowActionModal(false)}
-                variant="secondary"
-                fullWidth
-              />
-              <PillButton
-                label="追加"
-                onPress={handleAddAction}
-                variant="primary"
-                fullWidth
-                disabled={!selectedActionId}
+          {selectedAction ? (
+            <View style={styles.modalSection}>
+              <Heading size="small">メモ（任意）</Heading>
+              <TextInput
+                style={styles.notesInput}
+                placeholder="この時のメモを追加..."
+                multiline
+                numberOfLines={4}
+                value={notes}
+                onChangeText={setNotes}
+                placeholderTextColor={IbukiColors.mid}
               />
             </View>
-          </ScrollView>
+          ) : null}
+
+          <View style={styles.modalActions}>
+            <PillButton
+              label="キャンセル"
+              onPress={() => setShowActionModal(false)}
+              style={styles.fullWidthButton}
+              variant="light"
+            />
+            <PillButton
+              label={isSaving ? "追加中..." : "追加"}
+              onPress={selectedAction ? handleAddAction : undefined}
+              style={[
+                styles.fullWidthButton,
+                !selectedAction && styles.disabledButton,
+              ]}
+              variant="dark"
+            />
+          </View>
         </IbukiScreen>
       </Modal>
     </IbukiScreen>
@@ -235,194 +273,144 @@ export default function PlanterDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  actionOption: {
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    marginTop: IbukiSpacing.sm,
     paddingHorizontal: IbukiSpacing.md,
-    paddingBottom: IbukiSpacing.xl,
+    paddingVertical: IbukiSpacing.md,
   },
-  growthSection: {
-    alignItems: "center",
-    paddingVertical: IbukiSpacing.lg,
-    marginBottom: IbukiSpacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: IbukiColors.border,
-  },
-  plantViz: {
-    width: 100,
-    height: 100,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: IbukiSpacing.md,
-  },
-  plantEmoji: {
-    fontSize: 60,
-  },
-  levelInfo: {
-    alignItems: "center",
-    marginBottom: IbukiSpacing.md,
-  },
-  levelLabel: {
-    fontSize: 12,
-    color: IbukiColors.muted,
+  actionOptionDesc: {
+    color: IbukiColors.mid,
     fontFamily: IbukiFonts.sans,
+    fontSize: 12,
+  },
+  actionOptionSelected: {
+    backgroundColor: IbukiColors.accentTint,
+    borderColor: IbukiColors.accent,
+  },
+  actionOptionTitle: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 14,
     marginBottom: IbukiSpacing.xs,
   },
-  levelValue: {
-    fontSize: 32,
+  actionOptionTitleSelected: {
+    color: IbukiColors.accentDeep,
     fontFamily: IbukiFonts.sansBold,
-    color: IbukiColors.text,
   },
-  progressSection: {
+  closeButton: {
+    color: IbukiColors.ink,
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  emptyText: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 12,
+    marginTop: IbukiSpacing.md,
+  },
+  fullWidthButton: {
+    marginTop: IbukiSpacing.sm,
     width: "100%",
   },
-  progressLabel: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: IbukiSpacing.sm,
-  },
-  progressText: {
-    fontSize: 12,
-    color: IbukiColors.muted,
-    fontFamily: IbukiFonts.sans,
-  },
-  progressCount: {
-    fontSize: 12,
-    fontFamily: IbukiFonts.sansBold,
-    color: IbukiColors.text,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: IbukiColors.border,
-    borderRadius: 4,
-    overflow: "hidden",
-    marginBottom: IbukiSpacing.sm,
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: IbukiColors.success,
-    borderRadius: 4,
-  },
-  progressPercent: {
-    fontSize: 12,
-    color: IbukiColors.muted,
-    fontFamily: IbukiFonts.sans,
-    textAlign: "right",
-  },
   infoSection: {
-    marginBottom: IbukiSpacing.lg,
+    gap: IbukiSpacing.sm,
+    paddingHorizontal: IbukiSpacing.md,
+    paddingVertical: IbukiSpacing.lg,
   },
-  description: {
-    marginVertical: IbukiSpacing.md,
+  logAction: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 14,
+    marginBottom: IbukiSpacing.xs,
   },
-  logsSection: {
-    paddingTop: IbukiSpacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: IbukiColors.border,
+  logContent: {
+    flex: 1,
+  },
+  logDate: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 50,
+  },
+  logDay: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 18,
+  },
+  logItem: {
+    borderBottomColor: IbukiColors.line,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: IbukiSpacing.md,
+    paddingBottom: IbukiSpacing.md,
+  },
+  logMeta: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 12,
+    marginBottom: IbukiSpacing.xs,
+  },
+  logMonth: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 10,
+  },
+  logNotes: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 12,
+    lineHeight: 16,
   },
   logsCount: {
-    fontSize: 12,
-    color: IbukiColors.muted,
+    color: IbukiColors.mid,
     fontFamily: IbukiFonts.sans,
+    fontSize: 12,
     marginBottom: IbukiSpacing.md,
   },
   logsList: {
     gap: IbukiSpacing.md,
     marginTop: IbukiSpacing.md,
   },
-  logItem: {
-    flexDirection: "row",
-    gap: IbukiSpacing.md,
-    paddingBottom: IbukiSpacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: IbukiColors.border,
-  },
-  logDate: {
-    width: 50,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logMonth: {
-    fontSize: 10,
-    color: IbukiColors.muted,
-    fontFamily: IbukiFonts.sans,
-  },
-  logDay: {
-    fontSize: 18,
-    fontFamily: IbukiFonts.sansBold,
-    color: IbukiColors.text,
-  },
-  logContent: {
-    flex: 1,
-  },
-  logAction: {
-    fontSize: 14,
-    fontFamily: IbukiFonts.sans,
-    color: IbukiColors.text,
-    marginBottom: IbukiSpacing.xs,
-  },
-  logNotes: {
-    fontSize: 12,
-    color: IbukiColors.muted,
-    fontFamily: IbukiFonts.sans,
-    lineHeight: 16,
-  },
-  emptyText: {
-    fontSize: 12,
-    color: IbukiColors.muted,
-    fontFamily: IbukiFonts.sans,
-    marginTop: IbukiSpacing.md,
-  },
-  modalContent: {
+  logsSection: {
+    borderTopColor: IbukiColors.line,
+    borderTopWidth: 1,
     paddingHorizontal: IbukiSpacing.md,
-    paddingBottom: IbukiSpacing.xl,
-  },
-  modalSection: {
-    marginBottom: IbukiSpacing.lg,
-  },
-  actionOption: {
-    paddingVertical: IbukiSpacing.md,
-    paddingHorizontal: IbukiSpacing.md,
-    borderRadius: IbukiRadius.md,
-    borderWidth: 1,
-    borderColor: IbukiColors.border,
-    marginTop: IbukiSpacing.sm,
-  },
-  actionOptionSelected: {
-    backgroundColor: IbukiColors.accent,
-    borderColor: IbukiColors.primary,
-  },
-  actionOptionTitle: {
-    fontSize: 14,
-    fontFamily: IbukiFonts.sans,
-    color: IbukiColors.text,
-    marginBottom: IbukiSpacing.xs,
-  },
-  actionOptionTitleSelected: {
-    fontFamily: IbukiFonts.sansBold,
-    color: IbukiColors.primary,
-  },
-  actionOptionDesc: {
-    fontSize: 12,
-    color: IbukiColors.muted,
-    fontFamily: IbukiFonts.sans,
-  },
-  notesInput: {
-    borderWidth: 1,
-    borderColor: IbukiColors.border,
-    borderRadius: IbukiRadius.md,
-    paddingHorizontal: IbukiSpacing.md,
-    paddingVertical: IbukiSpacing.sm,
-    fontFamily: IbukiFonts.sans,
-    color: IbukiColors.text,
-    minHeight: 100,
-    textAlignVertical: "top",
+    paddingTop: IbukiSpacing.lg,
   },
   modalActions: {
     gap: IbukiSpacing.md,
     marginTop: IbukiSpacing.lg,
   },
-  closeButton: {
-    fontSize: 20,
-    color: IbukiColors.text,
-    fontWeight: "bold",
+  modalSection: {
+    marginBottom: IbukiSpacing.lg,
+  },
+  notesInput: {
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sans,
+    minHeight: 100,
+    paddingHorizontal: IbukiSpacing.md,
+    paddingVertical: IbukiSpacing.sm,
+    textAlignVertical: "top",
+  },
+  photoSection: {
+    marginBottom: IbukiSpacing.md,
+  },
+  stateBlock: {
+    alignItems: "center",
+    gap: IbukiSpacing.sm,
+    justifyContent: "center",
+    paddingVertical: IbukiSpacing.xxl,
+  },
+  stateText: {
+    color: IbukiColors.ink,
+    textAlign: "center",
   },
 });

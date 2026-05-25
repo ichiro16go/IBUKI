@@ -153,6 +153,65 @@ export type Database = {
           },
         ]
       }
+      planter_items: {
+        Row: {
+          created_at: string
+          id: string
+          like_card_id: string
+          planted_at: string
+          source_encounter_id: string | null
+          source_saved_card_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          like_card_id: string
+          planted_at?: string
+          source_encounter_id?: string | null
+          source_saved_card_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          like_card_id?: string
+          planted_at?: string
+          source_encounter_id?: string | null
+          source_saved_card_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planter_items_like_card_id_fkey"
+            columns: ["like_card_id"]
+            isOneToOne: false
+            referencedRelation: "like_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planter_items_source_encounter_id_fkey"
+            columns: ["source_encounter_id"]
+            isOneToOne: false
+            referencedRelation: "encounters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planter_items_source_saved_card_id_fkey"
+            columns: ["source_saved_card_id"]
+            isOneToOne: false
+            referencedRelation: "saved_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planter_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_cards: {
         Row: {
           created_at: string | null
@@ -192,6 +251,54 @@ export type Database = {
           },
           {
             foreignKeyName: "saved_cards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suki_action_logs: {
+        Row: {
+          acted_at: string
+          action_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          planter_item_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          acted_at?: string
+          action_type: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          planter_item_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          acted_at?: string
+          action_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          planter_item_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suki_action_logs_planter_item_id_fkey"
+            columns: ["planter_item_id"]
+            isOneToOne: false
+            referencedRelation: "planter_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suki_action_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"

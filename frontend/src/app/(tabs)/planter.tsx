@@ -1,5 +1,7 @@
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, View, Pressable } from "react-native";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
   Heading,
@@ -7,18 +9,49 @@ import {
   Kicker,
   PhotoBlock,
 } from "@/components/ibuki-ui";
-import { IbukiColors, IbukiSpacing } from "@/constants/ibuki-theme";
-import {
-  planterItems,
-  getHobbyById,
-  getGrowthStatus,
-} from "@/data/ibuki";
+import { IbukiColors, IbukiRadius, IbukiSpacing } from "@/constants/ibuki-theme";
+import { useAuth } from "@/contexts/auth";
+import { fetchPlanterFeed, type PlanterFeedItem } from "@/lib/planter";
 
 export default function PlanterScreen() {
-  function openPlanterDetail(sukiId: string) {
+  const { user } = useAuth();
+  const [planterItems, setPlanterItems] = useState<PlanterFeedItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadPlanterItems = useCallback(async () => {
+    if (!user?.id) {
+      setPlanterItems([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const nextPlanterItems = await fetchPlanterFeed(user.id);
+      setPlanterItems(nextPlanterItems);
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "planterの取得に失敗しました",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadPlanterItems();
+    }, [loadPlanterItems]),
+  );
+
+  function openPlanterDetail(planterItemId: string) {
     router.push({
       pathname: "/planter/[id]",
-      params: { id: sukiId },
+      params: { id: planterItemId },
     } as never);
   }
 
@@ -31,111 +64,103 @@ export default function PlanterScreen() {
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {planterItems.map((item) => {
-          const hobby = getHobbyById(item.sukiId);
-          const growth = getGrowthStatus(item.sukiId);
-
-          return (
+      {isLoading ? (
+        <View style={styles.stateBlock}>
+          <ActivityIndicator color={IbukiColors.ink} />
+          <Text style={styles.stateText}>planterを読み込み中です</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.stateBlock}>
+          <Text style={styles.stateText}>{error}</Text>
+        </View>
+      ) : planterItems.length === 0 ? (
+        <View style={styles.stateBlock}>
+          <Text style={styles.stateText}>
+            まだ planter に植えた suki がありません。
+          </Text>
+          <Text style={styles.stateSubtext}>
+            bookmark した suki を planter に送ると、ここで育成を始められます。
+          </Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {planterItems.map((item) => (
             <Pressable
               key={item.id}
-              onPress={() => openPlanterDetail(item.sukiId)}
-              style={({ pressed }) => [
-                styles.planterCard,
-                pressed && styles.pressed,
-              ]}
+              onPress={() => openPlanterDetail(item.id)}
+              style={({ pressed }) => [styles.planterCard, pressed && styles.pressed]}
             >
               <View style={styles.cardContent}>
                 <PhotoBlock
-                  hobby={hobby}
-                  height={120}
-                  label={`Level ${growth.level}`}
+                  hobby={item.hobby}
+                  height={180}
+                  label={`L${item.level}`}
                 />
                 <View style={styles.cardBody}>
-                  <View style={styles.titleRow}>
-                    <Heading size="small">{hobby.nameJa}</Heading>
-                    <Kicker>L{growth.level}</Kicker>
-                  </View>
-                  <View style={styles.statsRow}>
-                    <View style={styles.stat}>
-                      <Kicker style={styles.statLabel}>アクション</Kicker>
-                      <Heading size="small">{growth.actionCount}</Heading>
-                    </View>
-                    <View style={styles.progressBar}>
-                      <View
-                        style={[
-                          styles.progressFill,
-                          {
-                            width: `${growth.nextLevelProgressPercent}%`,
-                          },
-                        ]}
-                      />
-                    </View>
-                  </View>
+                  <Text style={styles.cardTitle}>{item.hobby.nameJa}</Text>
                 </View>
               </View>
             </Pressable>
-          );
-        })}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
     </IbukiScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  cardBody: {
+    backgroundColor: IbukiColors.background,
+    paddingHorizontal: IbukiSpacing.sm,
+    paddingVertical: IbukiSpacing.sm,
+  },
+  cardContent: {
+    backgroundColor: IbukiColors.surface,
+    borderRadius: IbukiRadius.md,
+    overflow: "hidden",
+  },
+  cardTitle: {
+    color: IbukiColors.ink,
+    fontSize: 16,
+    fontWeight: "600",
+  },
   header: {
+    paddingBottom: IbukiSpacing.md,
     paddingHorizontal: IbukiSpacing.md,
     paddingTop: IbukiSpacing.lg,
-    paddingBottom: IbukiSpacing.md,
   },
   listContainer: {
-    paddingHorizontal: IbukiSpacing.md,
-    paddingBottom: IbukiSpacing.xl,
     gap: IbukiSpacing.md,
+    paddingBottom: IbukiSpacing.xxl,
+    paddingHorizontal: IbukiSpacing.md,
   },
   planterCard: {
-    marginBottom: IbukiSpacing.sm,
+    marginBottom: IbukiSpacing.xs,
   },
   pressed: {
     opacity: 0.7,
   },
-  cardContent: {
-    overflow: "hidden",
-  },
-  cardBody: {
-    padding: IbukiSpacing.md,
-    backgroundColor: IbukiColors.background,
-  },
-  titleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: IbukiSpacing.sm,
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: IbukiSpacing.md,
-  },
-  stat: {
-    flex: 0,
-  },
-  statLabel: {
-    marginBottom: IbukiSpacing.xs,
-  },
-  progressBar: {
+  scrollView: {
     flex: 1,
-    height: 6,
-    backgroundColor: IbukiColors.border,
-    borderRadius: 3,
-    overflow: "hidden",
   },
-  progressFill: {
-    height: "100%",
-    backgroundColor: IbukiColors.success,
-    borderRadius: 3,
+  stateBlock: {
+    alignItems: "center",
+    gap: IbukiSpacing.sm,
+    justifyContent: "center",
+    paddingHorizontal: IbukiSpacing.xl,
+    paddingVertical: IbukiSpacing.xxl,
+  },
+  stateSubtext: {
+    color: IbukiColors.mid,
+    fontSize: 12,
+    textAlign: "center",
+  },
+  stateText: {
+    color: IbukiColors.ink,
+    textAlign: "center",
   },
 });
