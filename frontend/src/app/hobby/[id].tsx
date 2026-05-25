@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { StyleSheet, Text, View, Alert } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 
 import {
   BodyText,
@@ -18,25 +18,120 @@ import {
   IbukiRadius,
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
+import { useAuth } from "@/contexts/auth";
 import { getHobbyById } from "@/data/ibuki";
+import { fetchLikeCardById, mapLikeCardToHobby, saveEncounterBookmark } from "@/lib/encounters";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function HobbyDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const hobby = getHobbyById(id);
+  const { cardId, encounterId, hideKey, id, source } = useLocalSearchParams<{
+    id: string;
+    source?: string;
+    cardId?: string;
+    encounterId?: string;
+    hideKey?: string;
+  }>();
+  const { user } = useAuth();
+  const isRemote = source === "remote" && typeof cardId === "string";
+  const staticHobby = useMemo(() => getHobbyById(id), [id]);
+  const [remoteHobby, setRemoteHobby] = useState<typeof staticHobby | null>(null);
+  const [isLoadingRemote, setIsLoadingRemote] = useState(isRemote);
+  const [remoteLoadError, setRemoteLoadError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const { hideEncounter } = useEncounterPreferences();
+  const hobby = isRemote ? remoteHobby : staticHobby;
+
+  useEffect(() => {
+    if (!isRemote || typeof cardId !== "string") {
+      setIsLoadingRemote(false);
+      setRemoteLoadError(null);
+      return;
+    }
+
+    let active = true;
+
+    const loadRemoteCard = async () => {
+      try {
+        setIsLoadingRemote(true);
+        setRemoteLoadError(null);
+        const likeCard = await fetchLikeCardById(cardId);
+        if (active) {
+          setRemoteHobby(mapLikeCardToHobby(likeCard));
+        }
+      } catch (loadError) {
+        if (active) {
+          setRemoteHobby(null);
+          setRemoteLoadError(
+            loadError instanceof Error
+              ? loadError.message
+              : "カードを取得できませんでした",
+          );
+        }
+      } finally {
+        if (active) {
+          setIsLoadingRemote(false);
+        }
+      }
+    };
+
+    void loadRemoteCard();
+
+    return () => {
+      active = false;
+    };
+  }, [cardId, isRemote]);
 
   function markUninterested() {
-    hideEncounter(hobby.id);
+    hideEncounter(typeof hideKey === "string" ? hideKey : hobby.id);
     router.replace("/encounters");
   }
 
-  function handleSave() {
+  async function handleSave() {
+    if (isRemote && user?.id && typeof cardId === "string" && typeof encounterId === "string") {
+      try {
+        await saveEncounterBookmark({
+          userId: user.id,
+          encounterId,
+          likeCardId: cardId,
+        });
+        setSaved(true);
+        Alert.alert("Bookmarkしました", `${hobby.nameJa}をbookmarkに追加しました`);
+      } catch (saveError) {
+        Alert.alert(
+          "保存できませんでした",
+          saveError instanceof Error ? saveError.message : "bookmarkに失敗しました",
+        );
+      }
+      return;
+    }
+
     setSaved((current) => !current);
     if (!saved) {
       Alert.alert("Bookmarkしました", `${hobby.nameJa}をbookmarkに追加しました`);
     }
+  }
+
+  if (isLoadingRemote) {
+    return (
+      <IbukiScreen>
+        <View style={styles.loadingState}>
+          <ActivityIndicator color={IbukiColors.ink} />
+          <Text style={styles.placeDistance}>カードを読み込み中です</Text>
+        </View>
+      </IbukiScreen>
+    );
+  }
+
+  if (isRemote && (!hobby || remoteLoadError)) {
+    return (
+      <IbukiScreen>
+        <View style={styles.loadingState}>
+          <Text style={styles.placeDistance}>
+            {remoteLoadError ?? "カードを取得できませんでした"}
+          </Text>
+        </View>
+      </IbukiScreen>
+    );
   }
 
   return (
@@ -221,6 +316,12 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
     gap: IbukiSpacing.sm,
+  },
+  loadingState: {
+    alignItems: "center",
+    gap: IbukiSpacing.sm,
+    justifyContent: "center",
+    minHeight: 320,
   },
   actionShort: {
     flex: 0.9,
