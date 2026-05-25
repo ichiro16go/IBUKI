@@ -29,7 +29,7 @@ export const useEncounter = (userId: string) => {
           console.log('すれ違い発生!', data.encounters);
           // ここで通知やUIの更新を行う
         }
-      }, 30000);
+      },9000);
     };
 
     start();

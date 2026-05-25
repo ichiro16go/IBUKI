@@ -1,5 +1,9 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useEncounter } from '../hooks/useEncounter';
+
 
 import {
   BodyText,
@@ -23,6 +27,18 @@ export default function HomeScreen() {
   const handleStart = () => {
     router.push("/sign-in");
   };
+
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUserId(user.id);
+    };
+    getUser();
+  }, []);
+
+  useEncounter(userId ?? '');
 
   return (
     <IbukiScreen scroll={false}>
