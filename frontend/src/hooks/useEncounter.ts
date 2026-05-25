@@ -7,6 +7,8 @@ export const useEncounter = (userId: string) => {
     let interval: ReturnType<typeof setInterval>;
 
     const start = async () => {
+      if (!userId) return;
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         console.error("位置情報の許可がありません");

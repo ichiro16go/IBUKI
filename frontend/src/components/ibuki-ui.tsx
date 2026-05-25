@@ -629,7 +629,7 @@ export function BottomTabBar() {
       icon: { ios: "bookmark", android: "bookmark_border", web: "bookmark" },
     },
     {
-      path: "/entry",
+      path: "/planter",
       label: "育てる",
       icon: { ios: "leaf", android: "eco", web: "leaf" },
     },
