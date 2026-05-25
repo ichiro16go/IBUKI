@@ -141,6 +141,16 @@ uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ```bash
+# ngrok インストール（初回のみ・Homebrew 使用）
+brew install ngrok/ngrok/ngrok
+```
+
+```bash
+# ngrok でバックエンドを外部公開（フロントエンドから実機アクセスする場合）
+ngrok http 8000
+```
+
+```bash
 # 検証環境DB起動
 make supabase-start
 ```
