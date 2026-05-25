@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import * as Location from 'expo-location';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '@/lib/supabase';
 
 export const useEncounter = (userId: string) => {
   useEffect(() => {

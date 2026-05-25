@@ -1,8 +1,8 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { useEncounter } from '../hooks/useEncounter';
+import { supabase } from '@/lib/supabase';
+import { useEncounter } from '../../hooks/useEncounter';
 
 
 import {
