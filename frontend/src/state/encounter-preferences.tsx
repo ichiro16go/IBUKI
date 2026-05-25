@@ -25,7 +25,9 @@ export function EncounterPreferencesProvider({
 
   const hideEncounter = useCallback((encounterId: string) => {
     setHiddenEncounterIds((currentIds) =>
-      currentIds.includes(encounterId) ? currentIds : [...currentIds, encounterId],
+      currentIds.includes(encounterId)
+        ? currentIds
+        : [...currentIds, encounterId],
     );
   }, []);
 

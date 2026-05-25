@@ -13,7 +13,12 @@ import {
   View,
 } from "react-native";
 
-import { IbukiScreen, IconButton, Kicker, PillButton } from "@/components/ibuki-ui";
+import {
+  IbukiScreen,
+  IconButton,
+  Kicker,
+  PillButton,
+} from "@/components/ibuki-ui";
 import {
   IbukiColors,
   IbukiFonts,
@@ -104,7 +109,11 @@ export default function SukiDetailScreen() {
         <View style={styles.topBar}>
           <IconButton
             label="Back"
-            icon={{ ios: "chevron.left", android: "arrow_back", web: "chevron.left" }}
+            icon={{
+              ios: "chevron.left",
+              android: "arrow_back",
+              web: "chevron.left",
+            }}
             onPress={() => router.back()}
           />
         </View>
@@ -122,7 +131,11 @@ export default function SukiDetailScreen() {
         <View style={styles.topBar}>
           <IconButton
             label="Back"
-            icon={{ ios: "chevron.left", android: "arrow_back", web: "chevron.left" }}
+            icon={{
+              ios: "chevron.left",
+              android: "arrow_back",
+              web: "chevron.left",
+            }}
             onPress={() => router.back()}
           />
           <Kicker>MY SUKI CARD</Kicker>

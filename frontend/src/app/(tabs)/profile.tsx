@@ -1,24 +1,23 @@
+import { useEffect, useState, useCallback } from "react";
 import { router } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
-import { useCallback, useState } from "react";
+
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 
+import { HobbyRecommendationModal } from "@/components/hobby-recommendation-modal";
 import {
   Heading,
   IbukiScreen,
   IconButton,
   Kicker,
-  PillButton,
   TopBar,
 } from "@/components/ibuki-ui";
 import {
@@ -27,9 +26,17 @@ import {
   IbukiRadius,
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
+import { profileSummary } from "@/data/ibuki";
+import {
+  useHobbyRecommendations,
+  type RecommendedHobby,
+} from "@/hooks/use-hobby-recommendations";
 import { useAuth } from "@/contexts/auth";
-import { createLikeCard, getMyLikeCards, type LikeCard } from "@/lib/like-cards";
-import { hobbies, profileSummary, type Hobby } from "@/data/ibuki";
+import {
+  createLikeCard,
+  getMyLikeCards,
+  type LikeCard,
+} from "@/lib/like-cards";
 
 const MAX_SHARED_HOBBIES = 5;
 
@@ -37,12 +44,10 @@ export default function ProfileScreen() {
   const { user } = useAuth();
   const [likeCards, setLikeCards] = useState<LikeCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pickerVisible, setPickerVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const { state, recommend, reset } = useHobbyRecommendations();
 
   const canAddMore = likeCards.length < MAX_SHARED_HOBBIES;
-  const availableHobbies = hobbies.filter(
-    (h) => !likeCards.some((c) => c.title === h.nameJa),
-  );
 
   useFocusEffect(
     useCallback(() => {
@@ -55,19 +60,26 @@ export default function ProfileScreen() {
     }, [user]),
   );
 
-  function openPicker() {
-    if (canAddMore) setPickerVisible(true);
+  function openRecommendations() {
+    if (!canAddMore) return;
+    setModalVisible(true);
+    void recommend();
   }
 
-  async function addHobby(hobby: Hobby) {
-    setPickerVisible(false);
+  function closeRecommendations() {
+    setModalVisible(false);
+    reset();
+  }
+
+  async function addHobbyFromRecommendation(hobby: RecommendedHobby) {
     try {
       const newCard = await createLikeCard({
         title: hobby.nameJa,
         category: hobby.nameEn,
-        detail: hobby.intro,
+        detail: hobby.reason,
       });
       setLikeCards((current) => [newCard, ...current]);
+      closeRecommendations();
     } catch {
       Alert.alert("エラー", "カードの追加に失敗しました");
     }
@@ -140,10 +152,10 @@ export default function ProfileScreen() {
             </View>
           ))}
           <Pressable
-            accessibilityLabel="趣味を追加"
+            accessibilityLabel="AIにsukiを提案してもらう"
             accessibilityRole="button"
             disabled={!canAddMore}
-            onPress={openPicker}
+            onPress={openRecommendations}
             style={({ pressed }) => [
               styles.gridItem,
               styles.addCard,
@@ -153,88 +165,23 @@ export default function ProfileScreen() {
           >
             <Text style={styles.addPlus}>＋</Text>
             <Text style={styles.addText}>
-              {canAddMore ? "趣味を追加" : "上限に達しました"}
+              {canAddMore ? "sukiを追加" : "上限に達しました"}
             </Text>
           </Pressable>
         </View>
       )}
 
-      <Modal
-        animationType="fade"
-        onRequestClose={() => setPickerVisible(false)}
-        transparent
-        visible={pickerVisible}
-      >
-        <Pressable
-          accessibilityLabel="趣味追加ピッカーを閉じる"
-          style={styles.modalBackdrop}
-          onPress={() => setPickerVisible(false)}
-        >
-          <Pressable
-            style={styles.pickerSheet}
-            onPress={(event) => event.stopPropagation()}
-          >
-            <View style={styles.pickerHeader}>
-              <View style={styles.pickerTitleCopy}>
-                <Kicker>ADD HOBBY</Kicker>
-                <Heading size="small">共有する趣味を選ぶ</Heading>
-              </View>
-              <Text style={styles.pickerCount}>
-                {likeCards.length} / {MAX_SHARED_HOBBIES}
-              </Text>
-            </View>
-
-            <ScrollView
-              contentContainerStyle={styles.pickerList}
-              showsVerticalScrollIndicator={false}
-            >
-              {canAddMore && availableHobbies.length > 0 ? (
-                availableHobbies.map((hobby) => (
-                  <Pressable
-                    accessibilityLabel={`${hobby.nameJa}を追加`}
-                    accessibilityRole="button"
-                    key={hobby.id}
-                    onPress={() => addHobby(hobby)}
-                    style={({ pressed }) => [
-                      styles.pickerOption,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <View style={styles.pickerOptionCopy}>
-                      <Text style={styles.pickerOptionTitle}>
-                        {hobby.nameJa}
-                      </Text>
-                      <Text style={styles.pickerOptionMeta}>
-                        {hobby.nameEn} · No. {hobby.number}
-                      </Text>
-                      <Text style={styles.pickerOptionIntro} numberOfLines={2}>
-                        {hobby.intro}
-                      </Text>
-                    </View>
-                    <Text style={styles.pickerOptionAdd}>追加</Text>
-                  </Pressable>
-                ))
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateTitle}>
-                    共有できる趣味は上限です
-                  </Text>
-                  <Text style={styles.emptyStateText}>
-                    今は最大 {MAX_SHARED_HOBBIES}{" "}
-                    枚までプロフィールに表示できます。
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
-
-            <PillButton
-              label="あとで"
-              onPress={() => setPickerVisible(false)}
-              style={styles.closeButton}
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <HobbyRecommendationModal
+        visible={modalVisible}
+        status={state.status}
+        recommendations={
+          state.status === "success" ? state.recommendations : []
+        }
+        errorMessage={state.status === "error" ? state.message : undefined}
+        onClose={closeRecommendations}
+        onAdd={addHobbyFromRecommendation}
+        onRetry={() => void recommend()}
+      />
     </IbukiScreen>
   );
 }
@@ -447,117 +394,5 @@ const styles = StyleSheet.create({
     fontFamily: IbukiFonts?.sansBold,
     fontSize: 12,
     fontWeight: "700",
-  },
-  modalBackdrop: {
-    alignItems: "center",
-    backgroundColor: "rgba(46,38,32,0.24)",
-    flex: 1,
-    justifyContent: "flex-end",
-    padding: IbukiSpacing.md,
-  },
-  pickerSheet: {
-    backgroundColor: IbukiColors.background,
-    borderColor: IbukiColors.line,
-    borderRadius: IbukiRadius.lg,
-    borderWidth: 1,
-    gap: IbukiSpacing.md,
-    maxHeight: "78%",
-    padding: IbukiSpacing.lg,
-    width: "100%",
-  },
-  pickerHeader: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: IbukiSpacing.sm,
-    justifyContent: "space-between",
-  },
-  pickerTitleCopy: {
-    flex: 1,
-    gap: 4,
-  },
-  pickerCount: {
-    backgroundColor: IbukiColors.ink,
-    borderRadius: IbukiRadius.pill,
-    color: IbukiColors.background,
-    fontFamily: IbukiFonts?.monoBold,
-    fontSize: 11,
-    fontWeight: "700",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  pickerList: {
-    gap: IbukiSpacing.xs,
-  },
-  pickerOption: {
-    alignItems: "center",
-    backgroundColor: IbukiColors.surface,
-    borderColor: IbukiColors.line,
-    borderRadius: IbukiRadius.md,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: IbukiSpacing.sm,
-    minHeight: 92,
-    padding: IbukiSpacing.sm,
-  },
-  pickerOptionCopy: {
-    flex: 1,
-    gap: 3,
-  },
-  pickerOptionTitle: {
-    color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.sansBold,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  pickerOptionMeta: {
-    color: IbukiColors.mid,
-    fontFamily: IbukiFonts?.monoBold,
-    fontSize: 10.5,
-    fontWeight: "700",
-  },
-  pickerOptionIntro: {
-    color: IbukiColors.inkSoft,
-    fontFamily: IbukiFonts?.sans,
-    fontSize: 12,
-    fontWeight: "500",
-    lineHeight: 17,
-  },
-  pickerOptionAdd: {
-    backgroundColor: IbukiColors.accentTint,
-    borderRadius: IbukiRadius.pill,
-    color: IbukiColors.accentDeep,
-    fontFamily: IbukiFonts?.sansBold,
-    fontSize: 12,
-    fontWeight: "700",
-    overflow: "hidden",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  emptyState: {
-    alignItems: "center",
-    backgroundColor: IbukiColors.surfaceMuted,
-    borderColor: IbukiColors.line,
-    borderRadius: IbukiRadius.md,
-    borderStyle: "dashed",
-    borderWidth: 1,
-    gap: IbukiSpacing.xs,
-    padding: IbukiSpacing.lg,
-  },
-  emptyStateTitle: {
-    color: IbukiColors.ink,
-    fontFamily: IbukiFonts?.sansBold,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  emptyStateText: {
-    color: IbukiColors.mid,
-    fontFamily: IbukiFonts?.sans,
-    fontSize: 12,
-    fontWeight: "500",
-    lineHeight: 18,
-    textAlign: "center",
-  },
-  closeButton: {
-    alignSelf: "stretch",
   },
 });

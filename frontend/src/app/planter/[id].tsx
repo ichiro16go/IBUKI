@@ -120,9 +120,7 @@ export default function PlanterDetailScreen() {
           <Text style={styles.logsCount}>{actionLogs.length}件</Text>
 
           {actionLogs.length === 0 ? (
-            <Text style={styles.emptyText}>
-              まだアクションがありません。
-            </Text>
+            <Text style={styles.emptyText}>まだアクションがありません。</Text>
           ) : (
             <View style={styles.logsList}>
               {actionLogs.map((log) => {
@@ -178,7 +176,8 @@ export default function PlanterDetailScreen() {
                   onPress={() => setSelectedActionId(action.id)}
                   style={[
                     styles.actionOption,
-                    selectedActionId === action.id && styles.actionOptionSelected,
+                    selectedActionId === action.id &&
+                      styles.actionOptionSelected,
                   ]}
                 >
                   <Text
