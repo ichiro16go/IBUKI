@@ -24,6 +24,7 @@ import { hobbies } from "@/data/ibuki";
 import { useAuth } from "@/contexts/auth";
 import {
   fetchEncounterFeed,
+  fetchOtherSukisByUserIds,
   saveEncounterBookmark,
   type EncounterFeedItem,
 } from "@/lib/encounters";
@@ -32,6 +33,7 @@ import { useEncounterPreferences } from "@/state/encounter-preferences";
 export default function EncountersScreen() {
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [encounters, setEncounters] = useState<EncounterFeedItem[]>([]);
+  const [otherSukisByUser, setOtherSukisByUser] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -49,6 +51,9 @@ export default function EncountersScreen() {
       setError(null);
       const nextEncounters = await fetchEncounterFeed(user.id);
       setEncounters(nextEncounters);
+      const userIds = [...new Set(nextEncounters.map((e) => e.fromUserId))];
+      const otherSukis = await fetchOtherSukisByUserIds(userIds);
+      setOtherSukisByUser(otherSukis);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -101,6 +106,7 @@ export default function EncountersScreen() {
         cardId: encounter.likeCardId,
         encounterId: encounter.encounterId,
         hideKey: encounter.id,
+        fromUserId: encounter.fromUserId,
       },
     } as never);
   }
@@ -163,6 +169,8 @@ export default function EncountersScreen() {
                 time={encounter.time}
                 context={encounter.context}
                 isNew={encounter.isNew}
+                otherSukiTitles={otherSukisByUser[encounter.fromUserId]}
+                fromUserProfile={encounter.fromUserProfile}
                 onPress={() => openHobbyDetail(encounter)}
               />
             </SwipeableEncounterCard>
