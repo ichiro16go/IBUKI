@@ -15,7 +15,12 @@ import {
   StatsRow,
 } from "@/components/ibuki-ui";
 import { IbukiColors, IbukiFonts, IbukiSpacing } from "@/constants/ibuki-theme";
-import { encounterFilters, encounters, getEncounterHobby, hobbies } from "@/data/ibuki";
+import {
+  encounterFilters,
+  encounters,
+  getEncounterHobby,
+  hobbies,
+} from "@/data/ibuki";
 
 export default function EncountersScreen() {
   const [selectedFilter, setSelectedFilter] = useState(encounterFilters[0]);
@@ -39,7 +44,11 @@ export default function EncountersScreen() {
         </View>
         <IconButton
           label="Show arrival notification"
-          icon={{ ios: "bell.badge", android: "notifications", web: "bell.badge" }}
+          icon={{
+            ios: "bell.badge",
+            android: "notifications",
+            web: "bell.badge",
+          }}
           onPress={() => setNotificationVisible(true)}
         />
       </View>
@@ -47,15 +56,25 @@ export default function EncountersScreen() {
       <StatsRow />
 
       <View style={styles.modeRow}>
-        <SegmentedControl value={mode} options={["FEED", "RADAR"]} onChange={setMode} />
+        <SegmentedControl
+          value={mode}
+          options={["FEED", "RADAR"]}
+          onChange={setMode}
+        />
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterRow}
+      >
         {encounterFilters.map((filter, index) => (
           <Chip
             key={filter}
             label={filter}
-            count={index === 0 ? 7 : index === 1 ? 1 : index === 3 ? 4 : undefined}
+            count={
+              index === 0 ? 7 : index === 1 ? 1 : index === 3 ? 4 : undefined
+            }
             selected={selectedFilter === filter}
             onPress={() => setSelectedFilter(filter)}
           />

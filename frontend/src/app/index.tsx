@@ -1,8 +1,20 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
-import { BodyText, Heading, IbukiScreen, Kicker, PillButton, PhotoBlock } from "@/components/ibuki-ui";
-import { IbukiColors, IbukiFonts, IbukiRadius, IbukiSpacing } from "@/constants/ibuki-theme";
+import {
+  BodyText,
+  Heading,
+  IbukiScreen,
+  Kicker,
+  PillButton,
+  PhotoBlock,
+} from "@/components/ibuki-ui";
+import {
+  IbukiColors,
+  IbukiFonts,
+  IbukiRadius,
+  IbukiSpacing,
+} from "@/constants/ibuki-theme";
 import { hobbies } from "@/data/ibuki";
 
 export default function HomeScreen() {
@@ -15,7 +27,10 @@ export default function HomeScreen() {
           <Text style={styles.brandMarkText}>i</Text>
         </View>
         <Text style={styles.brandText}>IBUKI</Text>
-        <Text style={styles.skipText} onPress={() => router.replace("/encounters" as never)}>
+        <Text
+          style={styles.skipText}
+          onPress={() => router.replace("/encounters" as never)}
+        >
           SKIP
         </Text>
       </View>
@@ -25,9 +40,7 @@ export default function HomeScreen() {
           <View key={hobby.id} style={[styles.stackCard, cardOffsets[index]]}>
             <View style={styles.stackCardHeader}>
               <Kicker>NO. {hobby.number}</Kicker>
-              {index === 2 && (
-                <Text style={styles.heartIcon}>♥</Text>
-              )}
+              {index === 2 && <Text style={styles.heartIcon}>♥</Text>}
             </View>
             <PhotoBlock hobby={hobby} height={132} />
             <Text style={styles.stackTitle}>{hobby.nameJa}</Text>
@@ -51,10 +64,17 @@ export default function HomeScreen() {
         <PillButton
           label="はじめる"
           variant="dark"
-          icon={{ ios: "arrow.right", android: "arrow_forward", web: "arrow.right" }}
+          icon={{
+            ios: "arrow.right",
+            android: "arrow_forward",
+            web: "arrow.right",
+          }}
           onPress={() => router.replace("/encounters" as never)}
         />
-        <PillButton label="仕組みを見る" onPress={() => router.replace("/entry" as never)} />
+        <PillButton
+          label="仕組みを見る"
+          onPress={() => router.replace("/entry" as never)}
+        />
       </View>
     </IbukiScreen>
   );

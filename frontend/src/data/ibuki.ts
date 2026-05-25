@@ -68,10 +68,12 @@ export const hobbies: Hobby[] = [
     lastSeen: "3分前",
     savedAt: "今日",
     photoTone: "dusk",
-    image: require("@/assets/images/placeholders/film-camera.png"),
-    beginnerNote: "写ルンですや中古コンパクトから。現像店を1つ見つけると続けやすい。",
+    image: require("@/assets/images/hobbies/film-camera -dusk-.png"),
+    beginnerNote:
+      "写ルンですや中古コンパクトから。現像店を1つ見つけると続けやすい。",
     nearbyPlace: "渋谷フォトラボ · 徒歩8分",
-    intro: "街の光や影を、あとでゆっくり受け取る趣味。散歩の速度が少しだけ変わります。",
+    intro:
+      "街の光や影を、あとでゆっくり受け取る趣味。散歩の速度が少しだけ変わります。",
   },
   {
     id: "togei",
@@ -85,10 +87,11 @@ export const hobbies: Hobby[] = [
     lastSeen: "昨日",
     savedAt: "3日前",
     photoTone: "clay",
-    image: require("@/assets/images/placeholders/togei.png"),
+    image: require("@/assets/images/hobbies/pottery -clay-.png"),
     beginnerNote: "体験教室で湯呑みを1つ。エプロンだけ持っていけば大丈夫。",
     nearbyPlace: "代々木うつわ工房 · 電車12分",
-    intro: "形がゆっくり立ち上がる時間を楽しむ趣味。完成まで待つことも、体験の一部です。",
+    intro:
+      "形がゆっくり立ち上がる時間を楽しむ趣味。完成まで待つことも、体験の一部です。",
   },
   {
     id: "jazz-kissa",
@@ -102,7 +105,7 @@ export const hobbies: Hobby[] = [
     lastSeen: "26分前",
     savedAt: "1週前",
     photoTone: "night",
-    image: require("@/assets/images/placeholders/jazz-kissa.png"),
+    image: require("@/assets/images/hobbies/jazz-kissa -night-.png"),
     beginnerNote: "会話より音を聴く場所。まずは昼の時間帯に一杯だけ。",
     nearbyPlace: "道玄坂 Quiet Blue · 徒歩9分",
     intro: "大きなスピーカーと暗い灯りの中で、音楽に場所ごと浸る趣味です。",
@@ -119,8 +122,9 @@ export const hobbies: Hobby[] = [
     lastSeen: "2時間前",
     savedAt: "3週前",
     photoTone: "moss",
-    image: require("@/assets/images/placeholders/birdwatching.png"),
-    beginnerNote: "双眼鏡がなくても、鳴き声アプリと公園のベンチから始められる。",
+    image: require("@/assets/images/hobbies/birdwatching -dawn-.png"),
+    beginnerNote:
+      "双眼鏡がなくても、鳴き声アプリと公園のベンチから始められる。",
     nearbyPlace: "明治神宮外苑 · 電車10分",
     intro: "街の中の小さな動きを見つける趣味。朝の散歩が観察の時間になります。",
   },
@@ -136,8 +140,9 @@ export const hobbies: Hobby[] = [
     lastSeen: "先週",
     savedAt: "2週前",
     photoTone: "paper",
-    image: require("@/assets/images/placeholders/tanka.png"),
-    beginnerNote: "まずは好きな一首を写すところから。SNS投稿でも十分に入口です。",
+    image: require("@/assets/images/hobbies/tanka -ink-.png"),
+    beginnerNote:
+      "まずは好きな一首を写すところから。SNS投稿でも十分に入口です。",
     nearbyPlace: "青山ブックセンター · 徒歩18分",
     intro: "短い形式に生活の湿度を閉じ込める趣味。読むだけでも始まります。",
   },
@@ -153,10 +158,11 @@ export const hobbies: Hobby[] = [
     lastSeen: "1時間前",
     savedAt: "2週前",
     photoTone: "mint",
-    image: require("@/assets/images/placeholders/board-game.png"),
+    image: require("@/assets/images/hobbies/board-game -mint-.png"),
     beginnerNote: "相席歓迎のカフェで、15分ルールの軽いゲームから。",
     nearbyPlace: "恵比寿 Table Door · 徒歩14分",
-    intro: "会話と考える時間が自然に混ざる趣味。初対面でもルールが間をつないでくれます。",
+    intro:
+      "会話と考える時間が自然に混ざる趣味。初対面でもルールが間をつないでくれます。",
   },
   {
     id: "sauna",
@@ -170,8 +176,9 @@ export const hobbies: Hobby[] = [
     lastSeen: "4時間前",
     savedAt: "先月",
     photoTone: "warm",
-    image: require("@/assets/images/placeholders/sauna.png"),
-    beginnerNote: "水分補給を忘れず、短いセットから。休憩を長めに取ると楽しい。",
+    image: require("@/assets/images/hobbies/sento.png"),
+    beginnerNote:
+      "水分補給を忘れず、短いセットから。休憩を長めに取ると楽しい。",
     nearbyPlace: "笹塚マルシンスパ · 電車16分",
     intro: "熱い部屋、水風呂、外気浴。単純な反復が生活のリズムになります。",
   },
@@ -187,28 +194,84 @@ export const hobbies: Hobby[] = [
     lastSeen: "今朝",
     savedAt: "先月",
     photoTone: "ink",
-    image: require("@/assets/images/placeholders/bookstores.png"),
-    beginnerNote: "知らない駅で小さな本屋を1つ探す。買わなくても、棚を見るだけでいい。",
+    image: require("@/assets/images/hobbies/paper.png"),
+    beginnerNote:
+      "知らない駅で小さな本屋を1つ探す。買わなくても、棚を見るだけでいい。",
     nearbyPlace: "渋谷 Publishing & Books · 徒歩6分",
-    intro: "本棚を通して街を見る趣味。旅ほど大きくなく、散歩より少し深い時間です。",
+    intro:
+      "本棚を通して街を見る趣味。旅ほど大きくなく、散歩より少し深い時間です。",
   },
 ];
 
 export const encounters: Encounter[] = [
-  { id: "enc-1", hobbyId: "film-camera", time: "3分前", distance: "110m", isNew: true, context: "dusk walk" },
-  { id: "enc-2", hobbyId: "jazz-kissa", time: "26分前", distance: "510m", isNew: false, context: "after work" },
-  { id: "enc-3", hobbyId: "board-game", time: "1時間前", distance: "850m", isNew: false, context: "station side" },
-  { id: "enc-4", hobbyId: "birdwatching", time: "2時間前", distance: "4.2km", isNew: false, context: "morning park" },
+  {
+    id: "enc-1",
+    hobbyId: "film-camera",
+    time: "3分前",
+    distance: "110m",
+    isNew: true,
+    context: "dusk walk",
+  },
+  {
+    id: "enc-2",
+    hobbyId: "jazz-kissa",
+    time: "26分前",
+    distance: "510m",
+    isNew: false,
+    context: "after work",
+  },
+  {
+    id: "enc-3",
+    hobbyId: "board-game",
+    time: "1時間前",
+    distance: "850m",
+    isNew: false,
+    context: "station side",
+  },
+  {
+    id: "enc-4",
+    hobbyId: "birdwatching",
+    time: "2時間前",
+    distance: "4.2km",
+    isNew: false,
+    context: "morning park",
+  },
 ];
 
 export const encounterFilters = ["全て", "新しい", "近い順", "ひとり向け"];
-export const savedFilters = ["全て", "今週", "いつかやってみたい", "近くで体験できる", "初心者向け"];
+export const savedFilters = [
+  "全て",
+  "今週",
+  "いつかやってみたい",
+  "近くで体験できる",
+  "初心者向け",
+];
 
 export const entrySteps: EntryStep[] = [
-  { id: "find", title: "近くの教室を1つ見る", description: "料金と所要時間だけ確認する", status: "done" },
-  { id: "book", title: "体験日を仮で決める", description: "週末の午前か平日の夜がおすすめ", status: "active" },
-  { id: "go", title: "手ぶら体験に行く", description: "汚れてもいい服だけ選ぶ", status: "locked" },
-  { id: "keep", title: "完成品を受け取る", description: "次に作りたい形をメモする", status: "locked" },
+  {
+    id: "find",
+    title: "近くの教室を1つ見る",
+    description: "料金と所要時間だけ確認する",
+    status: "done",
+  },
+  {
+    id: "book",
+    title: "体験日を仮で決める",
+    description: "週末の午前か平日の夜がおすすめ",
+    status: "active",
+  },
+  {
+    id: "go",
+    title: "手ぶら体験に行く",
+    description: "汚れてもいい服だけ選ぶ",
+    status: "locked",
+  },
+  {
+    id: "keep",
+    title: "完成品を受け取る",
+    description: "次に作りたい形をメモする",
+    status: "locked",
+  },
 ];
 
 export const profileSummary: ProfileSummary = {

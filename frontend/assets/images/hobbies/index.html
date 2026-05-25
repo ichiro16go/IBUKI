@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hobby photos</title>
+    <style>
+      :root {
+        --paper: #fbfaf6;
+        --ink: #1a1814;
+        --line: rgba(26, 24, 20, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        padding: 40px;
+      }
+      h1 {
+        font-family: "Fraunces", Georgia, serif;
+        font-weight: 300;
+        font-size: 36px;
+        letter-spacing: -0.01em;
+        margin: 0 0 4px;
+      }
+      .sub {
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(26, 24, 20, 0.55);
+        margin-bottom: 32px;
+      }
+      h2 {
+        font-family: "Fraunces", Georgia, serif;
+        font-weight: 400;
+        font-size: 18px;
+        margin: 40px 0 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed var(--line);
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+      h2 span {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        color: rgba(26, 24, 20, 0.5);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 18px;
+      }
+      .card {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .card img {
+        display: block;
+        width: 100%;
+        height: 170px;
+        object-fit: cover;
+      }
+      .meta {
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        gap: 8px;
+      }
+      .name {
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .meta a {
+        color: rgba(26, 24, 20, 0.55);
+        text-decoration: none;
+        flex-shrink: 0;
+      }
+      .meta a:hover {
+        color: var(--ink);
+      }
+      .kanji {
+        font-family: "Fraunces", serif;
+        color: rgba(26, 24, 20, 0.45);
+        font-size: 10px;
+        margin-left: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hobby photos</h1>
+    <div class="sub">Extracted from the standalone bundle · PNG</div>
+
+    <h2>Hobby tones <span>Used as backdrops on hobby cards</span></h2>
+    <div class="grid" id="tones"></div>
+
+    <h2>Named scenes <span>Used inside detail screens</span></h2>
+    <div class="grid" id="scenes"></div>
+
+    <script>
+      const tones = [
+        ["film-camera -dusk-.png", "film-camera", "フィルムカメラ"],
+        ["pottery -clay-.png", "pottery", "陶芸"],
+        ["birdwatching -dawn-.png", "birdwatching", "野鳥観察"],
+        ["jazz-kissa -night-.png", "jazz-kissa", "ジャズ喫茶"],
+        ["tanka -ink-.png", "tanka", "短歌"],
+        ["board-game -mint-.png", "board-game", "ボードゲーム"],
+        ["warm.png", "warm", ""],
+        ["paper.png", "paper", ""],
+        ["moss.png", "moss", ""],
+      ];
+      const scenes = [
+        ["camera-shop.png", "camera-shop", "中古カメラ店"],
+        ["photo-lab.png", "photo-lab", "現像所"],
+        ["street-walk.png", "street-walk", "街歩き"],
+        ["film-hero.png", "film-hero", ""],
+        ["film-street.png", "film-street", ""],
+        ["pottery-2.png", "pottery-2", ""],
+        ["pottery-3.png", "pottery-3", ""],
+        ["pottery-wide.png", "pottery-wide", ""],
+        ["sento.png", "sento", "銭湯"],
+      ];
+
+      const mk = ([file, label, kanji]) => `
+    <div class="card">
+      <img src="${encodeURI(file)}" alt="${label}">
+      <div class="meta">
+        <span class="name">${label}${kanji ? `<span class="kanji">${kanji}</span>` : ""}</span>
+        <a href="${encodeURI(file)}" download>download</a>
+      </div>
+    </div>`;
+
+      document.getElementById("tones").innerHTML = tones.map(mk).join("");
+      document.getElementById("scenes").innerHTML = scenes.map(mk).join("");
+    </script>
+  </body>
+</html>

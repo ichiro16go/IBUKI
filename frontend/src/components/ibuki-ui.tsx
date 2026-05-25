@@ -44,9 +44,19 @@ function AppSymbol({
 }) {
   if (Platform.OS === "web") {
     const fallback =
-      symbolFallbacks[name.ios] ?? symbolFallbacks[name.web ?? ""] ?? symbolFallbacks[name.android ?? ""] ?? "•";
+      symbolFallbacks[name.ios] ??
+      symbolFallbacks[name.web ?? ""] ??
+      symbolFallbacks[name.android ?? ""] ??
+      "•";
     return (
-      <Text style={{ color: tintColor, fontSize: size, fontWeight: "700", lineHeight: size + 2 }}>
+      <Text
+        style={{
+          color: tintColor,
+          fontSize: size,
+          fontWeight: "700",
+          lineHeight: size + 2,
+        }}
+      >
         {fallback}
       </Text>
     );
@@ -87,7 +97,10 @@ const symbolFallbacks: Record<string, string> = {
   tune: "≡",
 };
 
-const photoToneColors: Record<PhotoTone, { base: string; accent: string; ink: string }> = {
+const photoToneColors: Record<
+  PhotoTone,
+  { base: string; accent: string; ink: string }
+> = {
   warm: { base: "#E8D9C5", accent: "#C7A07A", ink: "#8E6A4C" },
   dawn: { base: "#DCE4ED", accent: "#B7C3D0", ink: "#6F8398" },
   dusk: { base: "#E8C9B0", accent: "#B68B72", ink: "#5F4137" },
@@ -111,7 +124,10 @@ export function IbukiScreen({
   style?: StyleProp<ViewStyle>;
 }) {
   const content = (
-    <SafeAreaView style={[styles.phone, style]} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={[styles.phone, style]}
+      edges={["top", "left", "right"]}
+    >
       {scroll ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -123,7 +139,12 @@ export function IbukiScreen({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.staticContent, withTabBar && styles.staticContentWithTabs]}>
+        <View
+          style={[
+            styles.staticContent,
+            withTabBar && styles.staticContentWithTabs,
+          ]}
+        >
           {children}
         </View>
       )}
@@ -133,7 +154,13 @@ export function IbukiScreen({
   return <View style={styles.appBackdrop}>{content}</View>;
 }
 
-export function Kicker({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
+export function Kicker({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<TextStyle>;
+}) {
   return <Text style={[styles.kicker, style]}>{children}</Text>;
 }
 
@@ -160,8 +187,16 @@ export function Heading({
   );
 }
 
-export function BodyText({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
-  return <Text style={[styles.bodyText, muted && styles.mutedText]}>{children}</Text>;
+export function BodyText({
+  children,
+  muted = false,
+}: {
+  children: ReactNode;
+  muted?: boolean;
+}) {
+  return (
+    <Text style={[styles.bodyText, muted && styles.mutedText]}>{children}</Text>
+  );
 }
 
 export function Chip({
@@ -176,11 +211,19 @@ export function Chip({
   onPress?: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
       <View style={[styles.chip, selected && styles.chipSelected]}>
-        <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
+        <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+          {label}
+        </Text>
         {typeof count === "number" && (
-          <Text style={[styles.chipCount, selected && styles.chipTextSelected]}>{count}</Text>
+          <Text style={[styles.chipCount, selected && styles.chipTextSelected]}>
+            {count}
+          </Text>
         )}
       </View>
     </Pressable>
@@ -202,10 +245,14 @@ export function PillButton({
 }) {
   const isDark = variant === "dark";
   const isAccent = variant === "accent";
-  const tintColor = isDark || isAccent ? IbukiColors.background : IbukiColors.ink;
+  const tintColor =
+    isDark || isAccent ? IbukiColors.background : IbukiColors.ink;
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [pressed && styles.pressed, style]}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [pressed && styles.pressed, style]}
+    >
       <View
         style={[
           styles.pillButton,
@@ -213,7 +260,12 @@ export function PillButton({
           isAccent && styles.pillButtonAccent,
         ]}
       >
-        <Text style={[styles.pillButtonText, (isDark || isAccent) && styles.pillButtonTextLight]}>
+        <Text
+          style={[
+            styles.pillButtonText,
+            (isDark || isAccent) && styles.pillButtonTextLight,
+          ]}
+        >
           {label}
         </Text>
         {icon && <AppSymbol name={icon} size={18} tintColor={tintColor} />}
@@ -232,7 +284,11 @@ export function IconButton({
   label?: string;
 }) {
   return (
-    <Pressable accessibilityLabel={label} onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
       <View style={styles.iconButton}>
         <AppSymbol name={icon} size={20} tintColor={IbukiColors.ink} />
       </View>
@@ -279,12 +335,19 @@ export function PhotoBlock({
     <View style={[styles.photoBlock, { height, backgroundColor: tone.base }]}>
       {hobby.image ? (
         <>
-          <Image source={hobby.image} style={styles.photoImage} contentFit="cover" transition={160} />
+          <Image
+            source={hobby.image}
+            style={styles.photoImage}
+            contentFit="cover"
+            transition={160}
+          />
           <View style={styles.photoScrim} />
         </>
       ) : (
         <>
-          <View style={[styles.photoCircleLarge, { backgroundColor: tone.accent }]} />
+          <View
+            style={[styles.photoCircleLarge, { backgroundColor: tone.accent }]}
+          />
           <View style={[styles.photoCircleSmall, { borderColor: tone.ink }]} />
         </>
       )}
@@ -308,9 +371,16 @@ export function HobbyCard({
   onPress?: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
       <View style={[styles.hobbyCard, compact && styles.hobbyCardCompact]}>
-        <PhotoBlock hobby={hobby} height={compact ? 92 : 138} label={`NO. ${hobby.number}`} />
+        <PhotoBlock
+          hobby={hobby}
+          height={compact ? 92 : 138}
+          label={`NO. ${hobby.number}`}
+        />
         <View style={styles.hobbyCardBody}>
           <View style={styles.rowBetween}>
             <Kicker>NO. {hobby.number}</Kicker>
@@ -353,18 +423,25 @@ export function EncounterCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
       <View style={styles.encounterCard}>
         <View style={styles.encounterMeta}>
           <View style={styles.liveDot} />
-          <Kicker>{isNew ? "NEW" : "PASS"} · {time}</Kicker>
+          <Kicker>
+            {isNew ? "NEW" : "PASS"} · {time}
+          </Kicker>
           <Text style={styles.distanceText}>{distance}</Text>
         </View>
         <View style={styles.encounterContent}>
           <PhotoBlock hobby={hobby} height={116} label={context} />
           <View style={styles.encounterCopy}>
             <Heading size="small">{hobby.nameJa}</Heading>
-            <Text style={styles.cardSubtitle}>{hobby.nameEn} · No. {hobby.number}</Text>
+            <Text style={styles.cardSubtitle}>
+              {hobby.nameEn} · No. {hobby.number}
+            </Text>
             <Text style={styles.quoteText}>“{hobby.quote}”</Text>
             <View style={styles.tagRow}>
               {hobby.tags.slice(0, 3).map((tag) => (
@@ -414,9 +491,25 @@ export function SegmentedControl({
       {options.map((option) => {
         const selected = option === value;
         return (
-          <Pressable key={option} onPress={() => onChange(option)} style={styles.segmentButton}>
-            <View style={[styles.segmentPill, selected && styles.segmentPillSelected]}>
-              <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>{option}</Text>
+          <Pressable
+            key={option}
+            onPress={() => onChange(option)}
+            style={styles.segmentButton}
+          >
+            <View
+              style={[
+                styles.segmentPill,
+                selected && styles.segmentPillSelected,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.segmentText,
+                  selected && styles.segmentTextSelected,
+                ]}
+              >
+                {option}
+              </Text>
             </View>
           </Pressable>
         );
@@ -440,7 +533,10 @@ export function RadarView({ hobbies }: { hobbies: Hobby[] }) {
           <Text style={styles.youPinText}>YOU</Text>
         </View>
         {hobbies.slice(0, 5).map((hobby, index) => (
-          <View key={hobby.id} style={[styles.radarBubble, radarBubblePositions[index]]}>
+          <View
+            key={hobby.id}
+            style={[styles.radarBubble, radarBubblePositions[index]]}
+          >
             <Text style={styles.radarBubbleTitle}>{hobby.nameJa}</Text>
             <Text style={styles.radarBubbleMeta}>{hobby.distance}</Text>
           </View>
@@ -472,10 +568,24 @@ export function EntryStepCard({
 }) {
   const done = step.status === "done";
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
       <View style={[styles.entryStep, active && styles.entryStepActive]}>
-        <View style={[styles.stepMark, done && styles.stepMarkDone, active && styles.stepMarkActive]}>
-          <Text style={[styles.stepMarkText, (done || active) && styles.stepMarkTextLight]}>
+        <View
+          style={[
+            styles.stepMark,
+            done && styles.stepMarkDone,
+            active && styles.stepMarkActive,
+          ]}
+        >
+          <Text
+            style={[
+              styles.stepMarkText,
+              (done || active) && styles.stepMarkTextLight,
+            ]}
+          >
             {done ? "✓" : active ? "•" : "○"}
           </Text>
         </View>
@@ -494,7 +604,11 @@ export function BottomTabBar() {
     {
       path: "/encounters",
       label: "すれ違い",
-      icon: { ios: "dot.radiowaves.left.and.right", android: "near_me", web: "dot.radiowaves.left.and.right" },
+      icon: {
+        ios: "dot.radiowaves.left.and.right",
+        android: "near_me",
+        web: "dot.radiowaves.left.and.right",
+      },
     },
     {
       path: "/saved",
@@ -509,7 +623,11 @@ export function BottomTabBar() {
     {
       path: "/profile",
       label: "プロフ",
-      icon: { ios: "person.crop.circle", android: "person", web: "person.crop.circle" },
+      icon: {
+        ios: "person.crop.circle",
+        android: "person",
+        web: "person.crop.circle",
+      },
     },
   ];
 
@@ -517,15 +635,22 @@ export function BottomTabBar() {
     <View pointerEvents="box-none" style={styles.tabBarWrap}>
       <View style={styles.tabBar}>
         {tabs.map((tab) => {
-          const active = pathname === tab.path || pathname.startsWith(`${tab.path}/`);
+          const active =
+            pathname === tab.path || pathname.startsWith(`${tab.path}/`);
           return (
-            <Pressable key={tab.path} onPress={() => router.replace(tab.path as never)} style={styles.tabItem}>
+            <Pressable
+              key={tab.path}
+              onPress={() => router.replace(tab.path as never)}
+              style={styles.tabItem}
+            >
               <AppSymbol
                 name={tab.icon}
                 size={24}
                 tintColor={active ? IbukiColors.ink : IbukiColors.soft}
               />
-              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{tab.label}</Text>
+              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
             </Pressable>
           );
         })}
@@ -546,13 +671,22 @@ export function NotificationModal({
   onOpen: () => void;
 }) {
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent
+      onRequestClose={onClose}
+    >
       <View style={styles.modalBackdrop}>
         <View style={styles.notificationMap}>
           <MapLines />
           <View style={styles.toast}>
             <AppSymbol
-              name={{ ios: "sparkles", android: "auto_awesome", web: "sparkles" }}
+              name={{
+                ios: "sparkles",
+                android: "auto_awesome",
+                web: "sparkles",
+              }}
               size={16}
               tintColor={IbukiColors.accentDeep}
             />
@@ -566,19 +700,31 @@ export function NotificationModal({
             <Kicker>NEW · NO. {hobby.number}</Kicker>
             <PhotoBlock hobby={hobby} height={150} label="dusk walk" />
             <Heading size="medium">{hobby.nameJa}</Heading>
-            <Text style={styles.cardSubtitle}>{hobby.nameEn} · {hobby.distance}</Text>
+            <Text style={styles.cardSubtitle}>
+              {hobby.nameEn} · {hobby.distance}
+            </Text>
             <Text style={styles.quoteText}>“{hobby.quote}”</Text>
             <View style={styles.modalActions}>
-              <PillButton label="あとで" onPress={onClose} style={styles.modalButton} />
+              <PillButton
+                label="あとで"
+                onPress={onClose}
+                style={styles.modalButton}
+              />
               <PillButton
                 label="カードを開く"
                 variant="dark"
-                icon={{ ios: "arrow.right", android: "arrow_forward", web: "arrow.right" }}
+                icon={{
+                  ios: "arrow.right",
+                  android: "arrow_forward",
+                  web: "arrow.right",
+                }}
                 onPress={onOpen}
                 style={styles.modalButtonWide}
               />
             </View>
-            <Text style={styles.privacyText}>相手のプロフィールや本名は表示されません</Text>
+            <Text style={styles.privacyText}>
+              相手のプロフィールや本名は表示されません
+            </Text>
           </View>
         </View>
       </View>
@@ -612,7 +758,8 @@ const styles = StyleSheet.create({
   appBackdrop: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: Platform.OS === "web" ? IbukiColors.appBackdrop : IbukiColors.background,
+    backgroundColor:
+      Platform.OS === "web" ? IbukiColors.appBackdrop : IbukiColors.background,
   },
   phone: {
     width: "100%",
@@ -770,7 +917,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   photoScrim: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(20,19,15,0.06)",
   },
   photoCircleLarge: {
@@ -1169,7 +1316,7 @@ const styles = StyleSheet.create({
     width: "92%",
   },
   mapLines: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: IbukiColors.mapLand,
   },
   mapRoad: {
