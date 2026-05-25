@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -6,7 +7,16 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 import {
   IbukiColors,
@@ -17,6 +27,13 @@ import {
 import type { RecommendedHobby } from "@/hooks/use-hobby-recommendations";
 
 import { Kicker, PillButton } from "./ibuki-ui";
+
+const SHEET_CLOSE_DISTANCE = 120;
+const SHEET_CLOSE_VELOCITY = 900;
+const SHEET_HIDDEN_BUFFER = 48;
+const SHEET_OPEN_DURATION_MS = 220;
+const SHEET_CLOSE_DURATION_MS = 180;
+const BACKDROP_DURATION_MS = 160;
 
 type Props = {
   visible: boolean;
@@ -37,29 +54,144 @@ export function HobbyRecommendationModal({
   onAdd,
   onRetry,
 }: Props) {
+  const { height } = useWindowDimensions();
+  const [isRendered, setIsRendered] = useState(visible);
+  const hiddenTranslateY = useSharedValue(height + SHEET_HIDDEN_BUFFER);
+  const sheetTranslateY = useSharedValue(height + SHEET_HIDDEN_BUFFER);
+  const backdropOpacity = useSharedValue(0);
+
+  const finishDismiss = useCallback(() => {
+    setIsRendered(false);
+    onClose();
+  }, [onClose]);
+
+  const dismissWithAnimation = useCallback(() => {
+    backdropOpacity.value = withTiming(0, { duration: BACKDROP_DURATION_MS });
+    sheetTranslateY.value = withTiming(
+      hiddenTranslateY.value,
+      { duration: SHEET_CLOSE_DURATION_MS },
+      (finished) => {
+        if (finished) {
+          runOnJS(finishDismiss)();
+        }
+      },
+    );
+  }, [backdropOpacity, finishDismiss, hiddenTranslateY, sheetTranslateY]);
+
+  useEffect(() => {
+    hiddenTranslateY.value = height + SHEET_HIDDEN_BUFFER;
+    if (!visible && !isRendered) {
+      sheetTranslateY.value = hiddenTranslateY.value;
+    }
+  }, [height, hiddenTranslateY, isRendered, sheetTranslateY, visible]);
+
+  useEffect(() => {
+    if (visible) {
+      setIsRendered(true);
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (!isRendered) return;
+
+    if (visible) {
+      backdropOpacity.value = 0;
+      sheetTranslateY.value = hiddenTranslateY.value;
+      backdropOpacity.value = withTiming(1, { duration: BACKDROP_DURATION_MS });
+      sheetTranslateY.value = withTiming(0, {
+        duration: SHEET_OPEN_DURATION_MS,
+      });
+      return;
+    }
+
+    backdropOpacity.value = withTiming(0, { duration: BACKDROP_DURATION_MS });
+    sheetTranslateY.value = withTiming(
+      hiddenTranslateY.value,
+      { duration: SHEET_CLOSE_DURATION_MS },
+      (finished) => {
+        if (finished) {
+          runOnJS(setIsRendered)(false);
+        }
+      },
+    );
+  }, [backdropOpacity, hiddenTranslateY, isRendered, sheetTranslateY, visible]);
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
+  }));
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetTranslateY.value }],
+  }));
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetY(8)
+    .onUpdate((event) => {
+      sheetTranslateY.value = Math.max(event.translationY, 0);
+    })
+    .onEnd((event) => {
+      const shouldClose =
+        event.translationY > SHEET_CLOSE_DISTANCE ||
+        event.velocityY > SHEET_CLOSE_VELOCITY;
+
+      if (shouldClose) {
+        backdropOpacity.value = withTiming(0, {
+          duration: BACKDROP_DURATION_MS,
+        });
+        sheetTranslateY.value = withTiming(
+          hiddenTranslateY.value,
+          { duration: SHEET_CLOSE_DURATION_MS },
+          (finished) => {
+            if (finished) {
+              runOnJS(finishDismiss)();
+            }
+          },
+        );
+        return;
+      }
+
+      sheetTranslateY.value = withSpring(0, { damping: 18, stiffness: 180 });
+    });
+
+  if (!isRendered) {
+    return null;
+  }
+
   return (
     <Modal
-      visible={visible}
+      visible={isRendered}
       transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      animationType="none"
+      onRequestClose={dismissWithAnimation}
     >
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      <Animated.View style={[styles.backdrop, backdropStyle]}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={dismissWithAnimation}
+        />
+      </Animated.View>
 
-      <View style={styles.sheet}>
-        {/* Handle bar */}
-        <View style={styles.handle} />
+      <Animated.View style={[styles.sheet, sheetStyle]}>
+        <GestureDetector gesture={panGesture}>
+          <View style={styles.dragArea}>
+            {/* Handle bar */}
+            <View style={styles.handle} />
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Kicker>AI · YouTube分析</Kicker>
-            <Text style={styles.title}>あなたへのsuki候補</Text>
+            {/* Header */}
+            <View style={styles.header}>
+              <View>
+                <Kicker>AI · YouTube分析</Kicker>
+                <Text style={styles.title}>あなたへのsuki候補</Text>
+              </View>
+              <Pressable
+                onPress={dismissWithAnimation}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeText}>✕</Text>
+              </Pressable>
+            </View>
           </View>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕</Text>
-          </Pressable>
-        </View>
+        </GestureDetector>
 
         {/* Body */}
         {status === "loading" && <LoadingBody />}
@@ -69,7 +201,7 @@ export function HobbyRecommendationModal({
         {status === "success" && (
           <SuccessBody recommendations={recommendations} onAdd={onAdd} />
         )}
-      </View>
+      </Animated.View>
     </Modal>
   );
 }
@@ -205,6 +337,10 @@ const styles = StyleSheet.create({
     paddingTop: IbukiSpacing.sm,
     position: "absolute",
     right: 0,
+  },
+  dragArea: {
+    marginHorizontal: -IbukiSpacing.lg,
+    paddingHorizontal: IbukiSpacing.lg,
   },
   handle: {
     alignSelf: "center",
