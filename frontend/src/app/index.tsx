@@ -20,6 +20,10 @@ import { hobbies } from "@/data/ibuki";
 export default function HomeScreen() {
   const stackedHobbies = [hobbies[3], hobbies[1], hobbies[0]];
 
+  const handleStart = () => {
+    router.push("/sign-in");
+  };
+
   return (
     <IbukiScreen scroll={false}>
       <View style={styles.brandRow}>
@@ -29,7 +33,7 @@ export default function HomeScreen() {
         <Text style={styles.brandText}>IBUKI</Text>
         <Text
           style={styles.skipText}
-          onPress={() => router.replace("/encounters" as never)}
+          onPress={() => router.push("/sign-in")}
         >
           SKIP
         </Text>
@@ -64,12 +68,8 @@ export default function HomeScreen() {
         <PillButton
           label="はじめる"
           variant="dark"
-          icon={{
-            ios: "arrow.right",
-            android: "arrow_forward",
-            web: "arrow.right",
-          }}
-          onPress={() => router.replace("/encounters" as never)}
+          icon={{ ios: "arrow.right", android: "arrow_forward", web: "arrow.right" }}
+          onPress={handleStart}
         />
         <PillButton
           label="仕組みを見る"

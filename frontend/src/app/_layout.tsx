@@ -13,14 +13,44 @@ import {
   SpaceMono_700Bold,
 } from "@expo-google-fonts/space-mono";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 
 import { IbukiFonts } from "@/constants/ibuki-theme";
+import { AuthProvider, useAuth } from "@/contexts/auth";
 
 void SplashScreen.preventAutoHideAsync();
+
+function RootNavigator() {
+  const { session, isLoading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const seg = segments[0] as string | undefined;
+    const inTabs = seg === "(tabs)";
+    const onPublicScreen = seg === "sign-in" || !seg;
+
+    if (!session && inTabs) {
+      router.replace("/sign-in");
+    } else if (session && onPublicScreen) {
+      router.replace("/encounters" as never);
+    }
+  }, [session, isLoading, segments]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="hobby/[id]" />
+      <Stack.Screen name="sign-in" />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -44,12 +74,10 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="hobby/[id]" />
-      </Stack>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <RootNavigator />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
