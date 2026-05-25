@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { router } from "expo-router";
+import { Image } from "expo-image";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -10,7 +14,6 @@ import {
 
 import {
   Heading,
-  HobbyCard,
   IbukiScreen,
   IconButton,
   Kicker,
@@ -23,43 +26,47 @@ import {
   IbukiRadius,
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
-import { hobbies, profileSummary } from "@/data/ibuki";
+import { useAuth } from "@/contexts/auth";
+import { createLikeCard, getMyLikeCards, type LikeCard } from "@/lib/like-cards";
+import { hobbies, profileSummary, type Hobby } from "@/data/ibuki";
 
-const INITIAL_SHARED_HOBBY_IDS = ["sauna", "bookstores", "jazz-kissa"];
 const MAX_SHARED_HOBBIES = 5;
 
 export default function ProfileScreen() {
-  const [sharedHobbyIds, setSharedHobbyIds] = useState(
-    INITIAL_SHARED_HOBBY_IDS,
-  );
+  const { user } = useAuth();
+  const [likeCards, setLikeCards] = useState<LikeCard[]>([]);
+  const [loading, setLoading] = useState(true);
   const [pickerVisible, setPickerVisible] = useState(false);
-  const sharedHobbies = sharedHobbyIds.flatMap((hobbyId) => {
-    const hobby = hobbies.find((candidate) => candidate.id === hobbyId);
-    return hobby ? [hobby] : [];
-  });
+
+  const canAddMore = likeCards.length < MAX_SHARED_HOBBIES;
   const availableHobbies = hobbies.filter(
-    (hobby) => !sharedHobbyIds.includes(hobby.id),
+    (h) => !likeCards.some((c) => c.title === h.nameJa),
   );
-  const canAddMore = sharedHobbyIds.length < MAX_SHARED_HOBBIES;
+
+  useEffect(() => {
+    if (!user) return;
+    getMyLikeCards()
+      .then(setLikeCards)
+      .catch(() => Alert.alert("エラー", "カードの取得に失敗しました"))
+      .finally(() => setLoading(false));
+  }, [user]);
 
   function openPicker() {
-    if (canAddMore) {
-      setPickerVisible(true);
-    }
+    if (canAddMore) setPickerVisible(true);
   }
 
-  function addHobby(hobbyId: string) {
-    setSharedHobbyIds((currentIds) => {
-      if (
-        currentIds.length >= MAX_SHARED_HOBBIES ||
-        currentIds.includes(hobbyId)
-      ) {
-        return currentIds;
-      }
-
-      return [...currentIds, hobbyId];
-    });
+  async function addHobby(hobby: Hobby) {
     setPickerVisible(false);
+    try {
+      const newCard = await createLikeCard({
+        title: hobby.nameJa,
+        category: hobby.nameEn,
+        detail: hobby.intro,
+      });
+      setLikeCards((current) => [newCard, ...current]);
+    } catch {
+      Alert.alert("エラー", "カードの追加に失敗しました");
+    }
   }
 
   return (
@@ -89,12 +96,12 @@ export default function ProfileScreen() {
 
       <View style={styles.stats}>
         <ProfileStat
-          value={profileSummary.savedCount.toString()}
-          label="保存したsuki"
+          value={String(likeCards.length).padStart(2, "0")}
+          label="すきカード"
         />
         <ProfileStat
-          value={String(sharedHobbyIds.length).padStart(2, "0")}
-          label="共有中"
+          value={profileSummary.savedCount.toString()}
+          label="保存したsuki"
         />
       </View>
 
@@ -106,35 +113,47 @@ export default function ProfileScreen() {
 
       <View style={styles.sectionHeader}>
         <Kicker>
-          共有中 · {sharedHobbyIds.length} / {MAX_SHARED_HOBBIES}
+          すきカード · {likeCards.length} / {MAX_SHARED_HOBBIES}
         </Kicker>
         <Kicker>↓ ドラッグで並べ替え</Kicker>
       </View>
 
-      <View style={styles.grid}>
-        {sharedHobbies.map((hobby) => (
-          <View key={hobby.id} style={styles.gridItem}>
-            <HobbyCard hobby={hobby} compact />
-          </View>
-        ))}
-        <Pressable
-          accessibilityLabel="趣味を追加"
-          accessibilityRole="button"
-          disabled={!canAddMore}
-          onPress={openPicker}
-          style={({ pressed }) => [
-            styles.gridItem,
-            styles.addCard,
-            !canAddMore && styles.addCardDisabled,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.addPlus}>＋</Text>
-          <Text style={styles.addText}>
-            {canAddMore ? "趣味を追加" : "上限に達しました"}
-          </Text>
-        </Pressable>
-      </View>
+      {loading ? (
+        <ActivityIndicator color={IbukiColors.ink} style={{ marginTop: 40 }} />
+      ) : (
+        <View style={styles.grid}>
+          {likeCards.map((card) => (
+            <View key={card.id} style={styles.gridItem}>
+              <LikeCardTile
+                card={card}
+                onPress={() =>
+                  router.push({
+                    pathname: "/suki/[id]",
+                    params: { id: card.id },
+                  } as never)
+                }
+              />
+            </View>
+          ))}
+          <Pressable
+            accessibilityLabel="趣味を追加"
+            accessibilityRole="button"
+            disabled={!canAddMore}
+            onPress={openPicker}
+            style={({ pressed }) => [
+              styles.gridItem,
+              styles.addCard,
+              !canAddMore && styles.addCardDisabled,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.addPlus}>＋</Text>
+            <Text style={styles.addText}>
+              {canAddMore ? "趣味を追加" : "上限に達しました"}
+            </Text>
+          </Pressable>
+        </View>
+      )}
 
       <Modal
         animationType="fade"
@@ -157,7 +176,7 @@ export default function ProfileScreen() {
                 <Heading size="small">共有する趣味を選ぶ</Heading>
               </View>
               <Text style={styles.pickerCount}>
-                {sharedHobbyIds.length} / {MAX_SHARED_HOBBIES}
+                {likeCards.length} / {MAX_SHARED_HOBBIES}
               </Text>
             </View>
 
@@ -171,7 +190,7 @@ export default function ProfileScreen() {
                     accessibilityLabel={`${hobby.nameJa}を追加`}
                     accessibilityRole="button"
                     key={hobby.id}
-                    onPress={() => addHobby(hobby.id)}
+                    onPress={() => addHobby(hobby)}
                     style={({ pressed }) => [
                       styles.pickerOption,
                       pressed && styles.pressed,
@@ -213,6 +232,39 @@ export default function ProfileScreen() {
         </Pressable>
       </Modal>
     </IbukiScreen>
+  );
+}
+
+function LikeCardTile({
+  card,
+  onPress,
+}: {
+  card: LikeCard;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.tileCard, pressed && styles.pressed]}
+    >
+      {card.photo_url ? (
+        <Image source={{ uri: card.photo_url }} style={styles.tilePhoto} />
+      ) : (
+        <View style={styles.tilePhotoPlaceholder} />
+      )}
+      <View style={styles.tileCopy}>
+        <Kicker>{card.category}</Kicker>
+        <Text style={styles.tileTitle} numberOfLines={2}>
+          {card.title}
+        </Text>
+        {card.detail ? (
+          <Text style={styles.tileDetail} numberOfLines={2}>
+            {card.detail}
+          </Text>
+        ) : null}
+      </View>
+    </Pressable>
   );
 }
 
@@ -332,6 +384,40 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.72,
+  },
+  tileCard: {
+    backgroundColor: IbukiColors.surface,
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    minHeight: 210,
+    overflow: "hidden",
+  },
+  tilePhoto: {
+    height: 120,
+    width: "100%",
+  },
+  tilePhotoPlaceholder: {
+    backgroundColor: IbukiColors.accentTint,
+    height: 120,
+    width: "100%",
+  },
+  tileCopy: {
+    gap: 4,
+    padding: IbukiSpacing.sm,
+  },
+  tileTitle: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts?.sansBold,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  tileDetail: {
+    color: IbukiColors.inkSoft,
+    fontFamily: IbukiFonts?.sans,
+    fontSize: 11,
+    fontWeight: "500",
+    lineHeight: 15,
   },
   addCard: {
     alignItems: "center",
