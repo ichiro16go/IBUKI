@@ -302,7 +302,9 @@ export function IconButton({
   return (
     <Pressable
       accessibilityLabel={label}
+      accessibilityRole="button"
       onPress={onPress}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       style={({ pressed }) => pressed && styles.pressed}
     >
       <View style={styles.iconButton}>
