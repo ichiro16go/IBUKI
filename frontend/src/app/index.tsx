@@ -31,12 +31,12 @@ export default function HomeScreen() {
           <Text style={styles.brandMarkText}>i</Text>
         </View>
         <Text style={styles.brandText}>IBUKI</Text>
-        <Text
+        {/* <Text
           style={styles.skipText}
           onPress={() => router.push("/sign-in")}
         >
           SKIP
-        </Text>
+        </Text> */}
       </View>
 
       <View style={styles.stack}>
@@ -71,10 +71,10 @@ export default function HomeScreen() {
           icon={{ ios: "arrow.right", android: "arrow_forward", web: "arrow.right" }}
           onPress={handleStart}
         />
-        <PillButton
+        {/* <PillButton
           label="仕組みを見る"
           onPress={() => router.replace("/entry" as never)}
-        />
+        /> */}
       </View>
     </IbukiScreen>
   );

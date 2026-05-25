@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -16,20 +16,29 @@ import {
 } from "@/constants/ibuki-theme";
 
 export default function SignInScreen() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, session } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Automatically navigate to encounters when session is available
+  useEffect(() => {
+    if (session) {
+      router.replace("/(tabs)/encounters" as never);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
 
   const handleSignIn = async () => {
     setLoading(true);
     setError(null);
     try {
-      await signInWithGoogle();
-      router.replace("/encounters" as never);
+      const didSignIn = await signInWithGoogle();
+      if (!didSignIn) {
+        setLoading(false);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "サインインに失敗しました");
-    } finally {
       setLoading(false);
     }
   };

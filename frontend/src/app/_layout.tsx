@@ -33,21 +33,24 @@ function RootNavigator() {
 
     const seg = segments[0] as string | undefined;
     const inTabs = seg === "(tabs)";
-    const onPublicScreen = seg === "sign-in" || !seg;
+    const onPublicScreen = seg === "sign-in" || seg === "auth-callback" || !seg;
 
     if (!session && inTabs) {
       router.replace("/sign-in");
     } else if (session && onPublicScreen) {
-      router.replace("/encounters" as never);
+      router.replace("/(tabs)/encounters" as never);
     }
-  }, [session, isLoading, segments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, isLoading]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="hobby/[id]" />
+      <Stack.Screen name="planter/[id]" />
       <Stack.Screen name="sign-in" />
+      <Stack.Screen name="auth-callback" />
     </Stack>
   );
 }
@@ -58,7 +61,6 @@ export default function RootLayout() {
     [IbukiFonts.sansRegular]: ZenMaruGothic_400Regular,
     [IbukiFonts.sans]: ZenMaruGothic_500Medium,
     [IbukiFonts.sansBold]: ZenMaruGothic_700Bold,
-    [IbukiFonts.monoRegular]: SpaceMono_400Regular,
     [IbukiFonts.mono]: SpaceMono_400Regular,
     [IbukiFonts.monoBold]: SpaceMono_700Bold,
   });
@@ -74,13 +76,10 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="hobby/[id]" />
-        <Stack.Screen name="planter/[id]" />
-      </Stack>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <RootNavigator />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
