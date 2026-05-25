@@ -12,7 +12,12 @@ import os
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
-from src.services.recommender import HobbyRecommendation, recommend_hobbies
+from src.services.recommender import (
+    ActionRecommendation,
+    HobbyRecommendation,
+    recommend_actions,
+    recommend_hobbies,
+)
 from src.services.youtube import build_youtube_profile
 
 logger = logging.getLogger(__name__)
@@ -40,6 +45,27 @@ class RecommendationItem(BaseModel):
 
 class RecommendResponse(BaseModel):
     recommendations: list[RecommendationItem]
+
+
+# ---------------------------------------------------------------------------
+# Action recommendation models
+# ---------------------------------------------------------------------------
+
+
+class ActionRecommendRequest(BaseModel):
+    hobby_title: str
+    hobby_category: str = ""
+    hobby_detail: str = ""
+
+
+class ActionRecommendItem(BaseModel):
+    title: str
+    description: str
+    action_type: str
+
+
+class ActionRecommendResponse(BaseModel):
+    recommendations: list[ActionRecommendItem]
 
 
 # ---------------------------------------------------------------------------
@@ -85,6 +111,33 @@ async def verify_supabase_token(authorization: str = Header(...)) -> None:
 # ---------------------------------------------------------------------------
 # Endpoint
 # ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/action-recommend",
+    response_model=ActionRecommendResponse,
+    summary="AI action recommendations for a specific hobby",
+)
+async def get_action_recommendations(
+    body: ActionRecommendRequest,
+    _: None = Depends(verify_supabase_token),
+) -> ActionRecommendResponse:
+    """Returns up to 3 AI-generated specific action suggestions for the given hobby."""
+    recommendations: list[ActionRecommendation] = await recommend_actions(
+        hobby_title=body.hobby_title,
+        hobby_category=body.hobby_category,
+        hobby_detail=body.hobby_detail,
+    )
+    return ActionRecommendResponse(
+        recommendations=[
+            ActionRecommendItem(
+                title=r.title,
+                description=r.description,
+                action_type=r.action_type,
+            )
+            for r in recommendations
+        ]
+    )
 
 
 @router.post(
