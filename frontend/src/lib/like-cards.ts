@@ -56,9 +56,14 @@ export async function getLikeCardById(id: string): Promise<LikeCard | null> {
 export async function createLikeCard(
   input: CreateLikeCardInput,
 ): Promise<LikeCard> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("ログインが必要です");
+
   const { data, error } = await supabase
     .from("like_cards")
-    .insert(input)
+    .insert({ ...input, user_id: user.id })
     .select()
     .single();
 
