@@ -4,20 +4,14 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import {
-  JetBrainsMono_400Regular,
-  JetBrainsMono_500Medium,
-  JetBrainsMono_700Bold,
-} from "@expo-google-fonts/jetbrains-mono";
+  ZenMaruGothic_400Regular,
+  ZenMaruGothic_500Medium,
+  ZenMaruGothic_700Bold,
+} from "@expo-google-fonts/zen-maru-gothic";
 import {
-  ShipporiMinchoB1_400Regular,
-  ShipporiMinchoB1_500Medium,
-  ShipporiMinchoB1_700Bold,
-} from "@expo-google-fonts/shippori-mincho-b1";
-import {
-  ZenKakuGothicNew_400Regular,
-  ZenKakuGothicNew_500Medium,
-  ZenKakuGothicNew_700Bold,
-} from "@expo-google-fonts/zen-kaku-gothic-new";
+  SpaceMono_400Regular,
+  SpaceMono_700Bold,
+} from "@expo-google-fonts/space-mono";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
