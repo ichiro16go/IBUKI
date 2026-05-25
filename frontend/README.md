@@ -1,5 +1,19 @@
 # Welcome to your Expo app 👋
 
+## 画面構成
+
+```
+bottom_navigation
+├─ すれちがいsuki一覧画面
+│  └─ suki詳細画面
+├─ suki bookmark画面
+│  └─ suki詳細画面（bookmarkから削除/planterに植える）
+├─ planter(育てているsuki一覧画面)
+│  └─ suki成長詳細画面（sukiの成長具合が見れる。suki_actionの登録ができ、suki_actionのlogをさかのぼれる）
+└─ plofile画面
+
+```
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started

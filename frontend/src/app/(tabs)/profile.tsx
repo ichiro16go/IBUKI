@@ -49,7 +49,7 @@ export default function ProfileScreen() {
       <View style={styles.stats}>
         <ProfileStat
           value={profileSummary.savedCount.toString()}
-          label="保存した趣味"
+          label="保存したsuki"
         />
         <ProfileStat value={`0${profileSummary.sharingCount}`} label="共有中" />
         <ProfileStat
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.segmentRow}>
-        <Text style={styles.segmentActive}>自分の趣味カード</Text>
+        <Text style={styles.segmentActive}>自分のsukiカード</Text>
         <Text style={styles.segment}>保存</Text>
         <Text style={styles.segment}>SNSリンク</Text>
       </View>
@@ -77,7 +77,7 @@ export default function ProfileScreen() {
         ))}
         <View style={[styles.gridItem, styles.addCard]}>
           <Text style={styles.addPlus}>＋</Text>
-          <Text style={styles.addText}>趣味を追加</Text>
+          <Text style={styles.addText}>sukiを追加</Text>
         </View>
       </View>
     </IbukiScreen>
