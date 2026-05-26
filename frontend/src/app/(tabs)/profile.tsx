@@ -35,6 +35,7 @@ import { useAuth } from "@/contexts/auth";
 import { createLikeCard, getMyLikeCards, getPlantedCountByCardIds, type LikeCard } from "@/lib/like-cards";
 import { fetchSavedCards } from "@/lib/encounters";
 import { getMyProfile } from "@/lib/user-profile";
+import {profileSummary} from "../../data/ibuki";
 
 
 const MAX_SHARED_HOBBIES = 5;
