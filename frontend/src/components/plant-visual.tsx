@@ -76,11 +76,11 @@ const growthConfig = [
 ];
 
 const PLANT_IMAGES = [
-    require("../../assets/images/plant_growth/suki_phase1.png"),
-    require("../../assets/images/plant_growth/suki_phase2.png"),
-    require("../../assets/images/plant_growth/suki_phase3.png"),
-    require("../../assets/images/plant_growth/suki_phase4.png"),
-    require("../../assets/images/plant_growth/suki_phase5.png"),
+    require("../../assets/images/plant_growth/suki_phase1.webp"),
+    require("../../assets/images/plant_growth/suki_phase2.webp"),
+    require("../../assets/images/plant_growth/suki_phase3.webp"),
+    require("../../assets/images/plant_growth/suki_phase4.webp"),
+    require("../../assets/images/plant_growth/suki_phase5.webp"),
 ] as const;
 
 export default function PlantVisual({
