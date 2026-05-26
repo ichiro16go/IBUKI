@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/contexts/auth";
 import { getHobbyById } from "@/data/ibuki";
 import {
+  deleteSavedBookmark,
   fetchLikeCardById,
   fetchOtherSukisByUserIds,
   mapLikeCardToHobby,
@@ -34,13 +35,23 @@ import { getUserPublicProfile } from "@/lib/user-profile";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
 
 export default function HobbyDetailScreen() {
-  const { cardId, encounterId, from, fromUserId, hideKey, id, source } = useLocalSearchParams<{
+  const {
+    cardId,
+    encounterId,
+    from,
+    fromUserId,
+    hideKey,
+    id,
+    savedCardId,
+    source,
+  } = useLocalSearchParams<{
     id: string;
     from?: string;
     source?: string;
     cardId?: string;
     encounterId?: string;
     hideKey?: string;
+    savedCardId?: string;
     fromUserId?: string;
   }>();
   const { user } = useAuth();
@@ -51,6 +62,7 @@ export default function HobbyDetailScreen() {
   const [remoteLoadError, setRemoteLoadError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPlanting, setIsPlanting] = useState(false);
+  const [isRemovingBookmark, setIsRemovingBookmark] = useState(false);
   const [fromUserProfile, setFromUserProfile] = useState<{
     age_range: string | null;
     gender_label: string | null;
@@ -60,7 +72,9 @@ export default function HobbyDetailScreen() {
   const { hideEncounter } = useEncounterPreferences();
   const hobby = (isRemote ? remoteHobby : staticHobby) ?? staticHobby;
   const canPlantFromBookmark =
-    from === "bookmark" && user?.id && typeof cardId === "string";
+    from === "bookmark" && Boolean(user?.id) && typeof cardId === "string";
+  const canRemoveBookmark =
+    canPlantFromBookmark && typeof savedCardId === "string";
 
   useEffect(() => {
     if (typeof fromUserId !== "string") return;
@@ -175,6 +189,7 @@ export default function HobbyDetailScreen() {
       const planterItem = await createPlanterItem({
         encounterId: typeof encounterId === "string" ? encounterId : null,
         likeCardId: cardId,
+        savedCardId: typeof savedCardId === "string" ? savedCardId : null,
         userId: user.id,
       });
       Alert.alert("Planterに植えました", `${hobby.nameJa}の育成を始めます`);
@@ -191,6 +206,51 @@ export default function HobbyDetailScreen() {
       );
     } finally {
       setIsPlanting(false);
+    }
+  }
+
+  function handleRemoveBookmarkPress() {
+    if (!user?.id || typeof savedCardId !== "string" || isRemovingBookmark) {
+      return;
+    }
+
+    Alert.alert(
+      "Bookmarkを解除しますか？",
+      `${hobby.nameJa}をbookmarkから削除します。`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "解除",
+          style: "destructive",
+          onPress: () => {
+            void removeBookmark();
+          },
+        },
+      ],
+    );
+  }
+
+  async function removeBookmark() {
+    if (!user?.id || typeof savedCardId !== "string" || isRemovingBookmark) {
+      return;
+    }
+
+    try {
+      setIsRemovingBookmark(true);
+      await deleteSavedBookmark({
+        savedCardId,
+        userId: user.id,
+      });
+      router.replace("/bookmark");
+    } catch (removeError) {
+      Alert.alert(
+        "Bookmarkを解除できませんでした",
+        removeError instanceof Error
+          ? removeError.message
+          : "bookmarkの解除に失敗しました",
+      );
+    } finally {
+      setIsRemovingBookmark(false);
     }
   }
 
@@ -303,26 +363,40 @@ export default function HobbyDetailScreen() {
 
 
       {canPlantFromBookmark ? (
-        <PillButton
-          label={isPlanting ? "植えています..." : "Planterに植える"}
-          variant="accent"
-          onPress={isPlanting ? undefined : handlePlant}
-          style={styles.planterButton}
-        />
-      ) : (<View style={styles.actions}>
-        <PillButton
-          label="興味なし"
-          variant="light"
-          onPress={markUninterested}
-          style={styles.actionShort}
-        />
-        <PillButton
-          label={saved ? "★ 保存済み" : "☆ 保存する"}
-          variant={saved ? "accent" : "dark"}
-          onPress={handleSave}
-          style={styles.actionWide}
-        />
-      </View>)}
+        <View style={styles.actions}>
+          {canRemoveBookmark ? (
+            <PillButton
+              label={isRemovingBookmark ? "解除しています..." : "Bookmarkを解除"}
+              variant="danger"
+              onPress={
+                isRemovingBookmark ? undefined : handleRemoveBookmarkPress
+              }
+              style={styles.actionShort}
+            />
+          ) : null}
+          <PillButton
+            label={isPlanting ? "植えています..." : "Planterに植える"}
+            variant="accent"
+            onPress={isPlanting ? undefined : handlePlant}
+            style={canRemoveBookmark ? styles.actionWide : styles.planterButton}
+          />
+        </View>
+      ) : (
+        <View style={styles.actions}>
+          <PillButton
+            label="興味なし"
+            variant="light"
+            onPress={markUninterested}
+            style={styles.actionShort}
+          />
+          <PillButton
+            label={saved ? "★ 保存済み" : "☆ 保存する"}
+            variant={saved ? "accent" : "dark"}
+            onPress={handleSave}
+            style={styles.actionWide}
+          />
+        </View>
+      )}
     </IbukiScreen>
   );
 }

@@ -346,3 +346,19 @@ export async function saveEncounterBookmark({
 
   if (error) throw error;
 }
+
+export async function deleteSavedBookmark({
+  savedCardId,
+  userId,
+}: {
+  savedCardId: string;
+  userId: string;
+}) {
+  const { error } = await supabase
+    .from("saved_cards")
+    .delete()
+    .eq("id", savedCardId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+}
