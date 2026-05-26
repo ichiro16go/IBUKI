@@ -6,6 +6,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -32,7 +33,16 @@ import {
   updateLikeCard,
   type LikeCard,
 } from "@/lib/like-cards";
-import { createPlanterItem, fetchWeeklyPlanterCount, WEEKLY_PLANT_LIMIT } from "@/lib/planter";
+import {
+  createPlanterItem,
+  fetchWeeklyPlanterCount,
+  WEEKLY_PLANT_LIMIT,
+} from "@/lib/planter";
+import { buildPhotoUrlUpdate } from "@/lib/suki-card-photo-upload-core";
+import {
+  pickAndUploadSukiCardPhoto,
+  SukiCardPhotoValidationError,
+} from "@/lib/suki-card-photo-upload";
 
 export default function SukiDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -41,6 +51,7 @@ export default function SukiDetailScreen() {
   const [card, setCard] = useState<LikeCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [navigating, setNavigating] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -93,12 +104,48 @@ export default function SukiDetailScreen() {
         );
         return;
       }
-      const planterItem = await createPlanterItem({ likeCardId: id, userId: user.id });
-      router.push({ pathname: "/planter/[id]", params: { id: planterItem.id } } as never);
+      const planterItem = await createPlanterItem({
+        likeCardId: id,
+        userId: user.id,
+      });
+      router.push({
+        pathname: "/planter/[id]",
+        params: { id: planterItem.id },
+      } as never);
     } catch {
       Alert.alert("エラー", "アクションログの取得に失敗しました");
     } finally {
       setNavigating(false);
+    }
+  }
+
+  async function handlePickPhoto() {
+    if (!user?.id || uploadingPhoto) return;
+
+    setUploadingPhoto(true);
+    try {
+      const result = await pickAndUploadSukiCardPhoto({
+        likeCardId: id,
+        userId: user.id,
+      });
+
+      if (result.status === "cancelled") return;
+
+      const updated = await updateLikeCard(
+        id,
+        buildPhotoUrlUpdate(result.publicUrl),
+      );
+      setCard(updated);
+      setPhotoUrl(updated.photo_url ?? result.publicUrl);
+    } catch (error) {
+      if (error instanceof SukiCardPhotoValidationError) {
+        Alert.alert("エラー", error.message);
+        return;
+      }
+
+      Alert.alert("エラー", "写真のアップロードに失敗しました");
+    } finally {
+      setUploadingPhoto(false);
     }
   }
 
@@ -109,7 +156,6 @@ export default function SukiDetailScreen() {
         title,
         category,
         detail,
-        photo_url: photoUrl || undefined,
       });
       setCard(updated);
       Alert.alert("保存しました");
@@ -177,7 +223,10 @@ export default function SukiDetailScreen() {
               style={styles.saveButton}
             >
               {saving ? (
-                <ActivityIndicator color={IbukiColors.background} size="small" />
+                <ActivityIndicator
+                  color={IbukiColors.background}
+                  size="small"
+                />
               ) : (
                 <Text style={styles.saveButtonText}>保存</Text>
               )}
@@ -187,25 +236,32 @@ export default function SukiDetailScreen() {
 
         {/* 写真 */}
         <View style={styles.photoSection}>
-          {photoUrl ? (
-            <Image source={{ uri: photoUrl }} style={styles.photo} />
-          ) : (
-            <View style={styles.photoPlaceholder}>
-              <Text style={styles.photoPlaceholderText}>写真なし</Text>
-            </View>
-          )}
-          <View style={styles.photoUrlRow}>
-            <Kicker>写真URL</Kicker>
-            <TextInput
-              value={photoUrl}
-              onChangeText={setPhotoUrl}
-              placeholder="https://..."
-              placeholderTextColor={IbukiColors.soft}
-              style={styles.input}
-              autoCapitalize="none"
-              keyboardType="url"
-            />
-          </View>
+          <Pressable
+            accessibilityLabel="sukiカードの写真を選択"
+            accessibilityRole="button"
+            disabled={uploadingPhoto}
+            onPress={() => void handlePickPhoto()}
+            style={({ pressed }) => [
+              styles.photoPicker,
+              pressed && styles.photoPickerPressed,
+            ]}
+          >
+            {photoUrl ? (
+              <Image source={{ uri: photoUrl }} style={styles.photo} />
+            ) : (
+              <View style={styles.photoPlaceholder}>
+                <Text style={styles.photoPlaceholderText}>写真なし</Text>
+                <Text style={styles.photoPlaceholderHint}>
+                  タップして写真を追加
+                </Text>
+              </View>
+            )}
+            {uploadingPhoto ? (
+              <View style={styles.photoUploadingOverlay}>
+                <ActivityIndicator color={IbukiColors.background} />
+              </View>
+            ) : null}
+          </Pressable>
         </View>
 
         {/* タイトル */}
@@ -298,6 +354,15 @@ const styles = StyleSheet.create({
     gap: IbukiSpacing.sm,
     marginBottom: IbukiSpacing.md,
   },
+  photoPicker: {
+    borderRadius: IbukiRadius.lg,
+    height: 200,
+    overflow: "hidden",
+    width: "100%",
+  },
+  photoPickerPressed: {
+    opacity: 0.78,
+  },
   photo: {
     borderRadius: IbukiRadius.lg,
     height: 200,
@@ -318,8 +383,21 @@ const styles = StyleSheet.create({
     fontFamily: IbukiFonts.sans,
     fontSize: 14,
   },
-  photoUrlRow: {
-    gap: IbukiSpacing.xs,
+  photoPlaceholderHint: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  photoUploadingOverlay: {
+    alignItems: "center",
+    backgroundColor: "rgba(34, 34, 34, 0.48)",
+    bottom: 0,
+    justifyContent: "center",
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
   },
   field: {
     gap: IbukiSpacing.xs,

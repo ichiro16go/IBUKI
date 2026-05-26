@@ -49,6 +49,13 @@
         {
           "locationAlwaysAndWhenInUsePermission": "すれ違い通信のために位置情報を使用します。"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "sukiカードに写真を追加するため、写真ライブラリへのアクセスを許可してください。",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

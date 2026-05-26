@@ -64,7 +64,8 @@ export default function PlanterDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<SelectedActionInfo | null>(null);
+  const [selectedAction, setSelectedAction] =
+    useState<SelectedActionInfo | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -80,7 +81,11 @@ export default function PlanterDetailScreen() {
     });
   }, [detail]);
 
-  const { state: aiState, fetchRecommendations, reset: resetAi } = useActionRecommendations();
+  const {
+    state: aiState,
+    fetchRecommendations,
+    reset: resetAi,
+  } = useActionRecommendations();
 
   const loadDetail = useCallback(async () => {
     if (!user?.id || !planterItemId) {
@@ -176,7 +181,11 @@ export default function PlanterDetailScreen() {
       <TopBar
         left={
           <IconButton
-            icon="chevron-left"
+            icon={{
+              ios: "chevron.left",
+              android: "arrow_back",
+              web: "chevron.left",
+            }}
             onPress={() => router.back()}
             label="戻る"
           />
@@ -201,7 +210,9 @@ export default function PlanterDetailScreen() {
         </View>
         {detail?.item.isOwnSuki && detail.item.actionCount === 0 ? (
           <PillButton
-            label={initialStage ? `成熟度: ${initialStage}` : "初期成熟度を設定"}
+            label={
+              initialStage ? `成熟度: ${initialStage}` : "初期成熟度を設定"
+            }
             onPress={() => setShowInitialStageModal(true)}
             style={{ marginTop: 12, width: 220 }}
             variant="accent"
