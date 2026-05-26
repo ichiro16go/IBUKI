@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { router } from "expo-router";
-import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
 
 import {
@@ -12,7 +11,10 @@ import {
   View,
 } from "react-native";
 
-import { HobbyRecommendationModal } from "@/components/hobby-recommendation-modal";
+import {
+  HobbyRecommendationModal,
+  type ManualSukiInput,
+} from "@/components/hobby-recommendation-modal";
 import {
   Heading,
   IbukiScreen,
@@ -32,10 +34,15 @@ import {
   type RecommendedHobby,
 } from "@/hooks/use-hobby-recommendations";
 import { useAuth } from "@/contexts/auth";
-import { createLikeCard, getMyLikeCards, getPlantedCountByCardIds, type LikeCard } from "@/lib/like-cards";
+import { profileSummary } from "@/data/ibuki";
 import { fetchSavedCards } from "@/lib/encounters";
+import {
+  createLikeCard,
+  getMyLikeCards,
+  getPlantedCountByCardIds,
+  type LikeCard,
+} from "@/lib/like-cards";
 import { getMyProfile } from "@/lib/user-profile";
-import {profileSummary} from "../../data/ibuki";
 
 
 const MAX_SHARED_HOBBIES = 5;
@@ -55,7 +62,13 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!user) return;
+      if (!user) {
+        setLikeCards([]);
+        setSavedCount(0);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       Promise.all([getMyLikeCards(), fetchSavedCards(user.id), getMyProfile()])
         .then(async ([cards, saved, profile]) => {
@@ -95,6 +108,17 @@ export default function ProfileScreen() {
       closeRecommendations();
     } catch {
       Alert.alert("エラー", "カードの追加に失敗しました");
+    }
+  }
+
+  async function addManualSuki(input: ManualSukiInput) {
+    try {
+      const newCard = await createLikeCard(input);
+      setLikeCards((current) => [newCard, ...current]);
+      closeRecommendations();
+    } catch {
+      Alert.alert("エラー", "カードの追加に失敗しました");
+      throw new Error("Failed to create manual suki card");
     }
   }
 
@@ -228,6 +252,7 @@ export default function ProfileScreen() {
         errorMessage={state.status === "error" ? state.message : undefined}
         onClose={closeRecommendations}
         onAdd={addHobbyFromRecommendation}
+        onAddManual={addManualSuki}
         onRetry={() => void recommend()}
       />
     </IbukiScreen>
@@ -264,7 +289,12 @@ function LikeCardTile({
             {card.detail}
           </Text>
         ) : null}
-        {/* {plantedCount > 1 ? (
+        <View style={styles.plantedBadge}>
+          <Text style={styles.plantedBadgeText}>
+            植えた人 {card.planted_user_count ?? 0}人
+          </Text>
+        </View>
+        {plantedCount > 1 ? (
           <Text style={styles.plantedCount}>他{plantedCount - 1}人が育てています。</Text>
         ) : null} */}
       </View>
@@ -451,6 +481,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
     lineHeight: 15,
+  },
+  plantedBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: IbukiColors.accentTint,
+    borderRadius: IbukiRadius.pill,
+    marginTop: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  plantedBadgeText: {
+    color: IbukiColors.accentDeep,
+    fontFamily: IbukiFonts?.sansBold,
+    fontSize: 11,
+    fontWeight: "700",
   },
   plantedCount: {
     color: IbukiColors.mid,

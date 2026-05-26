@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 
 import {
-  BodyText,
   Chip,
   Heading,
   IbukiScreen,
@@ -128,6 +127,9 @@ export default function HobbyDetailScreen() {
           encounterId,
           likeCardId: cardId,
         });
+        if (typeof hideKey === "string") {
+          hideEncounter(hideKey);
+        }
         setSaved(true);
         Alert.alert(
           "Bookmarkしました",
@@ -241,13 +243,6 @@ export default function HobbyDetailScreen() {
       <View style={styles.quoteBox}>
         <Text style={styles.quoteMark}>&#34;</Text>
         <Text style={styles.quote}>{hobby.quote}</Text>
-      </View>
-
-      <View style={styles.infoGrid}>
-        <View style={styles.infoCard}>
-          <Kicker>HOW TO START</Kicker>
-          <BodyText muted>{hobby.beginnerNote}</BodyText>
-        </View>
       </View>
 
       {typeof fromUserId === "string" &&
@@ -368,16 +363,6 @@ const styles = StyleSheet.create({
     fontFamily: IbukiFonts?.sans,
     fontSize: 16,
     lineHeight: 24,
-  },
-  infoGrid: {
-    marginBottom: IbukiSpacing.md,
-  },
-  infoCard: {
-    backgroundColor: IbukiColors.surface,
-    borderColor: IbukiColors.line,
-    borderRadius: IbukiRadius.md,
-    borderWidth: 1,
-    padding: IbukiSpacing.md,
   },
   placeCard: {
     backgroundColor: IbukiColors.surface,

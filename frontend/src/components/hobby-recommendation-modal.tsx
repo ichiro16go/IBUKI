@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -5,8 +6,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 import {
   IbukiColors,
@@ -18,6 +29,13 @@ import type { RecommendedHobby } from "@/hooks/use-hobby-recommendations";
 
 import { Kicker, PillButton } from "./ibuki-ui";
 
+const SHEET_CLOSE_DISTANCE = 120;
+const SHEET_CLOSE_VELOCITY = 900;
+const SHEET_HIDDEN_BUFFER = 48;
+const SHEET_OPEN_DURATION_MS = 220;
+const SHEET_CLOSE_DURATION_MS = 180;
+const BACKDROP_DURATION_MS = 160;
+
 type Props = {
   visible: boolean;
   status: "loading" | "success" | "error" | "idle";
@@ -25,7 +43,14 @@ type Props = {
   errorMessage?: string;
   onClose: () => void;
   onAdd?: (hobby: RecommendedHobby) => void;
+  onAddManual?: (input: ManualSukiInput) => void | Promise<void>;
   onRetry?: () => void;
+};
+
+export type ManualSukiInput = {
+  title: string;
+  category: string;
+  detail: string;
 };
 
 export function HobbyRecommendationModal({
@@ -35,42 +60,295 @@ export function HobbyRecommendationModal({
   errorMessage,
   onClose,
   onAdd,
+  onAddManual,
   onRetry,
 }: Props) {
+  const { height } = useWindowDimensions();
+  const [isRendered, setIsRendered] = useState(visible);
+  const hiddenTranslateY = useSharedValue(height + SHEET_HIDDEN_BUFFER);
+  const sheetTranslateY = useSharedValue(height + SHEET_HIDDEN_BUFFER);
+  const backdropOpacity = useSharedValue(0);
+
+  const finishDismiss = useCallback(() => {
+    setIsRendered(false);
+    onClose();
+  }, [onClose]);
+
+  const dismissWithAnimation = useCallback(() => {
+    backdropOpacity.value = withTiming(0, { duration: BACKDROP_DURATION_MS });
+    sheetTranslateY.value = withTiming(
+      hiddenTranslateY.value,
+      { duration: SHEET_CLOSE_DURATION_MS },
+      (finished) => {
+        if (finished) {
+          runOnJS(finishDismiss)();
+        }
+      },
+    );
+  }, [backdropOpacity, finishDismiss, hiddenTranslateY, sheetTranslateY]);
+
+  useEffect(() => {
+    hiddenTranslateY.value = height + SHEET_HIDDEN_BUFFER;
+    if (!visible && !isRendered) {
+      sheetTranslateY.value = hiddenTranslateY.value;
+    }
+  }, [height, hiddenTranslateY, isRendered, sheetTranslateY, visible]);
+
+  useEffect(() => {
+    if (visible) {
+      setIsRendered(true);
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (!isRendered) return;
+
+    if (visible) {
+      backdropOpacity.value = 0;
+      sheetTranslateY.value = hiddenTranslateY.value;
+      backdropOpacity.value = withTiming(1, { duration: BACKDROP_DURATION_MS });
+      sheetTranslateY.value = withTiming(0, {
+        duration: SHEET_OPEN_DURATION_MS,
+      });
+      return;
+    }
+
+    backdropOpacity.value = withTiming(0, { duration: BACKDROP_DURATION_MS });
+    sheetTranslateY.value = withTiming(
+      hiddenTranslateY.value,
+      { duration: SHEET_CLOSE_DURATION_MS },
+      (finished) => {
+        if (finished) {
+          runOnJS(setIsRendered)(false);
+        }
+      },
+    );
+  }, [backdropOpacity, hiddenTranslateY, isRendered, sheetTranslateY, visible]);
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
+  }));
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetTranslateY.value }],
+  }));
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetY(8)
+    .onUpdate((event) => {
+      sheetTranslateY.value = Math.max(event.translationY, 0);
+    })
+    .onEnd((event) => {
+      const shouldClose =
+        event.translationY > SHEET_CLOSE_DISTANCE ||
+        event.velocityY > SHEET_CLOSE_VELOCITY;
+
+      if (shouldClose) {
+        backdropOpacity.value = withTiming(0, {
+          duration: BACKDROP_DURATION_MS,
+        });
+        sheetTranslateY.value = withTiming(
+          hiddenTranslateY.value,
+          { duration: SHEET_CLOSE_DURATION_MS },
+          (finished) => {
+            if (finished) {
+              runOnJS(finishDismiss)();
+            }
+          },
+        );
+        return;
+      }
+
+      sheetTranslateY.value = withSpring(0, { damping: 18, stiffness: 180 });
+    });
+
+  if (!isRendered) {
+    return null;
+  }
+
   return (
     <Modal
-      visible={visible}
+      visible={isRendered}
       transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      animationType="none"
+      onRequestClose={dismissWithAnimation}
     >
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      <Animated.View style={[styles.backdrop, backdropStyle]}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={dismissWithAnimation}
+        />
+      </Animated.View>
 
-      <View style={styles.sheet}>
-        {/* Handle bar */}
-        <View style={styles.handle} />
+      <Animated.View style={[styles.sheet, sheetStyle]}>
+        <GestureDetector gesture={panGesture}>
+          <View style={styles.dragArea}>
+            {/* Handle bar */}
+            <View style={styles.handle} />
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Kicker>AI · YouTube分析</Kicker>
-            <Text style={styles.title}>あなたへのsuki候補</Text>
+            {/* Header */}
+            <View style={styles.header}>
+              <View>
+                <Kicker>AI · YouTube分析</Kicker>
+                <Text style={styles.title}>あなたへのsuki候補</Text>
+              </View>
+              <Pressable
+                onPress={dismissWithAnimation}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeText}>✕</Text>
+              </Pressable>
+            </View>
           </View>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕</Text>
-          </Pressable>
-        </View>
+        </GestureDetector>
 
-        {/* Body */}
-        {status === "loading" && <LoadingBody />}
-        {status === "error" && (
-          <ErrorBody message={errorMessage ?? ""} onRetry={onRetry} />
-        )}
-        {status === "success" && (
-          <SuccessBody recommendations={recommendations} onAdd={onAdd} />
-        )}
-      </View>
+        <ScrollView
+          style={styles.bodyScroll}
+          contentContainerStyle={styles.bodyContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <ManualSukiForm onAddManual={onAddManual} />
+
+          <View style={styles.aiSection}>
+            <Kicker>AI SUGGESTIONS</Kicker>
+            {status === "loading" && <LoadingBody />}
+            {status === "error" && (
+              <ErrorBody message={errorMessage ?? ""} onRetry={onRetry} />
+            )}
+            {status === "success" && (
+              <SuccessBody recommendations={recommendations} onAdd={onAdd} />
+            )}
+            {status === "idle" && (
+              <Text style={styles.emptyText}>
+                YouTube分析の候補はここに表示されます。
+              </Text>
+            )}
+          </View>
+        </ScrollView>
+      </Animated.View>
     </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Manual input state
+// ---------------------------------------------------------------------------
+
+function ManualSukiForm({
+  onAddManual,
+}: {
+  onAddManual?: (input: ManualSukiInput) => void | Promise<void>;
+}) {
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [detail, setDetail] = useState("");
+  const [validationMessage, setValidationMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const trimmedTitle = title.trim();
+  const trimmedCategory = category.trim();
+  const trimmedDetail = detail.trim();
+
+  async function handleSubmit() {
+    if (!onAddManual || isSubmitting) return;
+
+    if (!trimmedTitle) {
+      setValidationMessage("sukiの名前を入力してください。");
+      return;
+    }
+
+    setValidationMessage("");
+    setIsSubmitting(true);
+
+    try {
+      await onAddManual({
+        title: trimmedTitle,
+        category: trimmedCategory || "suki",
+        detail: trimmedDetail,
+      });
+      setTitle("");
+      setCategory("");
+      setDetail("");
+    } catch {
+      setValidationMessage("追加できませんでした。もう一度試してください。");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <View style={styles.manualCard}>
+      <View style={styles.manualHeader}>
+        <View>
+          <Kicker>MY SUKI</Kicker>
+          <Text style={styles.manualTitle}>自分でsukiを追加</Text>
+        </View>
+        <Text style={styles.requiredMark}>必須</Text>
+      </View>
+
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>名前</Text>
+        <TextInput
+          value={title}
+          onChangeText={(value) => {
+            setTitle(value);
+            if (validationMessage) setValidationMessage("");
+          }}
+          placeholder="例：喫茶店めぐり"
+          placeholderTextColor={IbukiColors.soft}
+          style={styles.input}
+          maxLength={100}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>カテゴリ</Text>
+        <TextInput
+          value={category}
+          onChangeText={setCategory}
+          placeholder="例：街歩き"
+          placeholderTextColor={IbukiColors.soft}
+          style={styles.input}
+          maxLength={100}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>メモ</Text>
+        <TextInput
+          value={detail}
+          onChangeText={setDetail}
+          placeholder="どんなところが好き？"
+          placeholderTextColor={IbukiColors.soft}
+          style={[styles.input, styles.inputMultiline]}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+        />
+      </View>
+
+      {validationMessage ? (
+        <Text style={styles.validationText}>{validationMessage}</Text>
+      ) : null}
+
+      <Pressable
+        accessibilityRole="button"
+        disabled={!onAddManual || isSubmitting}
+        onPress={handleSubmit}
+        style={({ pressed }) => [
+          styles.manualSubmit,
+          (!onAddManual || isSubmitting) && styles.manualSubmitDisabled,
+          pressed && styles.pressed,
+        ]}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator color={IbukiColors.background} size="small" />
+        ) : (
+          <Text style={styles.manualSubmitText}>このsukiを追加</Text>
+        )}
+      </Pressable>
+    </View>
   );
 }
 
@@ -139,11 +417,7 @@ function SuccessBody({
   }
 
   return (
-    <ScrollView
-      style={styles.successScroll}
-      contentContainerStyle={styles.successBody}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.successBody}>
       <Text style={styles.subtitle}>
         YouTubeの視聴傾向から{recommendations.length}つのsukiを見つけました
       </Text>
@@ -175,7 +449,7 @@ function SuccessBody({
           )}
         </View>
       ))}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -205,6 +479,10 @@ const styles = StyleSheet.create({
     paddingTop: IbukiSpacing.sm,
     position: "absolute",
     right: 0,
+  },
+  dragArea: {
+    marginHorizontal: -IbukiSpacing.lg,
+    paddingHorizontal: IbukiSpacing.lg,
   },
   handle: {
     alignSelf: "center",
@@ -246,7 +524,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: IbukiSpacing.lg,
     justifyContent: "center",
-    paddingVertical: IbukiSpacing.xxxl,
+    paddingVertical: IbukiSpacing.xl,
   },
   loadingText: {
     color: IbukiColors.mid,
@@ -274,12 +552,95 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
-  successScroll: {
+  bodyScroll: {
     flex: 1,
+  },
+  bodyContent: {
+    gap: IbukiSpacing.lg,
+    paddingBottom: IbukiSpacing.lg,
+  },
+  manualCard: {
+    backgroundColor: IbukiColors.surface,
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    gap: IbukiSpacing.md,
+    padding: IbukiSpacing.md,
+  },
+  manualHeader: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  manualTitle: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 18,
+    fontWeight: "700",
+    marginTop: 2,
+  },
+  requiredMark: {
+    backgroundColor: IbukiColors.accentTint,
+    borderRadius: IbukiRadius.pill,
+    color: IbukiColors.accentDeep,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 11,
+    fontWeight: "700",
+    overflow: "hidden",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  field: {
+    gap: IbukiSpacing.xs,
+  },
+  fieldLabel: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  input: {
+    backgroundColor: IbukiColors.background,
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.sm,
+    borderWidth: 1,
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 15,
+    minHeight: 44,
+    paddingHorizontal: IbukiSpacing.md,
+    paddingVertical: 10,
+  },
+  inputMultiline: {
+    minHeight: 82,
+  },
+  validationText: {
+    color: IbukiColors.hot,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 12,
+  },
+  manualSubmit: {
+    alignItems: "center",
+    backgroundColor: IbukiColors.ink,
+    borderRadius: IbukiRadius.pill,
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: IbukiSpacing.lg,
+  },
+  manualSubmitDisabled: {
+    opacity: 0.5,
+  },
+  manualSubmitText: {
+    color: IbukiColors.background,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  aiSection: {
+    gap: IbukiSpacing.md,
   },
   successBody: {
     gap: IbukiSpacing.md,
-    paddingBottom: IbukiSpacing.lg,
   },
   subtitle: {
     color: IbukiColors.mid,
@@ -336,5 +697,8 @@ const styles = StyleSheet.create({
   addButton: {
     alignSelf: "flex-start",
     marginTop: IbukiSpacing.xs,
+  },
+  pressed: {
+    opacity: 0.72,
   },
 });
