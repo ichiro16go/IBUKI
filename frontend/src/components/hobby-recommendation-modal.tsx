@@ -44,6 +44,7 @@ type Props = {
   onClose: () => void;
   onAdd?: (hobby: RecommendedHobby) => void;
   onAddManual?: (input: ManualSukiInput) => void | Promise<void>;
+  onRequestAiRecommendations?: () => void;
   onRetry?: () => void;
 };
 
@@ -61,6 +62,7 @@ export function HobbyRecommendationModal({
   onClose,
   onAdd,
   onAddManual,
+  onRequestAiRecommendations,
   onRetry,
 }: Props) {
   const { height } = useWindowDimensions();
@@ -220,14 +222,41 @@ export function HobbyRecommendationModal({
               <SuccessBody recommendations={recommendations} onAdd={onAdd} />
             )}
             {status === "idle" && (
-              <Text style={styles.emptyText}>
-                YouTube分析の候補はここに表示されます。
-              </Text>
+              <AiOptInBody
+                onRequestAiRecommendations={onRequestAiRecommendations}
+              />
             )}
           </View>
         </ScrollView>
       </Animated.View>
     </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// AI opt-in state
+// ---------------------------------------------------------------------------
+
+function AiOptInBody({
+  onRequestAiRecommendations,
+}: {
+  onRequestAiRecommendations?: () => void;
+}) {
+  return (
+    <View style={styles.aiOptInCard}>
+      <Text style={styles.aiOptInTitle}>AIレコメンドを使いますか？</Text>
+      <Text style={styles.aiOptInText}>
+        YouTubeの登録チャンネル・高評価・プレイリストをもとに、あなたのsuki候補を提案します。
+      </Text>
+      {onRequestAiRecommendations && (
+        <PillButton
+          label="AIに提案してもらう"
+          variant="accent"
+          onPress={onRequestAiRecommendations}
+          style={styles.aiOptInButton}
+        />
+      )}
+    </View>
   );
 }
 
@@ -638,6 +667,30 @@ const styles = StyleSheet.create({
   },
   aiSection: {
     gap: IbukiSpacing.md,
+  },
+  aiOptInCard: {
+    backgroundColor: IbukiColors.surface,
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.md,
+    borderWidth: 1,
+    gap: IbukiSpacing.sm,
+    padding: IbukiSpacing.md,
+  },
+  aiOptInTitle: {
+    color: IbukiColors.ink,
+    fontFamily: IbukiFonts.sansBold,
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  aiOptInText: {
+    color: IbukiColors.inkSoft,
+    fontFamily: IbukiFonts.sans,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  aiOptInButton: {
+    alignSelf: "flex-start",
+    marginTop: IbukiSpacing.xs,
   },
   successBody: {
     gap: IbukiSpacing.md,

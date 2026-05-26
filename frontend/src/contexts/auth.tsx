@@ -48,6 +48,7 @@ type AuthContextType = {
   /** Google OAuth refresh token — lets the backend refresh YouTube access. */
   providerRefreshToken: string | null;
   signInWithGoogle: () => Promise<boolean>;
+  requestYouTubeAccess: () => Promise<boolean>;
   clearAuthError: () => void;
   signOut: () => Promise<void>;
 };
@@ -131,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   >(null);
   const processedAuthUrlsRef = useRef(new Set<string>());
   const inFlightAuthRequestsRef = useRef(new Map<string, Promise<boolean>>());
+  const shouldPersistProviderTokensRef = useRef(false);
 
   // Restore persisted provider tokens on mount.
   useEffect(() => {
@@ -180,6 +182,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return inFlightRequest;
     }
 
+    const shouldPersistProviderTokens = shouldPersistProviderTokensRef.current;
+
     const request = (async () => {
       setIsLoading(true);
       setAuthError(null);
@@ -200,13 +204,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setSession(data.session);
 
-        // Persist the provider token so it survives app restarts.
-        if (payload.providerToken) {
+        if (shouldPersistProviderTokens && payload.providerToken) {
           setProviderToken(payload.providerToken);
           await setStoredSecret(PROVIDER_TOKEN_KEY, payload.providerToken);
         }
 
-        if (payload.providerRefreshToken) {
+        if (shouldPersistProviderTokens && payload.providerRefreshToken) {
           setProviderRefreshToken(payload.providerRefreshToken);
           await setStoredSecret(
             PROVIDER_REFRESH_TOKEN_KEY,
@@ -268,10 +271,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [completeAuthSessionFromUrl]);
 
-  const signInWithOAuth = async (provider: "google") => {
+  const signInWithOAuth = async (
+    provider: "google",
+    options?: {
+      scopes?: string;
+      shouldPersistProviderTokens?: boolean;
+      queryParams?: Record<string, string>;
+    },
+  ) => {
     const redirectUrl = getAuthRedirectUrl();
     setIsLoading(true);
     setAuthError(null);
+    shouldPersistProviderTokensRef.current =
+      options?.shouldPersistProviderTokens ?? false;
 
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -279,13 +291,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           redirectTo: redirectUrl,
           skipBrowserRedirect: true,
-          // youtube.readonly lets us read subscriptions, liked videos, and
-          // playlists to power AI hobby recommendations.
-          scopes: "https://www.googleapis.com/auth/youtube.readonly",
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
+          scopes: options?.scopes,
+          queryParams: options?.queryParams,
         },
       });
 
@@ -316,10 +323,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthError(message);
       setIsLoading(false);
       throw authError;
+    } finally {
+      shouldPersistProviderTokensRef.current = false;
     }
   };
 
   const signInWithGoogle = () => signInWithOAuth("google");
+
+  const requestYouTubeAccess = () =>
+    signInWithOAuth("google", {
+      scopes: "https://www.googleapis.com/auth/youtube.readonly",
+      shouldPersistProviderTokens: true,
+      queryParams: {
+        access_type: "offline",
+        prompt: "consent",
+      },
+    });
 
   const signOut = async () => {
     setAuthError(null);
@@ -343,6 +362,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         providerToken,
         providerRefreshToken,
         signInWithGoogle,
+        requestYouTubeAccess,
         clearAuthError,
         signOut,
       }}

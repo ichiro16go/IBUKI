@@ -62,7 +62,8 @@ export default function PlanterDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<SelectedActionInfo | null>(null);
+  const [selectedAction, setSelectedAction] =
+    useState<SelectedActionInfo | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -78,7 +79,11 @@ export default function PlanterDetailScreen() {
     });
   }, [detail]);
 
-  const { state: aiState, fetchRecommendations, reset: resetAi } = useActionRecommendations();
+  const {
+    state: aiState,
+    fetchRecommendations,
+    reset: resetAi,
+  } = useActionRecommendations();
 
   const loadDetail = useCallback(async () => {
     if (!user?.id || !planterItemId) {
@@ -195,12 +200,22 @@ export default function PlanterDetailScreen() {
       <TopBar
         left={
           <IconButton
-            icon="chevron-left"
+            icon={{
+              ios: "chevron.left",
+              android: "arrow_back",
+              web: "chevron.left",
+            }}
             onPress={() => router.back()}
             label="戻る"
           />
         }
-        right={item.isOwnSuki ? <Kicker>MY SUKI</Kicker> : <Kicker>もらったsuki</Kicker>}
+        right={
+          item.isOwnSuki ? (
+            <Kicker>MY SUKI</Kicker>
+          ) : (
+            <Kicker>もらったsuki</Kicker>
+          )
+        }
       />
 
       <View style={styles.visualSection}>
@@ -211,10 +226,18 @@ export default function PlanterDetailScreen() {
           const maxHeight = Math.min(displayWidth * 1.05, 380);
 
           return (
-            <View style={{ width: displayWidth, height: maxHeight, overflow: "hidden" }}>
+            <View
+              style={{
+                width: displayWidth,
+                height: maxHeight,
+                overflow: "hidden",
+              }}
+            >
               <PlantVisual
                 actionCount={item.actionCount}
-                stage={initialStage ?? (item.actionCount === 0 ? "seed" : "leafy")}
+                stage={
+                  initialStage ?? (item.actionCount === 0 ? "seed" : "leafy")
+                }
                 plantType={Math.abs(hashCode(item.id)) % 3}
                 size={displayWidth}
                 itemLevel={Math.max(0, (item.level ?? 1) - 1)}
@@ -225,7 +248,9 @@ export default function PlanterDetailScreen() {
 
         {item.isOwnSuki && item.actionCount === 0 ? (
           <PillButton
-            label={initialStage ? `成熟度: ${initialStage}` : "初期成熟度を設定"}
+            label={
+              initialStage ? `成熟度: ${initialStage}` : "初期成熟度を設定"
+            }
             onPress={() => setShowInitialStageModal(true)}
             style={{ marginTop: 12, width: 220 }}
             variant="accent"
@@ -308,19 +333,22 @@ export default function PlanterDetailScreen() {
                 }
                 style={[
                   styles.actionOption,
-                  selectedAction?.id === action.id && styles.actionOptionSelected,
+                  selectedAction?.id === action.id &&
+                    styles.actionOptionSelected,
                 ]}
               >
                 <Text
                   style={[
                     styles.actionOptionTitle,
                     selectedAction?.id === action.id &&
-                    styles.actionOptionTitleSelected,
+                      styles.actionOptionTitleSelected,
                   ]}
                 >
                   {action.title}
                 </Text>
-                <Text style={styles.actionOptionDesc}>{action.description}</Text>
+                <Text style={styles.actionOptionDesc}>
+                  {action.description}
+                </Text>
               </Pressable>
             ))}
 
@@ -330,10 +358,13 @@ export default function PlanterDetailScreen() {
                 <Kicker>AIのおすすめ ✦</Kicker>
                 <View style={styles.aiLoadingContainer}>
                   <ActivityIndicator size="small" color={IbukiColors.mid} />
-                  <Text style={styles.aiLoadingText}>AIがおすすめを考え中...</Text>
+                  <Text style={styles.aiLoadingText}>
+                    AIがおすすめを考え中...
+                  </Text>
                 </View>
               </View>
-            ) : aiState.status === "success" && aiState.recommendations.length > 0 ? (
+            ) : aiState.status === "success" &&
+              aiState.recommendations.length > 0 ? (
               <View style={styles.aiSection}>
                 <Kicker>AIのおすすめ ✦</Kicker>
                 {aiState.recommendations.map((rec, index) => (
@@ -351,20 +382,22 @@ export default function PlanterDetailScreen() {
                       styles.actionOption,
                       styles.actionOptionAi,
                       selectedAction?.id === `ai-rec-${index}` &&
-                      styles.actionOptionAiSelected,
+                        styles.actionOptionAiSelected,
                     ]}
                   >
                     <Text
                       style={[
                         styles.actionOptionTitle,
                         selectedAction?.id === `ai-rec-${index}` &&
-                        styles.actionOptionTitleAiSelected,
+                          styles.actionOptionTitleAiSelected,
                       ]}
                     >
                       {rec.title}
                     </Text>
                     {rec.description ? (
-                      <Text style={styles.actionOptionDesc}>{rec.description}</Text>
+                      <Text style={styles.actionOptionDesc}>
+                        {rec.description}
+                      </Text>
                     ) : null}
                   </Pressable>
                 ))}
@@ -424,21 +457,42 @@ export default function PlanterDetailScreen() {
 
           <View style={{ padding: 20 }}>
             <Heading size="small">どの段階から始めますか？</Heading>
-            <Pressable onPress={() => void saveInitialStage("seed")} style={[styles.actionOption, { marginTop: 16 }]}>
+            <Pressable
+              onPress={() => void saveInitialStage("seed")}
+              style={[styles.actionOption, { marginTop: 16 }]}
+            >
               <Text style={styles.actionOptionTitle}>種（Seed）</Text>
-              <Text style={styles.actionOptionDesc}>最初の状態。AIの提案を1〜3回実行すると芽が出ます。</Text>
+              <Text style={styles.actionOptionDesc}>
+                最初の状態。AIの提案を1〜3回実行すると芽が出ます。
+              </Text>
             </Pressable>
-            <Pressable onPress={() => void saveInitialStage("sprout")} style={[styles.actionOption, { marginTop: 12 }]}>
+            <Pressable
+              onPress={() => void saveInitialStage("sprout")}
+              style={[styles.actionOption, { marginTop: 12 }]}
+            >
               <Text style={styles.actionOptionTitle}>芽（Sprout）</Text>
-              <Text style={styles.actionOptionDesc}>芽が出ている状態。葉が少しあります。</Text>
+              <Text style={styles.actionOptionDesc}>
+                芽が出ている状態。葉が少しあります。
+              </Text>
             </Pressable>
-            <Pressable onPress={() => void saveInitialStage("leafy")} style={[styles.actionOption, { marginTop: 12 }]}>
-              <Text style={styles.actionOptionTitle}>ある程度成長（Leafy）</Text>
-              <Text style={styles.actionOptionDesc}>葉があり、すぐに花が咲く可能性があります。</Text>
+            <Pressable
+              onPress={() => void saveInitialStage("leafy")}
+              style={[styles.actionOption, { marginTop: 12 }]}
+            >
+              <Text style={styles.actionOptionTitle}>
+                ある程度成長（Leafy）
+              </Text>
+              <Text style={styles.actionOptionDesc}>
+                葉があり、すぐに花が咲く可能性があります。
+              </Text>
             </Pressable>
 
             <View style={{ marginTop: 20 }}>
-              <PillButton label="クリア" onPress={() => void saveInitialStage(null)} variant="light" />
+              <PillButton
+                label="クリア"
+                onPress={() => void saveInitialStage(null)}
+                variant="light"
+              />
             </View>
           </View>
         </IbukiScreen>
