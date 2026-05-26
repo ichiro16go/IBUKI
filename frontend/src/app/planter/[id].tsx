@@ -5,11 +5,13 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   BodyText,
@@ -165,6 +167,7 @@ export default function PlanterDetailScreen() {
     setShowInitialStageModal(false);
   }
 
+  const insets = useSafeAreaInsets();
   const screenWidth = Dimensions.get("window").width;
   const maxHeight = Math.min(screenWidth * 1.05, 380);
 
@@ -259,21 +262,23 @@ export default function PlanterDetailScreen() {
             )}
           </View>
 
+          {/* アクション追加 — ボトムシート */}
           <Modal
             visible={showActionModal}
+            transparent
             animationType="slide"
             onRequestClose={closeActionModal}
           >
-            <IbukiScreen>
-              <TopBar
-                left={<Kicker>アクション追加</Kicker>}
-                right={
-                  <Pressable onPress={closeActionModal}>
-                    <Text style={styles.closeButton}>✕</Text>
-                  </Pressable>
-                }
-              />
-              <View style={styles.modalSection}>
+            <Pressable style={styles.sheetBackdrop} onPress={closeActionModal} />
+            <View style={[styles.sheet, { paddingBottom: insets.bottom + IbukiSpacing.lg }]}>
+              <View style={styles.sheetHandle} />
+              <View style={styles.sheetTitleRow}>
+                <Kicker>アクションを追加</Kicker>
+                <Pressable onPress={closeActionModal} hitSlop={16} style={styles.sheetCloseBtn}>
+                  <Text style={styles.sheetCloseBtnText}>✕</Text>
+                </Pressable>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false} style={styles.sheetScroll}>
                 <Heading size="small">アクションを選択</Heading>
                 {sukiActions.map((action) => (
                   <Pressable
@@ -345,22 +350,22 @@ export default function PlanterDetailScreen() {
                     ))}
                   </View>
                 ) : null}
-              </View>
-              {selectedAction ? (
-                <View style={styles.modalSection}>
-                  <Heading size="small">メモ（任意）</Heading>
-                  <TextInput
-                    style={styles.notesInput}
-                    placeholder="この時のメモを追加..."
-                    multiline
-                    numberOfLines={4}
-                    value={notes}
-                    onChangeText={setNotes}
-                    placeholderTextColor={IbukiColors.mid}
-                  />
-                </View>
-              ) : null}
-              <View style={styles.modalActions}>
+                {selectedAction ? (
+                  <View style={styles.aiSection}>
+                    <Heading size="small">メモ（任意）</Heading>
+                    <TextInput
+                      style={styles.notesInput}
+                      placeholder="この時のメモを追加..."
+                      multiline
+                      numberOfLines={4}
+                      value={notes}
+                      onChangeText={setNotes}
+                      placeholderTextColor={IbukiColors.mid}
+                    />
+                  </View>
+                ) : null}
+              </ScrollView>
+              <View style={styles.sheetActions}>
                 <PillButton
                   label="キャンセル"
                   onPress={closeActionModal}
@@ -374,24 +379,26 @@ export default function PlanterDetailScreen() {
                   variant="dark"
                 />
               </View>
-            </IbukiScreen>
+            </View>
           </Modal>
 
+          {/* 初期成熟度 — ボトムシート */}
           <Modal
             visible={showInitialStageModal}
+            transparent
             animationType="slide"
             onRequestClose={() => setShowInitialStageModal(false)}
           >
-            <IbukiScreen>
-              <TopBar
-                left={<Kicker>初期成熟度を選択</Kicker>}
-                right={
-                  <Pressable onPress={() => setShowInitialStageModal(false)}>
-                    <Text style={styles.closeButton}>✕</Text>
-                  </Pressable>
-                }
-              />
-              <View style={{ padding: 20 }}>
+            <Pressable style={styles.sheetBackdrop} onPress={() => setShowInitialStageModal(false)} />
+            <View style={[styles.sheet, { paddingBottom: insets.bottom + IbukiSpacing.lg }]}>
+              <View style={styles.sheetHandle} />
+              <View style={styles.sheetTitleRow}>
+                <Kicker>初期成熟度を選択</Kicker>
+                <Pressable onPress={() => setShowInitialStageModal(false)} hitSlop={16} style={styles.sheetCloseBtn}>
+                  <Text style={styles.sheetCloseBtnText}>✕</Text>
+                </Pressable>
+              </View>
+              <View style={styles.sheetScroll}>
                 <Heading size="small">どの段階から始めますか？</Heading>
                 <Pressable onPress={() => void saveInitialStage("seed")} style={[styles.actionOption, { marginTop: 16 }]}>
                   <Text style={styles.actionOptionTitle}>種（Seed）</Text>
@@ -409,7 +416,7 @@ export default function PlanterDetailScreen() {
                   <PillButton label="クリア" onPress={() => void saveInitialStage(null)} variant="light" />
                 </View>
               </View>
-            </IbukiScreen>
+            </View>
           </Modal>
         </>
       )}
@@ -588,5 +595,47 @@ const styles = StyleSheet.create({
   stateText: {
     color: IbukiColors.ink,
     textAlign: "center",
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.38)",
+  },
+  sheet: {
+    backgroundColor: IbukiColors.background,
+    borderTopLeftRadius: IbukiRadius.xl,
+    borderTopRightRadius: IbukiRadius.xl,
+    maxHeight: "88%",
+    paddingHorizontal: IbukiSpacing.lg,
+    paddingTop: IbukiSpacing.sm,
+  },
+  sheetHandle: {
+    alignSelf: "center",
+    backgroundColor: IbukiColors.line,
+    borderRadius: IbukiRadius.pill,
+    height: 4,
+    marginBottom: IbukiSpacing.sm,
+    width: 36,
+  },
+  sheetTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: IbukiSpacing.md,
+  },
+  sheetCloseBtn: {
+    padding: IbukiSpacing.xs,
+  },
+  sheetCloseBtnText: {
+    color: IbukiColors.mid,
+    fontSize: 18,
+  },
+  sheetScroll: {
+    flexGrow: 0,
+  },
+  sheetActions: {
+    borderTopColor: IbukiColors.line,
+    borderTopWidth: 1,
+    gap: IbukiSpacing.sm,
+    paddingTop: IbukiSpacing.md,
   },
 });
