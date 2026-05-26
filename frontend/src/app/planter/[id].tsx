@@ -280,6 +280,7 @@ export default function PlanterDetailScreen() {
             animationType="slide"
             onRequestClose={closeActionModal}
           >
+            <View style={styles.sheetContainer}>
             <Pressable style={styles.sheetBackdrop} onPress={closeActionModal} />
             <View style={[styles.sheet, { paddingBottom: insets.bottom + IbukiSpacing.lg }]}>
               <View style={styles.sheetHandle} />
@@ -391,6 +392,7 @@ export default function PlanterDetailScreen() {
                 />
               </View>
             </View>
+            </View>
           </Modal>
 
           {/* 初期成熟度 — ボトムシート */}
@@ -400,6 +402,7 @@ export default function PlanterDetailScreen() {
             animationType="slide"
             onRequestClose={() => setShowInitialStageModal(false)}
           >
+            <View style={styles.sheetContainer}>
             <Pressable style={styles.sheetBackdrop} onPress={() => setShowInitialStageModal(false)} />
             <View style={[styles.sheet, { paddingBottom: insets.bottom + IbukiSpacing.lg }]}>
               <View style={styles.sheetHandle} />
@@ -427,6 +430,7 @@ export default function PlanterDetailScreen() {
                   <PillButton label="クリア" onPress={() => void saveInitialStage(null)} variant="light" />
                 </View>
               </View>
+            </View>
             </View>
           </Modal>
         </>
@@ -606,6 +610,10 @@ const styles = StyleSheet.create({
   stateText: {
     color: IbukiColors.ink,
     textAlign: "center",
+  },
+  sheetContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
