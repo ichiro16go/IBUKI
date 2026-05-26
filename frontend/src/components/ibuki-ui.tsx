@@ -254,15 +254,16 @@ export function PillButton({
   style,
 }: {
   label: string;
-  variant?: "dark" | "light" | "accent";
+  variant?: "dark" | "light" | "accent" | "danger";
   icon?: SymbolName;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
   const isDark = variant === "dark";
   const isAccent = variant === "accent";
+  const isDanger = variant === "danger";
   const tintColor =
-    isDark || isAccent ? IbukiColors.background : IbukiColors.ink;
+    isDark || isAccent || isDanger ? IbukiColors.background : IbukiColors.ink;
 
   return (
     <Pressable
@@ -274,12 +275,13 @@ export function PillButton({
           styles.pillButton,
           isDark && styles.pillButtonDark,
           isAccent && styles.pillButtonAccent,
+          isDanger && styles.pillButtonDanger,
         ]}
       >
         <Text
           style={[
             styles.pillButtonText,
-            (isDark || isAccent) && styles.pillButtonTextLight,
+            (isDark || isAccent || isDanger) && styles.pillButtonTextLight,
           ]}
         >
           {label}
@@ -928,6 +930,10 @@ const styles = StyleSheet.create({
   pillButtonAccent: {
     backgroundColor: IbukiColors.good,
     borderColor: IbukiColors.good,
+  },
+  pillButtonDanger: {
+    backgroundColor: IbukiColors.hot,
+    borderColor: IbukiColors.hot,
   },
   pillButtonText: {
     color: IbukiColors.ink,

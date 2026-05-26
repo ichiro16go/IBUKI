@@ -117,6 +117,7 @@ export default function BookmarkScreen() {
                       source: "remote",
                       cardId: savedCard.likeCardId,
                       encounterId: savedCard.encounterId,
+                      savedCardId: savedCard.id,
                       fromUserId: fromUserIds[savedCard.encounterId],
                     },
                   } as never)
