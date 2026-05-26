@@ -1,5 +1,6 @@
 import React from "react";
-import { View, StyleSheet, Image } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { IbukiColors } from "@/constants/ibuki-theme";
 
 export type PlantStage = "seed" | "sprout" | "leafy";
@@ -74,6 +75,14 @@ const growthConfig = [
     },
 ];
 
+const PLANT_IMAGES = [
+    require("../../assets/images/plant_growth/suki_phase1.png"),
+    require("../../assets/images/plant_growth/suki_phase2.png"),
+    require("../../assets/images/plant_growth/suki_phase3.png"),
+    require("../../assets/images/plant_growth/suki_phase4.png"),
+    require("../../assets/images/plant_growth/suki_phase5.png"),
+] as const;
+
 export default function PlantVisual({
     actionCount,
     stage = "seed",
@@ -87,8 +96,6 @@ export default function PlantVisual({
     size?: number;
     itemLevel?: number;
 }) {
-    // If `itemLevel` is provided (preferred), use it directly (0-based).
-    // Otherwise compute growth level from stage/actionCount as before.
     let growthLevel: number;
     if (typeof itemLevel === "number") {
         growthLevel = Math.max(0, Math.min(4, Math.floor(itemLevel)));
@@ -97,28 +104,16 @@ export default function PlantVisual({
         growthLevel = Math.min(4, baseLevel + Math.floor(actionCount / 2));
     }
 
-    // Static image assets (5 stages). Currently only `suki_phase1..5.png` are provided.
-    // Map plant types to variants here — fallback to 'suki' for all types if others missing.
-    const variantName = "suki";
-    const IMAGES = {
-        suki: [
-            require("../../assets/images/plant_growth/suki_phase1.png"),
-            require("../../assets/images/plant_growth/suki_phase2.png"),
-            require("../../assets/images/plant_growth/suki_phase3.png"),
-            require("../../assets/images/plant_growth/suki_phase4.png"),
-            require("../../assets/images/plant_growth/suki_phase5.png"),
-        ],
-    } as const;
+    const source = PLANT_IMAGES[growthLevel];
 
-    const variantImages = (IMAGES as any)[variantName];
-
-    if (variantImages && variantImages[growthLevel]) {
-        const source = variantImages[growthLevel];
+    if (source) {
         return (
             <View style={[styles.container, { width: size, height: size * 1.05 }]}>
                 <Image
                     source={source}
-                    style={{ width: size, height: size * 1.05, resizeMode: "contain" }}
+                    style={{ width: size, height: size * 1.05 }}
+                    contentFit="contain"
+                    transition={150}
                 />
             </View>
         );

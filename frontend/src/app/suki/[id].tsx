@@ -33,7 +33,11 @@ import {
   updateLikeCard,
   type LikeCard,
 } from "@/lib/like-cards";
-import { createPlanterItem } from "@/lib/planter";
+import {
+  createPlanterItem,
+  fetchWeeklyPlanterCount,
+  WEEKLY_PLANT_LIMIT,
+} from "@/lib/planter";
 import { buildPhotoUrlUpdate } from "@/lib/suki-card-photo-upload-core";
 import {
   pickAndUploadSukiCardPhoto,
@@ -92,6 +96,14 @@ export default function SukiDetailScreen() {
     if (!user?.id) return;
     setNavigating(true);
     try {
+      const weeklyPlantCount = await fetchWeeklyPlanterCount(user.id);
+      if (weeklyPlantCount >= WEEKLY_PLANT_LIMIT) {
+        Alert.alert(
+          "今週の上限に達しました",
+          `今週はすでに${WEEKLY_PLANT_LIMIT}個まで植えています。来週また植えてください。`,
+        );
+        return;
+      }
       const planterItem = await createPlanterItem({
         likeCardId: id,
         userId: user.id,
