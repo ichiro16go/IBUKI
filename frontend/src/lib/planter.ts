@@ -3,6 +3,8 @@ import type { Tables } from "@/lib/database.types";
 import { formatRelativeTime, mapLikeCardToHobby } from "@/lib/encounters";
 import { supabase } from "@/lib/supabase";
 
+export const WEEKLY_PLANT_LIMIT = 3;
+
 type LikeCardRelation = Tables<"like_cards"> | Tables<"like_cards">[] | null;
 
 type PlanterItemWithCardRow = Tables<"planter_items"> & {
@@ -74,6 +76,22 @@ function mapActionLog(log: ActionLogRow): PlanterActionLogItem {
     notes: log.notes,
     title: log.title,
   };
+}
+
+function getWeekAgoIsoString() {
+  return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+}
+
+export async function fetchWeeklyPlanterCount(userId: string) {
+  const { count, error } = await supabase
+    .from("planter_items")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("planted_at", getWeekAgoIsoString());
+
+  if (error) throw error;
+
+  return count ?? 0;
 }
 
 function buildPlanterFeedItem(

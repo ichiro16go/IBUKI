@@ -25,7 +25,11 @@ import {
   mapLikeCardToHobby,
   saveEncounterBookmark,
 } from "@/lib/encounters";
-import { createPlanterItem } from "@/lib/planter";
+import {
+  createPlanterItem,
+  fetchWeeklyPlanterCount,
+  WEEKLY_PLANT_LIMIT,
+} from "@/lib/planter";
 import { getUserPublicProfile } from "@/lib/user-profile";
 import { useEncounterPreferences } from "@/state/encounter-preferences";
 
@@ -159,6 +163,15 @@ export default function HobbyDetailScreen() {
 
     try {
       setIsPlanting(true);
+      const weeklyPlantCount = await fetchWeeklyPlanterCount(user.id);
+      if (weeklyPlantCount >= WEEKLY_PLANT_LIMIT) {
+        Alert.alert(
+          "今週の上限に達しました",
+          `今週はすでに${WEEKLY_PLANT_LIMIT}個まで植えています。来週また植えてください。`,
+        );
+        return;
+      }
+
       const planterItem = await createPlanterItem({
         encounterId: typeof encounterId === "string" ? encounterId : null,
         likeCardId: cardId,
