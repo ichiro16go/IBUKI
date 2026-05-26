@@ -88,7 +88,11 @@ export default function ProfileEditScreen() {
       <TopBar
         left={
           <IconButton
-            icon="chevron-left"
+            icon={{
+              ios: "chevron.left",
+              android: "arrow_back",
+              web: "chevron.left",
+            }}
             onPress={() => router.back()}
             label="戻る"
           />
@@ -167,9 +171,7 @@ export default function ProfileEditScreen() {
         <View style={styles.toggleRow}>
           <View style={styles.toggleLabel}>
             <Heading size="small">プロフィールを公開する</Heading>
-            <BodyText>
-              すれ違いカードに年代・性別ラベルを表示します
-            </BodyText>
+            <BodyText>すれ違いカードに年代・性別ラベルを表示します</BodyText>
           </View>
           <Switch
             value={isProfilePublic}
@@ -186,7 +188,9 @@ export default function ProfileEditScreen() {
       <View style={styles.previewSection}>
         <Kicker>プレビュー</Kicker>
         <View style={styles.previewCard}>
-          <Text style={styles.previewLabel}>すれ違いカードに表示される情報</Text>
+          <Text style={styles.previewLabel}>
+            すれ違いカードに表示される情報
+          </Text>
           {isProfilePublic && (ageRange ?? genderLabel) ? (
             <Text style={styles.previewValue}>
               {[ageRange, genderLabel].filter(Boolean).join(" · ")}
