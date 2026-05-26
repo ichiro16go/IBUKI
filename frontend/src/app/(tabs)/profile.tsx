@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
 
@@ -44,18 +44,21 @@ import {
 } from "@/lib/like-cards";
 import { getMyProfile } from "@/lib/user-profile";
 
-
 const MAX_SHARED_HOBBIES = 5;
 
 export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, providerToken, requestYouTubeAccess } = useAuth();
   const [likeCards, setLikeCards] = useState<LikeCard[]>([]);
   const [savedCount, setSavedCount] = useState(0);
-  const [plantedCounts, setPlantedCounts] = useState<Record<string, number>>({});
+  const [plantedCounts, setPlantedCounts] = useState<Record<string, number>>(
+    {},
+  );
   const [nickname, setNickname] = useState<string | null>(null);
   const [isProfilePublic, setIsProfilePublic] = useState(false);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [shouldRecommendAfterConsent, setShouldRecommendAfterConsent] =
+    useState(false);
   const { state, recommend, reset } = useHobbyRecommendations();
 
   const canAddMore = likeCards.length < MAX_SHARED_HOBBIES;
@@ -86,15 +89,39 @@ export default function ProfileScreen() {
     }, [user]),
   );
 
+  useEffect(() => {
+    if (!modalVisible || !shouldRecommendAfterConsent || !providerToken) {
+      return;
+    }
+
+    setShouldRecommendAfterConsent(false);
+    void recommend();
+  }, [modalVisible, providerToken, recommend, shouldRecommendAfterConsent]);
+
   function openRecommendations() {
     if (!canAddMore) return;
+    reset();
     setModalVisible(true);
-    void recommend();
   }
 
   function closeRecommendations() {
     setModalVisible(false);
+    setShouldRecommendAfterConsent(false);
     reset();
+  }
+
+  async function startAiRecommendations() {
+    try {
+      if (!providerToken) {
+        const didGrantAccess = await requestYouTubeAccess();
+        if (didGrantAccess) setShouldRecommendAfterConsent(true);
+        return;
+      }
+
+      await recommend();
+    } catch {
+      Alert.alert("エラー", "YouTube連携に失敗しました");
+    }
   }
 
   async function addHobbyFromRecommendation(hobby: RecommendedHobby) {
@@ -160,15 +187,25 @@ export default function ProfileScreen() {
         </View>
         <View style={styles.identityCopy}>
           <View style={styles.publicBadgeRow}>
-            <View style={[styles.publicBadge, isProfilePublic ? styles.publicBadgeOn : styles.publicBadgeOff]}>
-              <Text style={[styles.publicBadgeText, isProfilePublic ? styles.publicBadgeTextOn : styles.publicBadgeTextOff]}>
+            <View
+              style={[
+                styles.publicBadge,
+                isProfilePublic ? styles.publicBadgeOn : styles.publicBadgeOff,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.publicBadgeText,
+                  isProfilePublic
+                    ? styles.publicBadgeTextOn
+                    : styles.publicBadgeTextOff,
+                ]}
+              >
                 {isProfilePublic ? "公開中" : "非公開"}
               </Text>
             </View>
           </View>
-          <Heading size="medium">
-            {nickname ?? "まだ名前のない\n誰か"}
-          </Heading>
+          <Heading size="medium">{nickname ?? "まだ名前のない\n誰か"}</Heading>
           <Text style={styles.metaText}>
             {profileSummary.location} · since {profileSummary.since}
           </Text>
@@ -188,9 +225,7 @@ export default function ProfileScreen() {
 
       <PillButton
         label="プロフィールを編集"
-        onPress={() =>
-          router.push({ pathname: "/profile-edit" } as never)
-        }
+        onPress={() => router.push({ pathname: "/profile-edit" } as never)}
         style={styles.editProfileButton}
         variant="light"
       />
@@ -253,7 +288,8 @@ export default function ProfileScreen() {
         onClose={closeRecommendations}
         onAdd={addHobbyFromRecommendation}
         onAddManual={addManualSuki}
-        onRetry={() => void recommend()}
+        onRequestAiRecommendations={() => void startAiRecommendations()}
+        onRetry={() => void startAiRecommendations()}
       />
     </IbukiScreen>
   );
@@ -295,8 +331,10 @@ function LikeCardTile({
           </Text>
         </View>
         {plantedCount > 1 ? (
-          <Text style={styles.plantedCount}>他{plantedCount - 1}人が育てています。</Text>
-        ) : null} */}
+          <Text style={styles.plantedCount}>
+            他{plantedCount - 1}人が育てています。
+          </Text>
+        ) : null}
       </View>
     </Pressable>
   );
