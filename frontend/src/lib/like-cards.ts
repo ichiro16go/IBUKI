@@ -93,3 +93,20 @@ export async function deleteLikeCard(id: string): Promise<void> {
   const { error } = await supabase.from("like_cards").delete().eq("id", id);
   if (error) throw error;
 }
+
+/** 指定の like_card_id ごとに何人が植えているかカウント */
+export async function getPlantedCountByCardIds(
+  cardIds: string[],
+): Promise<Record<string, number>> {
+  if (cardIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from("planter_items")
+    .select("like_card_id")
+    .in("like_card_id", cardIds);
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  for (const row of data) {
+    counts[row.like_card_id] = (counts[row.like_card_id] ?? 0) + 1;
+  }
+  return counts;
+}

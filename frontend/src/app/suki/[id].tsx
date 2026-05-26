@@ -25,19 +25,23 @@ import {
   IbukiRadius,
   IbukiSpacing,
 } from "@/constants/ibuki-theme";
+import { useAuth } from "@/contexts/auth";
 import {
   deleteLikeCard,
   getLikeCardById,
   updateLikeCard,
   type LikeCard,
 } from "@/lib/like-cards";
+import { createPlanterItem } from "@/lib/planter";
 
 export default function SukiDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
 
   const [card, setCard] = useState<LikeCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [navigating, setNavigating] = useState(false);
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -75,6 +79,19 @@ export default function SukiDetailScreen() {
         },
       },
     ]);
+  }
+
+  async function handleNavigateToActionLog() {
+    if (!user?.id) return;
+    setNavigating(true);
+    try {
+      const planterItem = await createPlanterItem({ likeCardId: id, userId: user.id });
+      router.push({ pathname: "/planter/[id]", params: { id: planterItem.id } } as never);
+    } catch {
+      Alert.alert("エラー", "アクションログの取得に失敗しました");
+    } finally {
+      setNavigating(false);
+    }
   }
 
   async function handleSave() {
@@ -224,11 +241,9 @@ export default function SukiDetailScreen() {
 
         {/* SUKI ACTION LOG */}
         <PillButton
-          label="SUKI ACTION LOG →"
+          label={navigating ? "移動中..." : "SUKI ACTION LOG →"}
           variant="dark"
-          onPress={() => {
-            // TODO: SUKI ACTION LOG 画面に遷移
-          }}
+          onPress={navigating ? undefined : handleNavigateToActionLog}
         />
       </IbukiScreen>
     </KeyboardAvoidingView>

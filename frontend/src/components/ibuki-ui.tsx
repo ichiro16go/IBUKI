@@ -429,12 +429,16 @@ export function EncounterCard({
   time,
   context,
   isNew,
+  otherSukiTitles,
+  fromUserProfile,
   onPress,
 }: {
   hobby: Hobby;
   time: string;
   context: string;
   isNew: boolean;
+  otherSukiTitles?: string[];
+  fromUserProfile?: { ageRange: string | null; genderLabel: string | null; isProfilePublic: boolean } | null;
   onPress: () => void;
 }) {
   return (
@@ -464,6 +468,28 @@ export function EncounterCard({
                 </View>
               ))}
             </View>
+            {fromUserProfile?.isProfilePublic &&
+              (fromUserProfile.ageRange ?? fromUserProfile.genderLabel) ? (
+              <View style={styles.userAttributeRow}>
+                <Text style={styles.userAttributeText}>
+                  {[fromUserProfile.ageRange, fromUserProfile.genderLabel]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </Text>
+              </View>
+            ) : null}
+            {otherSukiTitles && otherSukiTitles.length > 0 && (
+              <View style={styles.otherSukiSection}>
+                <Text style={styles.otherSukiLabel}>この人の他のsuki</Text>
+                <View style={styles.tagRow}>
+                  {otherSukiTitles.slice(0, 3).map((title) => (
+                    <View key={title} style={styles.otherSukiTag}>
+                      <Text style={styles.otherSukiTagText}>{title}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -1415,5 +1441,38 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     textAlign: "center",
+  },
+  userAttributeRow: {
+    marginTop: IbukiSpacing.xs,
+  },
+  userAttributeText: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts?.sansBold,
+    fontSize: 11,
+  },
+  otherSukiSection: {
+    borderTopColor: IbukiColors.line,
+    borderTopWidth: 1,
+    marginTop: IbukiSpacing.xs,
+    paddingTop: IbukiSpacing.xs,
+  },
+  otherSukiLabel: {
+    color: IbukiColors.mid,
+    fontFamily: IbukiFonts?.sans,
+    fontSize: 10,
+    marginBottom: IbukiSpacing.xs,
+  },
+  otherSukiTag: {
+    backgroundColor: IbukiColors.surfaceMuted,
+    borderColor: IbukiColors.line,
+    borderRadius: IbukiRadius.pill,
+    borderWidth: 1,
+    paddingHorizontal: IbukiSpacing.sm,
+    paddingVertical: 2,
+  },
+  otherSukiTagText: {
+    color: IbukiColors.inkSoft,
+    fontFamily: IbukiFonts?.sans,
+    fontSize: 10,
   },
 });

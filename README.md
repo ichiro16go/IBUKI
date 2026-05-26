@@ -4,6 +4,8 @@
 
 ## スクリーンショット
 
+![alt text](image.png)
+![alt text](image-1.png)
 <!-- README先頭の見栄え兼SNS素材。Day2 終了までに最低1枚は貼る -->
 
 | メイン画面 | 主要機能 |
@@ -16,7 +18,7 @@
 |---|---|
 | チーム名 | 彩吹 |
 | プロダクト名 | Ibuki |
-| 担当メンター | 未定 |
+| 担当メンター | shiho |
 
 ### メンバー
 
@@ -76,13 +78,13 @@ GPS ログを一定間隔でサーバーに送信し、近接していたユー�
 
 ## 提出ステータス（運営チェック用 — 各 Day 終了時に記入）
 
-- [ ] **Day1 終了時**：テーマ確定（プロダクト名・解決課題・ターゲットを記入済み）
-- [ ] **Day2 終了時**：MVP 動作（デプロイ済み URL が下記「デモ環境」欄に入っている）
+- [x] **Day1 終了時**：テーマ確定（プロダクト名・解決課題・ターゲットを記入済み）
+- [x] **Day2 終了時**：MVP 動作（デプロイ済み URL が下記「デモ環境」欄に入っている）
 - [ ] **Day3 終了時**：提出完了（プレゼン資料 URL / デモ動画 URL / AI 活用ログ完成）
 
 ## 提出物チェックリスト（Day3 17:00 提出〆切）
 
-- [ ] 動くデモ（デプロイ済み URL を「デモ環境」欄に記載）
+<!-- - [ ] 動くデモ（デプロイ済み URL を「デモ環境」欄に記載） -->
 - [ ] ソースコード（このリポに push 済み）
 - [ ] [`AI_USAGE_LOG.md`](./AI_USAGE_LOG.md)（AI 活用ログ、開発期間中の追記必須）
 - [ ] プレゼン資料（PDF or Slides URL を記載）
@@ -90,25 +92,28 @@ GPS ログを一定間隔でサーバーに送信し、近接していたユー�
 
 ## デモ・関連リンク
 
-| 種別 | URL |
+※ React Native（Expo Go）のモバイルアプリのため、Web デプロイは対象外。実機デモで発表。
+
+| 種別 | 内容 |
 |---|---|
-| デモ環境 | （Vercel / Render / Netlify 等） |
+| 実機デモ | Expo Go にて iOS / Android 動作確認済み |
 | プレゼン資料 | （Google Slides / Notion / Speakerdeck） |
 | デモ動画 | （YouTube / Loom） |
 
 ## 技術スタック
 
-- **フロント**： react native
-- **バックエンド**： supabase
-- **インフラ**： supabase
-- **利用 AI ツール**： claude code
+- **フロント**：React Native（Expo / Expo Router）
+- **バックエンド**：FastAPI（uvicorn） + Supabase Edge Functions（Deno）
+- **DB / 認証 / Storage**：Supabase（PostgreSQL + Auth）
+- **すれ違い検知**：GPS（Haversine 距離計算）via Supabase Edge Function
+- **開発 AI ツール**：Claude Code CLI / Claude Design / Gemini CLI
 
 ### 使用した外部 API / サービス
 
 | サービス名 | 用途 | プラン | 備考 |
 |---|---|---|---|
-| 例: OpenAI API | 〜の生成 | Pay-as-you-go | 概算コスト ¥XX |
-| | | | |
+| OpenAI API | suki レコメンド・アクション提案（gpt-4o-mini） | Pay-as-you-go | ハッカソン期間の使用量は少額 |
+| Supabase | DB・認証・Edge Functions | Free tier | |
 
 → API キー・秘匿情報は `.env`（`.gitignore` 対象）で管理。公開リポ化に備えて漏らさないこと。
 
@@ -193,8 +198,18 @@ make supabase-start
 開発期間が短いため、Day3 提出時点で「ここまでやった／ここは諦めた」を正直に書く。
 **正直に書くことは減点ではなく加点要素**（自己評価力として審査される）。
 
-- 未実装：（例）多言語対応 — 時間切れのため
-- 既知の問題：（例）モバイル Safari でレイアウト崩れあり — 開発機の Chrome では再現せず
+### 実装済み ✅
+
+- GPS によるすれ違い検出（Haversine 距離計算・Supabase Edge Function）
+- suki カードのすれ違い配信・bookmark・植物育成（5段階ビジュアル）
+- AI による suki レコメンドとアクション提案（OpenAI gpt-4o-mini）
+- ユーザー属性（年代・性別ラベル）の登録と匿名表示
+- iOS / Android 両対応（Expo Go で動作確認済み）
+
+### 未実装 / 諦めたもの
+
+- **プッシュ通知**：すれ違い発生時のリアルタイム通知 — Expo Notifications の設定工数が Day3 に間に合わなかったため。アーキテクチャ上は追加可能。
+- **多言語対応**：日本語のみ対応。i18n は将来拡張として設計は意識している。
 
 ## 担当メンター・壁打ち履歴
 
@@ -202,8 +217,8 @@ make supabase-start
 
 | 日時 | メンター | 議論内容（要点） | 採用 / 一部採用 / 不採用 |
 |---|---|---|---|
-| Day1 14:00 | （例）Mercari 坂本さん | コア機能の絞り込み | 採用 |
-| Day2 11:00 |  |  |  |
+| Day1 14:00 | shiho さん | ①AI は「趣味ステップ生成」より「潜在的な好きの発見」に使うべき（写真フォルダ・YouTube履歴分析の提案） ②コールドスタート問題：一人でも完結できる価値設計へ ③「趣味を植え付け・広める」インセンティブ設計の提案 ④GPS vs BLE の技術的トレードオフ整理 ⑤受動と能動のバランス・プレゼン練習の重要性 | 一部採用（AI 活用方針・インセンティブ設計・GPS 採用を採用。写真フォルダ分析は工数的にスキップし YouTube 履歴ベースに変更） |
+| Day2 | shiho さん | PoC（GPS すれ違い検出 + すれ違いカード配信）の動作確認フィードバック | 採用 |
 
 ## AI 活用ログ
 
