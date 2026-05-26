@@ -11,7 +11,10 @@ import {
   View,
 } from "react-native";
 
-import { HobbyRecommendationModal } from "@/components/hobby-recommendation-modal";
+import {
+  HobbyRecommendationModal,
+  type ManualSukiInput,
+} from "@/components/hobby-recommendation-modal";
 import {
   Heading,
   IbukiScreen,
@@ -95,6 +98,17 @@ export default function ProfileScreen() {
     }
   }
 
+  async function addManualSuki(input: ManualSukiInput) {
+    try {
+      const newCard = await createLikeCard(input);
+      setLikeCards((current) => [newCard, ...current]);
+      closeRecommendations();
+    } catch {
+      Alert.alert("エラー", "カードの追加に失敗しました");
+      throw new Error("Failed to create manual suki card");
+    }
+  }
+
   function handleSignOutPress() {
     Alert.alert("サインアウト", "サインアウトしますか？", [
       { text: "キャンセル", style: "cancel" },
@@ -118,11 +132,11 @@ export default function ProfileScreen() {
       <TopBar
         left={<Kicker>PROFILE</Kicker>}
         right={
-            <IconButton
-              icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
-              onPress={handleSignOutPress}
-              label="設定"
-            />
+          <IconButton
+            icon={{ ios: "gearshape", android: "settings", web: "gearshape" }}
+            onPress={handleSignOutPress}
+            label="設定"
+          />
         }
       />
 
@@ -210,6 +224,7 @@ export default function ProfileScreen() {
         errorMessage={state.status === "error" ? state.message : undefined}
         onClose={closeRecommendations}
         onAdd={addHobbyFromRecommendation}
+        onAddManual={addManualSuki}
         onRetry={() => void recommend()}
       />
     </IbukiScreen>
