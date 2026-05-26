@@ -263,9 +263,9 @@ function LikeCardTile({
             {card.detail}
           </Text>
         ) : null}
-        {plantedCount > 1 ? (
+        {/* {plantedCount > 1 ? (
           <Text style={styles.plantedCount}>他{plantedCount - 1}人が育てています。</Text>
-        ) : null}
+        ) : null} */}
       </View>
     </Pressable>
   );
