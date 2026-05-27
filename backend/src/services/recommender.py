@@ -8,6 +8,7 @@ model is prompted to surface interests visible in the user's YouTube history.
 import json
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 
@@ -16,6 +17,17 @@ from openai import AsyncOpenAI
 from .youtube import YouTubeProfile
 
 logger = logging.getLogger(__name__)
+
+_MAX_INPUT_LEN = 200
+_CONTROL_CHARS_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def _sanitize_prompt_input(value: str, max_length: int = _MAX_INPUT_LEN) -> str:
+    """制御文字を除去し長さを制限することでプロンプトインジェクションを防ぐ。"""
+    value = _CONTROL_CHARS_RE.sub("", value)
+    value = value.replace("{", "｛").replace("}", "｝")
+    return value[:max_length].strip()
+
 
 MAX_RECOMMENDATIONS = 5
 PROMPT_CHANNEL_LIMIT = 30
@@ -140,11 +152,14 @@ class ActionRecommendation:
 def _build_action_prompt(
     hobby_title: str, hobby_category: str, hobby_detail: str
 ) -> str:
+    title = _sanitize_prompt_input(hobby_title)
+    category = _sanitize_prompt_input(hobby_category)
+    detail = _sanitize_prompt_input(hobby_detail, max_length=500)
     return f"""あなたはユーザーの趣味活動を具体的にサポートするアシスタントです。
 
-趣味: {hobby_title}
-カテゴリ: {hobby_category or "未設定"}
-詳細: {hobby_detail or "未設定"}
+趣味: {title}
+カテゴリ: {category or "未設定"}
+詳細: {detail or "未設定"}
 
 この趣味に関して、ユーザーが今日・今週から実際に試せる具体的なアクションを{MAX_ACTION_RECOMMENDATIONS}つ提案してください。
 
@@ -244,17 +259,26 @@ async def recommend_hobbies(
         logger.info("YouTubeProfile is empty; using fallback recommendations")
         return _fallback_recommendations()
 
-    client = _get_client()
+    try:
+        client = _get_client()
+    except ValueError:
+        logger.warning("OpenAI client unavailable; using fallback recommendations")
+        return _fallback_recommendations()
+
     prompt = _build_prompt(profile)
     logger.info("Sending prompt to OpenAI:\n%s", prompt)
 
-    response = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"},
-        temperature=0.7,
-        max_tokens=768,
-    )
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0.7,
+            max_tokens=768,
+        )
+    except Exception:
+        logger.exception("OpenAI call failed for hobby recommendations")
+        return _fallback_recommendations()
 
     content = response.choices[0].message.content or "{}"
     logger.info("OpenAI raw response: %s", content)

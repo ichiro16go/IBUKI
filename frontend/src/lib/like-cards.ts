@@ -1,3 +1,4 @@
+import { PGRST } from "@/constants/error-codes";
 import { supabase } from "@/lib/supabase";
 
 export type LikeCard = {
@@ -47,7 +48,7 @@ export async function getLikeCardById(id: string): Promise<LikeCard | null> {
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") return null;
+    if (error.code === PGRST.NOT_FOUND) return null;
     throw error;
   }
   return data;

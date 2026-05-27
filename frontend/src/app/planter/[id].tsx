@@ -327,10 +327,10 @@ export default function PlanterDetailScreen() {
                       <Text style={styles.aiLoadingText}>AIがおすすめを考え中...</Text>
                     </View>
                   </View>
-                ) : aiState.status === "success" && aiState.recommendations.length > 0 ? (
+                ) : aiState.status === "success" && aiState.data.length > 0 ? (
                   <View style={styles.aiSection}>
                     <Kicker>AIのおすすめ ✦</Kicker>
-                    {aiState.recommendations.map((rec, index) => (
+                    {aiState.data.map((rec, index) => (
                       <Pressable
                         key={`ai-rec-${index}`}
                         onPress={() =>

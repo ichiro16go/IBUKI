@@ -282,7 +282,7 @@ export default function ProfileScreen() {
         visible={modalVisible}
         status={state.status}
         recommendations={
-          state.status === "success" ? state.recommendations : []
+          state.status === "success" ? state.data : []
         }
         errorMessage={state.status === "error" ? state.message : undefined}
         onClose={closeRecommendations}

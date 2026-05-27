@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 
 import { useAuth } from "@/contexts/auth";
+import { fetchWithAuth } from "@/lib/api-client";
+import type { AsyncState } from "@/lib/types";
 
 export type RecommendedHobby = {
   nameJa: string;
@@ -9,19 +11,13 @@ export type RecommendedHobby = {
   reason: string;
 };
 
-type RecommendationState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "success"; recommendations: RecommendedHobby[] }
-  | { status: "error"; message: string };
+type RecommendationState = AsyncState<RecommendedHobby[]>;
 
 type UseHobbyRecommendationsResult = {
   state: RecommendationState;
   recommend: () => Promise<void>;
   reset: () => void;
 };
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const IDLE_STATE: RecommendationState = { status: "idle" };
 
@@ -51,35 +47,24 @@ export function useHobbyRecommendations(): UseHobbyRecommendationsResult {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/hobby/recommend`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          google_access_token: providerToken,
-          google_refresh_token: providerRefreshToken,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => "");
-        throw new Error(
-          response.status === 401
-            ? "認証エラーが発生しました。サインインし直してください。"
-            : `サーバーエラー (${response.status})${errorText ? `: ${errorText}` : ""}`,
-        );
-      }
-
-      const data = (await response.json()) as {
+      const data = await fetchWithAuth<{
         recommendations: {
           name_ja: string;
           name_en: string;
           tags: string[];
           reason: string;
         }[];
-      };
+      }>(
+        "/api/hobby/recommend",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            google_access_token: providerToken,
+            google_refresh_token: providerRefreshToken,
+          }),
+        },
+        accessToken,
+      );
 
       const recommendations: RecommendedHobby[] = data.recommendations.map(
         (item) => ({
@@ -90,7 +75,7 @@ export function useHobbyRecommendations(): UseHobbyRecommendationsResult {
         }),
       );
 
-      setState({ status: "success", recommendations });
+      setState({ status: "success", data: recommendations });
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "おすすめの取得に失敗しました。";
