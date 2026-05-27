@@ -5,10 +5,19 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// 許可するオリジンを環境変数から取得。"*" を設定すれば全許可（開発用）。
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") ?? "";
+
+function getCorsHeaders(requestOrigin: string | null): Record<string, string> {
+  const allowed =
+    ALLOWED_ORIGIN === "*" || requestOrigin === ALLOWED_ORIGIN
+      ? (requestOrigin ?? "")
+      : "";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 function haversineDistance(
   lat1: number, lng1: number,
@@ -26,6 +35,8 @@ function haversineDistance(
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"));
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -148,7 +159,7 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: (err as Error).message }),
+      JSON.stringify({ error: "内部エラーが発生しました。" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

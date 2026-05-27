@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 
 import { useAuth } from "@/contexts/auth";
+import { fetchWithAuth } from "@/lib/api-client";
+import type { AsyncState } from "@/lib/types";
 
 export type RecommendedAction = {
   title: string;
@@ -8,11 +10,7 @@ export type RecommendedAction = {
   actionType: string;
 };
 
-type ActionRecommendationState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "success"; recommendations: RecommendedAction[] }
-  | { status: "error" };
+type ActionRecommendationState = AsyncState<RecommendedAction[]>;
 
 type UseActionRecommendationsResult = {
   state: ActionRecommendationState;
@@ -23,8 +21,6 @@ type UseActionRecommendationsResult = {
   ) => Promise<void>;
   reset: () => void;
 };
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const IDLE_STATE: ActionRecommendationState = { status: "idle" };
 
@@ -40,34 +36,27 @@ export function useActionRecommendations(): UseActionRecommendationsResult {
     ) => {
       const accessToken = session?.access_token;
       if (!accessToken) {
-        setState({ status: "error" });
+        setState({ status: "error", message: "セッションが無効です。" });
         return;
       }
 
       setState({ status: "loading" });
 
       try {
-        const response = await fetch(`${API_URL}/api/hobby/action-recommend`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            hobby_title: hobbyTitle,
-            hobby_category: hobbyCategory,
-            hobby_detail: hobbyDetail,
-          }),
-        });
-
-        if (!response.ok) {
-          setState({ status: "error" });
-          return;
-        }
-
-        const data = (await response.json()) as {
+        const data = await fetchWithAuth<{
           recommendations: { title: string; description: string; action_type: string }[];
-        };
+        }>(
+          "/api/hobby/action-recommend",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              hobby_title: hobbyTitle,
+              hobby_category: hobbyCategory,
+              hobby_detail: hobbyDetail,
+            }),
+          },
+          accessToken,
+        );
 
         const recommendations: RecommendedAction[] = data.recommendations.map((item) => ({
           title: item.title,
@@ -75,9 +64,11 @@ export function useActionRecommendations(): UseActionRecommendationsResult {
           actionType: item.action_type,
         }));
 
-        setState({ status: "success", recommendations });
-      } catch {
-        setState({ status: "error" });
+        setState({ status: "success", data: recommendations });
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "アクション提案の取得に失敗しました。";
+        setState({ status: "error", message });
       }
     },
     [session],

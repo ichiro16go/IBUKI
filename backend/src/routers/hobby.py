@@ -4,14 +4,19 @@ POST /api/hobby/recommend
   - Validates the caller's Supabase JWT via /auth/v1/user
   - Fetches YouTube signals using the Google provider token
   - Returns up to 5 AI-inferred interests
+
+POST /api/hobby/action-recommend
+  - Validates the caller's Supabase JWT
+  - Returns up to 3 AI-generated action suggestions for a given hobby
 """
 
 import logging
 import os
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from pydantic import BaseModel, Field
+from src.dependencies import limiter
 from src.services.recommender import (
     ActionRecommendation,
     HobbyRecommendation,
@@ -31,8 +36,8 @@ router = APIRouter(prefix="/api/hobby", tags=["hobby"])
 
 
 class RecommendRequest(BaseModel):
-    google_access_token: str
-    google_refresh_token: str | None = None
+    google_access_token: str = Field(..., max_length=2048)
+    google_refresh_token: str | None = Field(None, max_length=2048)
     existing_hobby_ids: list[str] = []  # kept for API compatibility, unused
 
 
@@ -53,9 +58,9 @@ class RecommendResponse(BaseModel):
 
 
 class ActionRecommendRequest(BaseModel):
-    hobby_title: str
-    hobby_category: str = ""
-    hobby_detail: str = ""
+    hobby_title: str = Field(..., max_length=200)
+    hobby_category: str = Field("", max_length=200)
+    hobby_detail: str = Field("", max_length=500)
 
 
 class ActionRecommendItem(BaseModel):
@@ -109,7 +114,7 @@ async def verify_supabase_token(authorization: str = Header(...)) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Endpoint
+# Endpoints
 # ---------------------------------------------------------------------------
 
 
@@ -118,26 +123,37 @@ async def verify_supabase_token(authorization: str = Header(...)) -> None:
     response_model=ActionRecommendResponse,
     summary="AI action recommendations for a specific hobby",
 )
+@limiter.limit("10/minute")
 async def get_action_recommendations(
+    request: Request,
     body: ActionRecommendRequest,
     _: None = Depends(verify_supabase_token),
 ) -> ActionRecommendResponse:
     """Returns up to 3 AI-generated specific action suggestions for the given hobby."""
-    recommendations: list[ActionRecommendation] = await recommend_actions(
-        hobby_title=body.hobby_title,
-        hobby_category=body.hobby_category,
-        hobby_detail=body.hobby_detail,
-    )
-    return ActionRecommendResponse(
-        recommendations=[
-            ActionRecommendItem(
-                title=r.title,
-                description=r.description,
-                action_type=r.action_type,
-            )
-            for r in recommendations
-        ]
-    )
+    try:
+        recommendations: list[ActionRecommendation] = await recommend_actions(
+            hobby_title=body.hobby_title,
+            hobby_category=body.hobby_category,
+            hobby_detail=body.hobby_detail,
+        )
+        return ActionRecommendResponse(
+            recommendations=[
+                ActionRecommendItem(
+                    title=r.title,
+                    description=r.description,
+                    action_type=r.action_type,
+                )
+                for r in recommendations
+            ]
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Unexpected error in /action-recommend")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="アクション提案の取得中にエラーが発生しました。",
+        )
 
 
 @router.post(
@@ -145,7 +161,9 @@ async def get_action_recommendations(
     response_model=RecommendResponse,
     summary="AI hobby recommendations from YouTube",
 )
+@limiter.limit("5/minute")
 async def get_hobby_recommendations(
+    request: Request,
     body: RecommendRequest,
     _: None = Depends(verify_supabase_token),
 ) -> RecommendResponse:
@@ -153,20 +171,29 @@ async def get_hobby_recommendations(
     Accepts Google provider tokens.
     Returns up to 5 AI-inferred interests based on YouTube signals.
     """
-    profile = await build_youtube_profile(
-        body.google_access_token,
-        body.google_refresh_token,
-    )
-    recommendations: list[HobbyRecommendation] = await recommend_hobbies(profile)
+    try:
+        profile = await build_youtube_profile(
+            body.google_access_token,
+            body.google_refresh_token,
+        )
+        recommendations: list[HobbyRecommendation] = await recommend_hobbies(profile)
 
-    return RecommendResponse(
-        recommendations=[
-            RecommendationItem(
-                name_ja=r.name_ja,
-                name_en=r.name_en,
-                tags=r.tags,
-                reason=r.reason,
-            )
-            for r in recommendations
-        ]
-    )
+        return RecommendResponse(
+            recommendations=[
+                RecommendationItem(
+                    name_ja=r.name_ja,
+                    name_en=r.name_en,
+                    tags=r.tags,
+                    reason=r.reason,
+                )
+                for r in recommendations
+            ]
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Unexpected error in /recommend")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="おすすめの取得中にエラーが発生しました。",
+        )
