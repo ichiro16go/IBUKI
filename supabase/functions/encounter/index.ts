@@ -42,26 +42,61 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user_id, latitude, longitude } = await req.json();
-
-    if (!user_id || !latitude || !longitude) {
+    const authorization = req.headers.get("authorization");
+    if (!authorization?.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "user_id, latitude, longitude are required" }),
+        JSON.stringify({ error: "Authorization header is required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authorization.slice("Bearer ".length).trim();
+    const { data: authData, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !authData.user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const authUserId = authData.user.id;
+    const body = await req.json();
+    const { user_id, latitude, longitude } = body as {
+      user_id?: string;
+      latitude?: number;
+      longitude?: number;
+    };
+
+    if (
+      typeof latitude !== "number" ||
+      typeof longitude !== "number" ||
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+      return new Response(
+        JSON.stringify({ error: "latitude, longitude are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (user_id && user_id !== authUserId) {
+      return new Response(
+        JSON.stringify({ error: "user_id does not match the authenticated user" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // 1. 自分の位置情報をupsert
     await supabase
       .from("user_locations")
-      .upsert({ user_id, latitude, longitude, updated_at: new Date().toISOString() });
+      .upsert({ user_id: authUserId, latitude, longitude, updated_at: new Date().toISOString() });
 
     // 2. 5分以内に更新された他のユーザーの位置情報を取得
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { data: nearbyUsers } = await supabase
       .from("user_locations")
       .select("user_id, latitude, longitude")
-      .neq("user_id", user_id)
+      .neq("user_id", authUserId)
       .gte("updated_at", fiveMinutesAgo);
 
     if (!nearbyUsers || nearbyUsers.length === 0) {
@@ -93,8 +128,8 @@ Deno.serve(async (req) => {
         .from("encounters")
         .select("id")
         .or(
-          `and(user_a_id.eq.${user_id},user_b_id.eq.${closeUser.user_id}),` +
-          `and(user_a_id.eq.${closeUser.user_id},user_b_id.eq.${user_id})`
+          `and(user_a_id.eq.${authUserId},user_b_id.eq.${closeUser.user_id}),` +
+          `and(user_a_id.eq.${closeUser.user_id},user_b_id.eq.${authUserId})`
         )
         .gte("encountered_at", oneHourAgo)
         .limit(1);
@@ -105,7 +140,7 @@ Deno.serve(async (req) => {
       const { data: encounter } = await supabase
         .from("encounters")
         .insert({
-          user_a_id: user_id,
+          user_a_id: authUserId,
           user_b_id: closeUser.user_id,
           detection_method: "GPS",
           encountered_at: new Date().toISOString(),
@@ -127,7 +162,7 @@ Deno.serve(async (req) => {
         await supabase.from("encounter_cards").insert({
           encounter_id: encounter.id,
           from_user_id: closeUser.user_id,
-          to_user_id: user_id,
+          to_user_id: authUserId,
           like_card_id: randomCardB.id,
         });
       }
@@ -136,14 +171,14 @@ Deno.serve(async (req) => {
       const { data: likeCardsA } = await supabase
         .from("like_cards")
         .select("id")
-        .eq("user_id", user_id)
+        .eq("user_id", authUserId)
         .limit(100);
 
       if (likeCardsA && likeCardsA.length > 0) {
         const randomCardA = likeCardsA[Math.floor(Math.random() * likeCardsA.length)];
         await supabase.from("encounter_cards").insert({
           encounter_id: encounter.id,
-          from_user_id: user_id,
+          from_user_id: authUserId,
           to_user_id: closeUser.user_id,
           like_card_id: randomCardA.id,
         });
