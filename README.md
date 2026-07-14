@@ -1,262 +1,245 @@
-# Team 06 — Engineer Guild Hackathon 2026/05
+<div id="top"></div>
 
-> **1行ピッチ（30字以内）**： 偶発的な"suki"を育てる
+## 使用技術一覧
 
-## スクリーンショット
+<p style="display: inline">
+  <!-- フロントエンド -->
+  <img src="https://img.shields.io/badge/-React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
+  <img src="https://img.shields.io/badge/-React%20Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
+  <img src="https://img.shields.io/badge/-Expo-000020.svg?logo=expo&style=for-the-badge">
+  <img src="https://img.shields.io/badge/-TypeScript-3178C6.svg?logo=typescript&style=for-the-badge&logoColor=white">
+  <!-- バックエンド(FW / 言語) -->
+  <img src="https://img.shields.io/badge/-FastAPI-009688.svg?logo=fastapi&style=for-the-badge&logoColor=white">
+  <img src="https://img.shields.io/badge/-Python-F2C63C.svg?logo=python&style=for-the-badge">
+  <img src="https://img.shields.io/badge/-uv-DE5FE9.svg?logo=uv&style=for-the-badge&logoColor=white">
+  <!-- データ / 認証 -->
+  <img src="https://img.shields.io/badge/-Supabase-3ECF8E.svg?logo=supabase&style=for-the-badge&logoColor=white">
+  <img src="https://img.shields.io/badge/-PostgreSQL-4169E1.svg?logo=postgresql&style=for-the-badge&logoColor=white">
+  <img src="https://img.shields.io/badge/-OpenAI-412991.svg?logo=openai&style=for-the-badge&logoColor=white">
+  <!-- インフラ / ツール -->
+  <img src="https://img.shields.io/badge/-ngrok-1F1E37.svg?logo=ngrok&style=for-the-badge&logoColor=white">
+  <img src="https://img.shields.io/badge/-githubactions-2088FF.svg?logo=github-actions&style=for-the-badge&logoColor=white">
+</p>
 
-![alt text](image.png)
-![alt text](image-1.png)
-<!-- README先頭の見栄え兼SNS素材。Day2 終了までに最低1枚は貼る -->
+## 目次
 
-| メイン画面 | 主要機能 |
-|---|---|
-| `docs/screenshot-main.png` を貼る | `docs/screenshot-feature.png` を貼る |
+1. [プロジェクトについて](#プロジェクトについて)
+2. [環境](#環境)
+3. [ディレクトリ構成](#ディレクトリ構成)
+4. [開発環境構築](#開発環境構築)
+5. [トラブルシューティング](#トラブルシューティング)
 
-## チーム情報
+<br />
+<div align="right">
+    <a href="./HACKATHON.md"><strong>ハッカソン提出ドキュメント »</strong></a>
+</div>
+<br />
+<div align="right">
+    <a href="./docs/supabase-development.md"><strong>Supabase 開発ガイド »</strong></a>
+</div>
+<br />
 
-| 項目 | 内容 |
-|---|---|
-| チーム名 | 彩吹 |
-| プロダクト名 | Ibuki |
-| 担当メンター | shiho |
+## プロダクト名
 
-### メンバー
+Ibuki — 偶発的な "suki" を育てるアプリ
 
-| GitHub | 氏名 | 大学 / 学部 | 担当役割 |
-|---|---|---|---|
-| @Kanahe1800 | 今村心香 | University of Victoria, Geomatics | BE |
-| @taisei0719 | 永田泰誠 | 大阪大学大学院 情報科学研究科 | FE/BE |
-| @yuseiwnl | 森有生 | 慶應義塾大学 経済学部 | Design / FE/ BE|
-| @ichiro16go | 宮本一路 | 早稲田大学 基幹理工学部 | PM |
+## プロジェクトについて
 
-担当役割の凡例：**PM** / **BE**（Backend）/ **FE**（Frontend）/ **Design** / **Infra** / **Data** / その他
+現代の SNS や動画プラットフォームは、ユーザーの行動履歴をもとにコンテンツを最適化するアルゴリズムによって運営されており、思いがけない趣味や価値観との偶然の出会いが失われている。
 
-## プロダクト概要
+Ibuki は、リアルな「すれ違い」を起点に知らなかった趣味と出会い、調べる・触れるアクションを通じてそれを育てていく体験を提供するモバイルアプリである。
 
-> 現代のSNSアルゴリズムは最適化された情報しか届けず、思いがけない趣味との偶然の出会いが失われている。本プロダクトは、リアルな「すれ違い」を起点に知らなかった趣味と出会い、調べる・触れるアクションを通じてそれを育てていく体験を提供するアプリである。
+- **frontend**: Expo (React Native) 製のモバイルアプリ
+- **backend**: FastAPI 製の API サーバー（OpenAI・Google API 連携）
+- **supabase**: 認証・データベース（PostgreSQL）・Edge Functions
 
-### 解決したい課題
+  <p align="left">
+    <br />
+    <a href="./HACKATHON.md"><strong>プロダクト詳細（プロダクト概要・課題・ターゲット） »</strong></a>
+    <br />
+    <br />
 
-現代のSNSや動画プラットフォームは、ユーザーの行動履歴をもとにコンテンツを最適化するアルゴリズムによって運営されている。これにより、ユーザーは自分がすでに興味を持っているものに近い情報しか受け取れなくなり、思いがけない趣味や価値観との偶然の出会いが失われている。
+<p align="right">(<a href="#top">トップへ</a>)</p>
 
-### ターゲットユーザー
+## 環境
 
-#### メインターゲット：20代〜30代の「刺激不足」を感じている社会人
+| 言語・フレームワーク | バージョン    |
+| -------------------- | ------------- |
+| Python               | 3.12 以上     |
+| FastAPI              | 0.115.0 以上  |
+| React                | 19.1.0        |
+| React Native         | 0.81.5        |
+| Expo SDK             | 54            |
+| TypeScript           | 5.9.2         |
+| Supabase CLI         | 2.101.0       |
+| PostgreSQL           | Supabase 提供 |
 
-毎日の通勤時間にSNSやYouTubeを眺めているが、表示されるのは自分の好みに最適化されたコンテンツばかり。
-新しい発見や驚きが減り、どこか物足りなさを感じている層。
-新しい趣味を持ちたいという欲求はあるが、何から始めればいいかわからない状態にある。
+その他のパッケージのバージョンは `backend/pyproject.toml` と `frontend/package.json` を参照してください
 
-#### サブターゲット：レアな趣味を持つ30代後半のニッチ愛好家
+<p align="right">(<a href="#top">トップへ</a>)</p>
 
-自分の好きなものへの熱量は高いが、周囲に同じ趣味の人が少なく、共有する場がない。
-アルゴリズムではリーチできない層に自分の趣味を知ってもらいたいと思っている。
-受け取る側ではなく、**発信・共有する側**のユーザーとして、アプリのコンテンツを支える存在。
+## ディレクトリ構成
 
-#### 共通する特徴
+```
+❯ tree -a -I "node_modules|.git|.venv|.expo|__pycache__|.ruff_cache" -L 2
+.
+├── .github
+│   ├── ISSUE_TEMPLATE
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   └── workflows
+├── AI_USAGE_LOG.md
+├── HACKATHON.md
+├── LICENSE
+├── Makefile
+├── README.md
+├── backend
+│   ├── .env.example
+│   ├── pyproject.toml
+│   ├── src
+│   └── uv.lock
+├── docs
+│   ├── design
+│   ├── marketing
+│   ├── meeting_log
+│   ├── orientation_slide
+│   ├── reference
+│   ├── requirement_definition.md
+│   └── supabase-development.md
+├── frontend
+│   ├── .env.example
+│   ├── app.json
+│   ├── eas.json
+│   ├── eslint.config.js
+│   ├── metro.config.js
+│   ├── package.json
+│   ├── src
+│   └── tsconfig.json
+├── package.json
+├── pnpm-lock.yaml
+└── supabase
+    ├── config.toml
+    ├── functions
+    ├── migrations
+    └── seed.sql
+```
 
-- スマートフォンを日常的に持ち歩いている
-- 既存のSNSのアルゴリズムに疲れや違和感を感じている
-- 「人との繋がり」よりも先に「趣味・コンテンツ」を通じた緩やかな接点を好む
+<p align="right">(<a href="#top">トップへ</a>)</p>
 
-### コア機能
+## 開発環境構築
 
-#### 1. すれ違い通信機能
+事前に以下をインストールしておくこと。
 
-位置情報をもとに、同じ時間・同じ場所にいたユーザーを自動的にマッチングする。
-GPS ログを一定間隔でサーバーに送信し、近接していたユーザーを「すれ違い」として記録する。
+- [uv](https://docs.astral.sh/uv/)（バックエンド）
+- Node.js / npm（フロントエンド）
+- [ngrok](https://ngrok.com/)（実機からバックエンドへ接続する場合）
 
-#### 2. すれ違い趣味表示機能
+### 環境変数ファイルの作成
 
-すれ違ったユーザーが登録している「好き」（趣味・興味）をカード形式で表示する。
-アルゴリズムによるレコメンドではなく、偶然の出会いによってのみ新しい趣味が届く。
+`backend/.env.example` と `frontend/.env.example` を元に、それぞれ `.env` を作成する（[環境変数の一覧](#環境変数の一覧)を参照）。
 
-#### 3. 好き登録機能
+```
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
 
-自分の趣味・好きなものを「好きカード」として登録する。
-趣味は多層構造（例：音楽 → ジャンル → アーティスト → 曲）で細かく設定できる。
+### 依存関係のインストール
 
-## 提出ステータス（運営チェック用 — 各 Day 終了時に記入）
-
-- [x] **Day1 終了時**：テーマ確定（プロダクト名・解決課題・ターゲットを記入済み）
-- [x] **Day2 終了時**：MVP 動作（デプロイ済み URL が下記「デモ環境」欄に入っている）
-- [ ] **Day3 終了時**：提出完了（プレゼン資料 URL / デモ動画 URL / AI 活用ログ完成）
-
-## 提出物チェックリスト（Day3 17:00 提出〆切）
-
-<!-- - [ ] 動くデモ（デプロイ済み URL を「デモ環境」欄に記載） -->
-- [ ] ソースコード（このリポに push 済み）
-- [ ] [`AI_USAGE_LOG.md`](./AI_USAGE_LOG.md)（AI 活用ログ、開発期間中の追記必須）
-- [ ] プレゼン資料（PDF or Slides URL を記載）
-- [ ] デモ動画（任意・1 分以内・URL 記載）
-
-## デモ・関連リンク
-
-※ React Native（Expo Go）のモバイルアプリのため、Web デプロイは対象外。実機デモで発表。
-
-| 種別 | 内容 |
-|---|---|
-| 実機デモ | Expo Go にて iOS / Android 動作確認済み |
-| プレゼン資料 | （Google Slides / Notion / Speakerdeck） |
-| デモ動画 | （YouTube / Loom） |
-
-## 技術スタック
-
-- **フロント**：React Native（Expo / Expo Router）
-- **バックエンド**：FastAPI（uvicorn） + Supabase Edge Functions（Deno）
-- **DB / 認証 / Storage**：Supabase（PostgreSQL + Auth）
-- **すれ違い検知**：GPS（Haversine 距離計算）via Supabase Edge Function
-- **開発 AI ツール**：Claude Code CLI / Claude Design / Gemini CLI
-
-### 使用した外部 API / サービス
-
-| サービス名 | 用途 | プラン | 備考 |
-|---|---|---|---|
-| OpenAI API | suki レコメンド・アクション提案（gpt-4o-mini） | Pay-as-you-go | ハッカソン期間の使用量は少額 |
-| Supabase | DB・認証・Edge Functions | Free tier | |
-
-→ API キー・秘匿情報は `.env`（`.gitignore` 対象）で管理。公開リポ化に備えて漏らさないこと。
-
-## セットアップ手順
-
-```bash
-# 依存関係のインストール
+```
 make install
 ```
 
-```bash
-# Supabase（初回のみ）
-make supabase-login
-make supabase-link SUPABASE_PROJECT_REF=<your-project-ref>
-make supabase-start
-make supabase-db-reset
-make supabase-types
+### バックエンドの起動
+
+FastAPI の開発サーバーを起動する（http://127.0.0.1:8000 ）。
+
+```
+make backend
 ```
 
-```bash
-# フロントエンド起動
-cd frontend
-npx expo start --tunnel
+### フロントエンドの起動
+
+Expo の開発サーバーを起動する。表示された QR コードを Expo Go アプリで読み込むか、`i` / `a` でシミュレータを起動する。
+
+実機と PC が同じ Wi-Fi にいる場合（LAN 接続・高速）:
+
+```
+make frontend
 ```
 
-```bash
-# バックエンド起動（必要な場合）
-cd backend
-uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+実機が別ネットワークにいる場合（ngrok 経由の tunnel 接続・低速）:
+
+```
+make frontend-tunnel
 ```
 
-```bash
-# YouTube連携でGoogle provider tokenを更新する場合
-# backend/.env に設定（値はGoogle Cloud OAuthクライアントのもの）
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-```
+### 動作確認
 
-```bash
-# ngrok インストール（初回のみ・Homebrew 使用）
-brew install ngrok/ngrok/ngrok
-```
+http://127.0.0.1:8000/docs にアクセスし、FastAPI の Swagger UI が表示されれば成功。
 
-```bash
-# ngrok でバックエンドを外部公開（フロントエンドから実機アクセスする場合）
-ngrok http 8000
-```
+### 環境変数の一覧
 
-```bash
-# 検証環境DB起動
-make supabase-start
-```
+#### backend/.env
 
-### 開発でよく使うコマンド
+| 変数名               | 役割                                                    | 例                                        |
+| -------------------- | ------------------------------------------------------- | ----------------------------------------- |
+| OPENAI_API_KEY       | OpenAI API のキー                                       | sk-...                                     |
+| CORS_ORIGINS         | CORS で許可するオリジン（カンマ区切り。未設定は全拒否） | http://localhost:8081,https://example.com |
+| SUPABASE_URL         | Supabase プロジェクトの URL                             | https://your-project-ref.supabase.co      |
+| SUPABASE_ANON_KEY    | Supabase の anon キー                                   | your-anon-key                             |
+| GOOGLE_CLIENT_ID     | Google OAuth のクライアント ID                          |                                           |
+| GOOGLE_CLIENT_SECRET | Google OAuth のクライアントシークレット                 |                                           |
 
-| 目的 | コマンド |
-|---|---|
-| 依存関係インストール | `make install` |
-| Supabase CLIログイン | `make supabase-login` |
-| Supabaseプロジェクト紐づけ | `make supabase-link SUPABASE_PROJECT_REF=<ref>` |
-| Supabaseローカル起動/停止 | `make supabase-start` / `make supabase-stop` |
-| migration新規作成 | `make supabase-migration name=<migration_name>` |
-| migrationからローカルDB再構築 | `make supabase-db-reset` |
-| linked先へmigration反映 | `make supabase-db-push` |
-| TypeScript型再生成 | `make supabase-types` |
+#### frontend/.env
 
-### Supabase運用ルール（重要）
+| 変数名                        | 役割                          | 例                                   |
+| ----------------------------- | ----------------------------- | ------------------------------------ |
+| EXPO_PUBLIC_SUPABASE_URL      | Supabase プロジェクトの URL   | https://your-project-ref.supabase.co |
+| EXPO_PUBLIC_SUPABASE_ANON_KEY | Supabase の anon キー         | your-anon-key                        |
+| EXPO_PUBLIC_API_URL           | バックエンド API のベース URL | http://127.0.0.1:8000                |
 
-- 本番Supabaseは直接編集しない。**必ずmigrationを作って管理**する。
-- schema変更後は `make supabase-db-reset` と `make supabase-types` を実行する。
-- migrationと型ファイルを同じPRでレビューする。
+### コマンド一覧
 
-詳細は [`docs/supabase-development.md`](./docs/supabase-development.md) を参照。
+| Make                    | 実行する処理                                   | 元のコマンド                                                                                    |
+| ----------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| make install            | フロント・バックエンドの依存関係をインストール | cd backend && uv sync --dev<br>cd frontend && npm ci                                             |
+| make backend            | FastAPI 開発サーバーを 8000 番で起動           | cd backend && uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000                    |
+| make tunnel             | ngrok で 8000 番ポートを公開                   | ngrok http 8000                                                                                 |
+| make frontend           | Expo 開発サーバーを tunnel モードで起動        | cd frontend && npx expo start --tunnel                                                          |
+| make format             | フロントを Prettier、バックエンドを Ruff で整形 | npm run format --prefix frontend<br>cd backend && uv run ruff format .                           |
+| make supabase-login     | Supabase CLI で認証                            | npx supabase login                                                                             |
+| make supabase-init      | ローカルの supabase/config.toml を作成         | npx supabase init                                                                              |
+| make supabase-link      | リモートプロジェクトにリンク                   | npx supabase link --project-ref ...                                                            |
+| make supabase-start     | ローカル Supabase コンテナを起動               | npx supabase start                                                                             |
+| make supabase-stop      | ローカル Supabase コンテナを停止               | npx supabase stop                                                                              |
+| make supabase-migration | マイグレーションを作成（name=... を指定）       | npx supabase migration new $(name)                                                             |
+| make supabase-db-push   | ローカルのマイグレーションをリンク先へ反映     | npx supabase db push                                                                           |
+| make supabase-db-reset  | マイグレーションからローカル DB をリセット     | npx supabase db reset                                                                          |
+| make supabase-types     | DB の TypeScript 型を生成                      | npx supabase gen types typescript --linked --schema public > frontend/src/lib/database.types.ts |
 
-### 開発ドキュメント
+### 実機からバックエンドへ接続する場合
 
-- Supabase開発フロー: [`docs/supabase-development.md`](./docs/supabase-development.md)
-- デザインガイドライン: [`docs/design-guidelines.md`](./docs/design-guidelines.md)
+実機の Expo Go からローカルのバックエンドへ接続するには、別ターミナルで `make tunnel` を実行し、発行された ngrok の URL を `frontend/.env` の `EXPO_PUBLIC_API_URL` に設定する。
 
-## 既知の問題 / 未実装機能（Day3 審査員向け）
+## トラブルシューティング
 
-開発期間が短いため、Day3 提出時点で「ここまでやった／ここは諦めた」を正直に書く。
-**正直に書くことは減点ではなく加点要素**（自己評価力として審査される）。
+### .env: no such file or directory
 
-### 実装済み 
+`.env` ファイルがありません。[環境変数の一覧](#環境変数の一覧)を参考に `backend/.env`・`frontend/.env` を作成してください。
 
-- GPS によるすれ違い検出（Haversine 距離計算・Supabase Edge Function）
-- suki カードのすれ違い配信・bookmark・植物育成（5段階ビジュアル）
-- AI による suki レコメンドとアクション提案（OpenAI gpt-4o-mini）
-- ユーザー属性（年代・性別ラベル）の登録と匿名表示
-- iOS / Android 両対応（Expo Go で動作確認済み）
+### uv: command not found
 
-### 未実装 / 諦めたもの
+uv がインストールされていません。[公式ドキュメント](https://docs.astral.sh/uv/)を参考にインストールしてください。
 
-- **プッシュ通知**：すれ違い発生時のリアルタイム通知 — Expo Notifications の設定工数が Day3 に間に合わなかったため。アーキテクチャ上は追加可能。
-- **BLEでのすれ違い** : 今は、GPSで位置を15秒おきに発信することで、すれ違いを検知しているが、将来的には、BLEですれ違いを検知できるようにしてバッテリーの消費を抑える。
-- **植物のコレクション機能** : プランでは、育てる植物がランダムで選ばれ、その植物コレクション図鑑みたいなのを実装予定だったが、時間の都合上今回は、一種類の植物を画像で用意した。
-- **セキュリティ** : 時間の関係でセキュリティ性が担保されていない。
-- **UI/UXの改善** : まだ、MVPのため、毎回リロードがかかったりとUXが悪い。Cache機能の実装等が今後必要。
+### Expo Go でアプリが読み込めない / API に接続できない
 
-## 担当メンター・壁打ち履歴
+実機からローカルのバックエンドへは直接届きません。`make tunnel` で ngrok を起動し、その URL を `frontend/.env` の `EXPO_PUBLIC_API_URL` に設定してください。
 
-メンター壁打ちの議事録。スポンサー側が事後に振り返る材料にもなるので、要点だけでも記入する。
+### CORS エラーが発生する
 
-| 日時 | メンター | 議論内容（要点） | 採用 / 一部採用 / 不採用 |
-|---|---|---|---|
-| Day1 14:00 | shiho さん | ①AI は「趣味ステップ生成」より「潜在的な好きの発見」に使うべき（写真フォルダ・YouTube履歴分析の提案） ②コールドスタート問題：一人でも完結できる価値設計へ ③「趣味を植え付け・広める」インセンティブ設計の提案 ④GPS vs BLE の技術的トレードオフ整理 ⑤受動と能動のバランス・プレゼン練習の重要性 | 一部採用（AI 活用方針・インセンティブ設計・GPS 採用を採用。写真フォルダ分析は工数的にスキップし YouTube 履歴ベースに変更） |
-| Day2 | shiho さん | PoC（GPS すれ違い検出 + すれ違いカード配信）の動作確認フィードバック | 採用 |
+`backend/.env` の `CORS_ORIGINS` に、フロントエンドのオリジン（Expo の場合は `http://localhost:8081` など）が含まれているか確認してください。未設定の場合はすべて拒否されます。
 
-## AI 活用ログ
+### CommandError: ngrok tunnel took too long to connect
 
-審査項目「AI 活用度」の根拠資料 → [`AI_USAGE_LOG.md`](./AI_USAGE_LOG.md)
+`make frontend-tunnel` で ngrok のトンネル確立がタイムアウトした場合のエラーです。実機と PC が同じ Wi-Fi にいるなら `make frontend`（LAN 接続）で起動してください。別ネットワークの実機で tunnel が必要な場合は、通信環境を変えて再試行するか、時間をおいて再実行してください。
 
-開発期間中に最低 1 日 3 件以上の追記を目安に。
-
-## 公開許諾（チーム全員合意のうえ記入 — Day3 終了時までに）
-
-提出後の運営側での扱いに関するチーム全員合意です。**いずれも N で構いません（審査に一切影響なし）**。
-
-| 項目 | 許諾 (Y/N) | 補足・条件 |
-|---|---|---|
-| ① このリポを **Public 化**してよい（コードがすべて公開される） |Y | |
-| ② プロダクト名・スクリーンショット・1行ピッチを **HTV / Mercari の SNS・記事**で掲載してよい |Y | |
-| ③ **スポンサー企業（Mercari, P&G 等）の広報・採用ページ**でプロダクト紹介してよい |Y | |
-
-## 審査観点（参考）
-
-審査は以下 8 項目で実施されます。実装中に意識すべきポイント：
-
-1. 実用性
-2. 創造性
-3. UI / UX
-4. 技術的挑戦
-5. 将来性
-6. 完成度
-7. プレゼンテーション
-8. AI 活用度（→ [`AI_USAGE_LOG.md`](./AI_USAGE_LOG.md) が根拠資料）
-
-## 謝辞（任意）
-
-スポンサー・メンター・運営への一言メッセージを残したい場合はここに記入。
-
-## 運営連絡先
-
-- Slack: `#eg-hackathon-2026-05`（または `#pjt_swe_event`）
-- 緊急時: 運営メンバー（Mercari HQ 受付 → 運営呼び出し）
+<p align="right">(<a href="#top">トップへ</a>)</p>

@@ -5,14 +5,15 @@ SUPABASE_TYPES ?= $(FRONTEND_DIR)/src/lib/database.types.ts
 SUPABASE_PROJECT_REF ?=
 SUPABASE ?= npx supabase
 
-.PHONY: help install format run backend tunnel frontend supabase-login supabase-init supabase-link supabase-start supabase-stop supabase-types supabase-db-push supabase-db-reset supabase-migration
+.PHONY: help install format run backend tunnel frontend frontend-tunnel supabase-login supabase-init supabase-link supabase-start supabase-stop supabase-types supabase-db-push supabase-db-reset supabase-migration
 
 help:
 	@printf "Targets:\n"
 	@printf "  run                   Start backend, ngrok tunnel, and frontend together (Ctrl-C stops all)\n"
 	@printf "  backend               Start the FastAPI dev server on port 8000\n"
-	@printf "  tunnel                Expose port 8000 via ngrok\n"
-	@printf "  frontend              Start the Expo dev server with tunnel\n"
+	@printf "  tunnel                Expose port 8000 via ngrok (for a device on a different network)\n"
+	@printf "  frontend              Start the Expo dev server on the local network (LAN)\n"
+	@printf "  frontend-tunnel       Start the Expo dev server via ngrok (for a device on a different network)\n"
 	@printf "  install               Install frontend and backend dependencies\n"
 	@printf "  format                Format frontend files with Prettier and backend files with Ruff\n"
 	@printf "  supabase-login        Authenticate the Supabase CLI\n"
@@ -32,6 +33,9 @@ tunnel:
 	ngrok http 8000
 
 frontend:
+	cd $(FRONTEND_DIR) && npx expo start
+
+frontend-tunnel:
 	cd $(FRONTEND_DIR) && npx expo start --tunnel
 
 install:
